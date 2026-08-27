@@ -215,39 +215,84 @@ async function isaretle(dugme, veri, tanim, bugun, yenile) {
 
 // --- Abonelik ------------------------------------------------------------
 
-function abonelikBlogu(veri, bugun) {
-  const blok = el('section', 'blok');
-  const aktif = veri.abonelikler.filter((a) => a.aktif);
-  const yaklasan = H.yaklasanOdemeler(veri.abonelikler, bugun, 7);
+const kalanMetni = (gun) => (gun === 0 ? 'bugün' : gun === 1 ? 'yarın' : `${gun} gün sonra`);
 
-  blok.append(
-    tepe(lira(H.aylikAbonelikToplami(veri.abonelikler, veri.kur)), 'lira abonelik', [
-      [{ vurgu: String(aktif.length) }, ' aktif'],
-      yaklasan.length
-        ? [{ vurgu: String(yaklasan.length) }, ' bu hafta ödenecek']
-        : ['bu hafta ödeme yok'],
-    ])
-  );
+/**
+ * İlk ekranın alt kenarındaki tek satır: yalnız SIRADAKİ ödeme.
+ * Abonelik bugünkü harcamayla eşit ağırlıkta değil; tam liste aşağıda kalır.
+ */
+function sonrakiOdeme(veri, bugun) {
+  const blok = el('section', 'blok-sonraki');
+  const satir = el('div', 'sonraki');
+  satir.append(el('span', 'onek', 'SIRADAKİ'));
 
-  for (const y of yaklasan) {
-    const satir = el('div', 'abone-satir');
-    satir.append(el('span', null, y.abonelik.ad));
+  // Pencere geniş tutulur: bir sonraki ödeme bu hafta olmayabilir, ama
+  // "sıradaki" olduğu için yine de gösterilmeli.
+  const yaklasan = H.yaklasanOdemeler(veri.abonelikler, bugun, 40);
+
+  if (yaklasan.length === 0) {
+    const aktif = veri.abonelikler.filter((a) => a.aktif).length;
     satir.append(
       el(
         'span',
-        'ne-zaman',
-        y.kalanGun === 0 ? 'bugün' : `${y.kalanGun} gün sonra, ${lira(H.tryeCevir(y.abonelik.tutar, y.abonelik.birim || 'TRY', veri.kur))} lira`
+        'kim',
+        aktif ? 'Yenileme günleri bilinmiyor' : 'Aktif abonelik yok'
       )
+    );
+  } else {
+    const y = yaklasan[0];
+    const tl = H.tryeCevir(y.abonelik.tutar, y.abonelik.birim || 'TRY', veri.kur);
+    satir.append(
+      el('span', 'kim', `${y.abonelik.ad}, ${lira(tl)} lira`),
+      el('span', 'ne-zaman', kalanMetni(y.kalanGun))
+    );
+  }
+
+  blok.append(satir);
+  return blok;
+}
+
+/** Katlamanın altındaki tam liste. */
+function abonelikBlogu(veri, bugun) {
+  const blok = el('section', 'blok-abonelik');
+  const aktif = veri.abonelikler.filter((a) => a.aktif);
+
+  const baslik = el('p', 'abone-baslik');
+  baslik.append(
+    el('b', null, lira(H.aylikAbonelikToplami(veri.abonelikler, veri.kur))),
+    el('span', null, `lira aylık, ${aktif.length} abonelik`)
+  );
+  blok.append(baslik);
+
+  // Ödemesi yakın olan üstte; günü bilinmeyenler sona düşer.
+  const sirali = aktif
+    .map((a) => ({ a, tarih: H.sonrakiYenileme(a, bugun) }))
+    .sort((x, y) => {
+      if (!x.tarih) return 1;
+      if (!y.tarih) return -1;
+      return x.tarih.localeCompare(y.tarih);
+    });
+
+  for (const { a, tarih } of sirali) {
+    const tl = H.tryeCevir(a.tutar, a.birim || 'TRY', veri.kur);
+    const satir = el('div', 'abone-satir');
+    satir.append(
+      el('span', 'ad', a.ad),
+      el('span', 'tut', lira(tl)),
+      el('span', 'ne-zaman', tarih ? kalanMetni(H.gunFarki(tarih, bugun)) : 'gün bilinmiyor')
     );
     blok.append(satir);
   }
 
-  // Yenileme günü bilinmeyeni saklamak yerine söyle: eksik veri ekranda da
-  // eksik görünmeli, tahmin üretmek yanlış güven verir.
-  const bilinmeyen = aktif.filter((a) => a.yenileme_gunu == null);
-  if (bilinmeyen.length) {
+  // Eksik veri ekranda da eksik görünmeli; tahmin üretmek yanlış güven verir.
+  const bilinmeyen = sirali.filter((x) => !x.tarih).length;
+  if (bilinmeyen > 0) {
     blok.append(
-      el('p', 'dipnot', `Yenileme günü bilinmiyor: ${bilinmeyen.map((a) => a.ad).join(', ')}.`)
+      el(
+        'p',
+        'dipnot',
+        `${bilinmeyen} aboneliğin yenileme günü kayıtlı değil. Claude'a söyleyince eklenir.`
+      )
     );
   }
 
@@ -288,11 +333,16 @@ async function ciz() {
   const harcama = harcamaBlogu(veri, bugun);
   const aliskanlik = aliskanlikBlogu(veri, bugun, ciz);
 
-  ekran.dataset.kip = aksam ? 'aksam' : 'gunduz';
-  ekran.replaceChildren(
+  // İlk ekran tam yüksekliktedir ve sıradaki ödeme satırıyla biter.
+  // Abonelik listesi onun kardeşidir, yani katlamanın altında kalır.
+  const ilkEkran = el('div', 'ilk-ekran');
+  ilkEkran.append(
     ...(aksam ? [aliskanlik, harcama] : [harcama, aliskanlik]),
-    abonelikBlogu(veri, bugun)
+    sonrakiOdeme(veri, bugun)
   );
+
+  ekran.dataset.kip = aksam ? 'aksam' : 'gunduz';
+  ekran.replaceChildren(ilkEkran, abonelikBlogu(veri, bugun));
   ekran.removeAttribute('aria-busy');
 }
 

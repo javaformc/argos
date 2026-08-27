@@ -1,11 +1,16 @@
 /* Argos.
-   Tasarım kısıtı: her şey tek ekranda, kaydırmadan. Boşa giden dikey alan
-   yok - ne büyük tarih başlığı, ne ayrı grafik alanı. Grafik yerine satırın
-   kendisi kullanılır: her harcama satırının zemini o kalemin günün
-   toplamındaki payı kadar doludur. Ayrı bir çizim alanı istemez.
 
-   Tek yazı ailesi (Archivo) iki eksende kullanılır: sayılar geniş
-   (wdth 112), etiketler dar (wdth 74). İkinci bir aileye gerek yok.
+   Hiyerarşi: bugünkü harcama ve alışkanlıklar birinci sıradadır ve ilk
+   ekranda durur. Abonelik ikinci sıradadır - alt kenarda yalnız SIRADAKİ
+   ödeme görünür, tam liste katlamanın altında kalır. Üç bloğun da başına
+   aynı boyda sayı koymak, aslında eşit olmayan şeyleri eşit gösteriyordu.
+
+   Grafik için ayrı alan ayrılmaz: her harcama satırının zemini o kalemin
+   payı kadar doludur. Bilgi taşımayan piksel yok, ama nefes alan boşluk
+   israf sayılmaz - okunmayan yoğunluk da bir kayıptır.
+
+   Tek yazı ailesi (Archivo) iki eksende: sayılar geniş (wdth 112),
+   etiketler dar (wdth 74). İkinci bir aileye gerek yok.
 
    Köşe kuralı: yapı keskin (radius 0). Yalnız dokunma hedefleri tam
    yuvarlaktır - yuvarlaklık "buna basılır" demektir, süs değildir. */
@@ -17,12 +22,12 @@
   --murekkep: #171a24;
   --soluk: #6b7185;
   --cizgi: #d8dae2;
-  --pay: #dfe1e9;
+  --pay: #2743c814;
   --vurgu: #2743c8;
   --vurgu-zayif: #2743c81a;
   --eksi: #a83250;
 
-  --olcu: 1.25rem;
+  --olcu: 1.375rem;
   --yazi: 'Archivo', ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -32,7 +37,7 @@
     --murekkep: #e7e9f0;
     --soluk: #8b91a5;
     --cizgi: #282d3b;
-    --pay: #1f2431;
+    --pay: #8ba0ff1c;
     --vurgu: #8ba0ff;
     --vurgu-zayif: #8ba0ff1f;
     --eksi: #e0798f;
@@ -63,7 +68,7 @@ body {
 .sayfa {
   max-width: 30rem;
   margin: 0 auto;
-  padding: 1.1rem var(--olcu) 2rem;
+  padding: 1.35rem var(--olcu) 2.5rem;
 }
 
 /* --- Üst şerit: tek satır ----------------------------------------------- */
@@ -73,7 +78,7 @@ body {
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  padding-bottom: 0.9rem;
+  padding-bottom: 1.35rem;
 }
 
 .tarih {
@@ -97,63 +102,66 @@ body {
   font-stretch: 78%;
 }
 
-#ekran {
+/* İlk ekran tam yüksekliktedir; sıradaki ödeme satırı margin-top:auto
+   ile alt kenarına yapışır. Abonelik listesi bu kutunun DIŞINDA kaldığı
+   için ancak kaydırınca görünür. */
+.ilk-ekran {
   display: flex;
   flex-direction: column;
-  gap: 1.35rem;
+  min-height: calc(100dvh - 9rem);
 }
 
-.blok {
-  padding-top: 1.1rem;
-  border-top: 1px solid var(--murekkep);
+.blok + .blok {
+  margin-top: 3rem;
 }
 
-/* --- Başlık satırı: büyük sayı solda, bağlam sağda ---------------------- */
+/* --- Blok başlığı: büyük sayı solda, bağlam sağda ----------------------- */
 
 .tepe {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.85rem;
+  margin-bottom: 1.15rem;
 }
 
 .buyuk {
   display: flex;
   align-items: baseline;
-  gap: 0.4rem;
+  gap: 0.45rem;
   min-width: 0;
 }
 
 .buyuk b {
-  font-size: 2.375rem;
+  font-size: 3rem;
   font-weight: 700;
   font-stretch: 112%;
-  letter-spacing: -0.04em;
-  line-height: 0.95;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
 }
 
 .buyuk .etiket {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 500;
   font-stretch: 74%;
   color: var(--soluk);
   white-space: nowrap;
 }
 
-/* Ay bağlamı: bugünün tek başına anlamı yok, neyle kıyaslandığı lazım. */
+/* Ay bağlamı: bugünün rakamının tek başına anlamı yok, neyle kıyaslandığı
+   olmadan "çok mu az mı" sorusu cevapsız kalır. */
 .baglam {
   flex: none;
   text-align: right;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-stretch: 72%;
-  line-height: 1.5;
+  line-height: 1.6;
   color: var(--soluk);
 }
 
 .baglam b {
   font-weight: 600;
-  font-stretch: 88%;
+  font-stretch: 92%;
   color: var(--murekkep);
 }
 
@@ -169,14 +177,16 @@ body {
   position: relative;
   display: flex;
   align-items: baseline;
-  gap: 0.6rem;
-  padding: 0.42rem 0.5rem 0.42rem 0.45rem;
-  font-size: 0.9375rem;
-  font-stretch: 84%;
+  gap: 0.7rem;
+  padding: 0.72rem 0.6rem 0.72rem 0.55rem;
 }
 
-/* Satırın zemini, o kalemin gün toplamındaki payı kadar dolu. Grafik için
-   ayrı alan ayırmadan aynı bilgiyi verir. */
+.kayit + .kayit {
+  border-top: 1px solid var(--cizgi);
+}
+
+/* Satırın zemini, o kalemin günün en büyük kalemine oranı kadar dolu.
+   Ayrı bir grafik alanı istemeden aynı karşılaştırmayı verir. */
 .kayit::before {
   content: '';
   position: absolute;
@@ -191,17 +201,20 @@ body {
 
 .kayit .saat {
   flex: none;
-  width: 2.4rem;
+  width: 2.5rem;
   font-size: 0.6875rem;
   font-weight: 500;
   font-stretch: 68%;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--soluk);
 }
 
 .kayit .ad {
   flex: 1;
   min-width: 0;
+  font-size: 0.9375rem;
+  font-stretch: 82%;
+  color: var(--soluk);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -209,16 +222,18 @@ body {
 
 .kayit .tut {
   flex: none;
+  font-size: 1.125rem;
   font-weight: 600;
-  font-stretch: 98%;
-  letter-spacing: -0.01em;
+  font-stretch: 100%;
+  letter-spacing: -0.02em;
 }
 
 .bos {
   margin: 0;
-  padding: 0.3rem 0 0.1rem;
-  font-size: 0.875rem;
+  padding: 0.4rem 0 0.2rem;
+  font-size: 0.9375rem;
   font-stretch: 78%;
+  line-height: 1.5;
   color: var(--soluk);
 }
 
@@ -237,10 +252,10 @@ body {
 .satir {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
   width: 100%;
-  min-height: 3rem;
-  padding: 0.5rem 0;
+  min-height: 3.75rem;
+  padding: 0.6rem 0;
   border: 0;
   background: none;
   color: var(--murekkep);
@@ -267,14 +282,15 @@ body {
 }
 
 .satir[data-ana='evet'] .isim {
-  font-size: 1.3125rem;
-  font-stretch: 105%;
-  letter-spacing: -0.02em;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-stretch: 108%;
+  letter-spacing: -0.025em;
 }
 
 .satir .not {
   flex: none;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-stretch: 72%;
   letter-spacing: 0.02em;
   color: var(--soluk);
@@ -296,7 +312,7 @@ body {
   place-items: center;
   width: 2.75rem;
   height: 2.75rem;
-  margin-right: -0.6rem;
+  margin-right: -0.55rem;
   border-radius: 50%;
   transition: background 130ms ease;
 }
@@ -307,16 +323,16 @@ body {
 
 .kutu::after {
   content: '';
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.5rem;
+  height: 1.5rem;
   border: 1.5px solid var(--soluk);
   border-radius: 50%;
   transition: background 130ms ease, border-color 130ms ease;
 }
 
 .satir[data-dolu='evet'] .kutu::after {
-  background: var(--murekkep);
-  border-color: var(--murekkep);
+  background: var(--vurgu);
+  border-color: var(--vurgu);
 }
 
 .satir[data-dolu='kacirildi'] .kutu::after {
@@ -324,31 +340,113 @@ body {
   border-style: dashed;
 }
 
-/* --- Abonelik ----------------------------------------------------------- */
+/* --- Sıradaki ödeme: ilk ekranın alt kenarı ----------------------------- */
+
+/* Sıradaki ödeme içeriğin hemen ardında durur. İlk ekranın artan boşluğu
+   bunun ALTINDA kalır: göz orayı sayfa sonu okur, kaydırınca abonelik
+   listesi gelir. Satırı auto ile alta itmek arada ölü boşluk bırakıyordu. */
+.blok-sonraki {
+  margin-top: 2.5rem;
+  padding-top: 1.35rem;
+  border-top: 1px solid var(--cizgi);
+}
+
+.sonraki {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-size: 0.9375rem;
+  font-stretch: 82%;
+}
+
+.sonraki .kim {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-stretch: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sonraki .onek {
+  flex: none;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  font-stretch: 68%;
+  letter-spacing: 0.14em;
+  color: var(--soluk);
+}
+
+.sonraki .ne-zaman {
+  flex: none;
+  font-size: 0.8125rem;
+  font-stretch: 72%;
+  color: var(--vurgu);
+}
+
+/* --- Abonelik listesi: katlamanın altında ------------------------------- */
+
+.blok-abonelik {
+  margin-top: 3rem;
+  padding-top: 1.35rem;
+  border-top: 1px solid var(--cizgi);
+}
+
+.abone-baslik {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0 0 0.85rem;
+}
+
+.abone-baslik b {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-stretch: 105%;
+  letter-spacing: -0.025em;
+}
+
+.abone-baslik span {
+  font-size: 0.875rem;
+  font-stretch: 74%;
+  color: var(--soluk);
+}
 
 .abone-satir {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
-  padding: 0.32rem 0;
+  padding: 0.5rem 0;
   font-size: 0.9375rem;
   font-stretch: 84%;
 }
 
-.abone-satir .ne-zaman {
+.abone-satir + .abone-satir {
+  border-top: 1px solid var(--cizgi);
+}
+
+.abone-satir .tut {
   flex: none;
   margin-left: auto;
+  font-weight: 600;
+  font-stretch: 96%;
+}
+
+.abone-satir .ne-zaman {
+  flex: none;
+  width: 6.5rem;
   font-size: 0.75rem;
   font-stretch: 72%;
-  letter-spacing: 0.02em;
-  color: var(--vurgu);
+  color: var(--soluk);
+  text-align: right;
 }
 
 .dipnot {
-  margin: 0.55rem 0 0;
+  margin: 0.85rem 0 0;
   font-size: 0.75rem;
   font-stretch: 74%;
-  line-height: 1.5;
+  line-height: 1.55;
   color: var(--soluk);
 }
 

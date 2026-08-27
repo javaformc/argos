@@ -26,7 +26,8 @@ export function yerelKaynak(kok = '/veri') {
       const yanit = await fetch(`${kok}/aliskanlik/onay-app-${ay}.json`, {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(kayitlar, null, 2),
+        // Dosya sonu satır sonuyla biter: git ve metin araçları böyle bekler.
+        body: JSON.stringify(kayitlar, null, 2) + '\n',
       });
       if (!yanit.ok) throw new Error(`onay yazılamadı (${yanit.status})`);
     },
