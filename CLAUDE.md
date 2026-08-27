@@ -66,3 +66,7 @@ Test koşucusu: Node yerleşik `node:test`. Barındırma: GitHub Pages.
 - **Onay dosyaları ikizdir.** `onay-*.json` Claude'un, `onay-app-*.json`
   Argos'un. Argos ikincisinden başkasına yazmaz.
 - Kur `veri/kur.json`'dan okunur, koda gömülmez.
+- **İşaretleme testi 4173'te yapılmaz.** O sunucu `C:wseri`'ye yazar
+  ve tıklama kullanıcının gerçek alışkanlık kaydına düşer. Tek tuş onayı
+  denemek için her zaman 4174 (örnek veri) kullanılır. Bu iki kez oldu;
+  ikisinde de kayıt elle geri alınmak zorunda kaldı.

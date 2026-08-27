@@ -1,15 +1,12 @@
 // Ana ekran. Veriyi kaynaktan alır, hesabı hesap.js'e bırakır, DOM'u kurar.
 // Burada hesap yapılmaz; burada yalnız gösterim kararı verilir.
-//
-// Kısıt: her şey tek ekrana sığar. Bir bilgi yer kaplıyorsa taşıdığı kadar
-// kaplamalı - bu yüzden ayrı grafik alanı yok, pay bilgisi satırın kendi
-// zeminine gömülü.
 
 import * as H from './hesap.js';
 import { yerelKaynak, veriYukle, onayIsaretle } from './veri.js';
 
 const AKSAM_ESIGI = 22; // kararlar.md > Ana ekran saate göre yeniden sıralanır
-const EN_COK_KAYIT = 6; // ekrana sığan satır sayısı; kalanı tek satırda özetlenir
+const IZ_GUN = 14; // alışkanlık ızgarasında gösterilen gün sayısı
+const EN_COK_KATEGORI = 5; // fazlası "diğer" altında toplanır
 
 const ekran = document.getElementById('ekran');
 const kaynak = yerelKaynak();
@@ -22,6 +19,7 @@ const el = (etiket, sinif, metin) => {
 };
 
 const GUNLER = ['pazar', 'pazartesi', 'salı', 'çarşamba', 'perşembe', 'cuma', 'cumartesi'];
+const KISA_GUN = ['pz', 'pt', 'sa', 'ça', 'pe', 'cu', 'ct'];
 const AYLAR = [
   'ocak', 'şubat', 'mart', 'nisan', 'mayıs', 'haziran',
   'temmuz', 'ağustos', 'eylül', 'ekim', 'kasım', 'aralık',
@@ -44,8 +42,20 @@ const KATEGORI_ADI = {
   kirtasiye: 'kırtasiye',
 };
 
+// Renk kategoriyi takip eder, sıralamayı değil: market bugün ilk sırada da
+// olsa dördüncü sırada da olsa aynı renktedir. Sıra değişince renklerin
+// yer değiştirmesi, aynı ekranı iki gün üst üste okumayı imkânsız kılar.
+const KATEGORI_RENGI = {
+  market: 'k1',
+  'yeme-icme': 'k2',
+  ulasim: 'k3',
+  fatura: 'k4',
+  teknoloji: 'k5',
+};
+
 const oku = (k) => KATEGORI_ADI[k] || k;
 const lira = (ham) => H.bicimle(H.yuvarla(ham));
+const renkDegiskeni = (kategori) => `var(--${KATEGORI_RENGI[kategori] || 'k6'})`;
 
 /** Bir harcamayı tek satırda anlatır: yer varsa yer, yoksa kategori. */
 function kayitAdi(h) {
@@ -55,37 +65,47 @@ function kayitAdi(h) {
   return alt ? `${kat}, ${alt}` : kat;
 }
 
-/** Büyük sayı + etiket. Her bloğun başında aynı biçim. */
+/** Büyük sayı solda, ay bağlamı sağda. */
 function tepe(sayi, etiket, baglamSatirlari) {
   const kutu = el('div', 'tepe');
-
   const buyuk = el('div', 'buyuk');
   buyuk.append(el('b', null, sayi), el('span', 'etiket', etiket));
   kutu.append(buyuk);
 
-  if (baglamSatirlari && baglamSatirlari.length) {
-    const baglam = el('div', 'baglam');
-    baglamSatirlari.forEach((parcalar, i) => {
-      if (i > 0) baglam.append(document.createElement('br'));
-      for (const p of parcalar) {
-        baglam.append(typeof p === 'string' ? p : el('b', null, p.vurgu));
-      }
-    });
-    kutu.append(baglam);
-  }
-
+  const baglam = el('div', 'baglam');
+  baglamSatirlari.forEach((parcalar, i) => {
+    if (i > 0) baglam.append(document.createElement('br'));
+    for (const p of parcalar) {
+      baglam.append(typeof p === 'string' ? p : el('b', null, p.vurgu));
+    }
+  });
+  kutu.append(baglam);
   return kutu;
 }
 
-// --- Bugünkü harcama -----------------------------------------------------
+// --- Bugün: yığılmış kategori şeridi -------------------------------------
+
+/**
+ * Kategorileri büyükten küçüğe alır, beşten fazlasını "diğer" altında
+ * toplar. Sekiz renkli bir şeridi kimse okuyamaz; okunmayan renk bilgi
+ * değil gürültüdür.
+ */
+function kategoriDagilimi(harcamalar, kur) {
+  const tumu = H.kategoriKirilimi(harcamalar, kur);
+  if (tumu.length <= EN_COK_KATEGORI) return tumu;
+
+  const bas = tumu.slice(0, EN_COK_KATEGORI - 1);
+  const kalanTutar = tumu.slice(EN_COK_KATEGORI - 1).reduce((t, k) => t + k.tutar, 0);
+  return [...bas, { kategori: 'diger', tutar: kalanTutar, toplanmis: true }];
+}
 
 function harcamaBlogu(veri, bugun) {
   const blok = el('section', 'blok');
   const bugunku = H.gununHarcamalari(veri.harcamalar, bugun);
   const gunToplam = H.toplamTL(bugunku, veri.kur);
 
-  // Bugünün rakamı tek başına bir şey anlatmaz; ay toplamı ve günlük
-  // ortalama olmadan "çok mu az mı" sorusu cevapsız kalır.
+  // Bugünün rakamı tek başına bir şey anlatmaz; neyle kıyaslandığı olmadan
+  // "çok mu az mı" sorusu cevapsız kalır.
   blok.append(
     tepe(lira(gunToplam), 'lira bugün', [
       [{ vurgu: lira(H.ayToplami(veri.harcamalar, veri.kur)) }, ' bu ay'],
@@ -94,43 +114,89 @@ function harcamaBlogu(veri, bugun) {
   );
 
   if (bugunku.length === 0) {
+    blok.append(el('div', 'serit-bos'));
     blok.append(
       el('p', 'bos', 'Bugüne kayıt düşmedi. Akşam özetinde anlattığın her şey buraya iner.')
     );
     return blok;
   }
 
-  // Büyükten küçüğe: gözün ilk gördüğü satır günün en büyük kalemi olmalı.
-  const sirali = bugunku
-    .map((h) => ({ h, tl: H.tryeCevir(h.tutar, h.birim || 'TRY', veri.kur) }))
-    .sort((a, b) => b.tl - a.tl);
+  const dagilim = kategoriDagilimi(bugunku, veri.kur);
 
-  const gosterilen = sirali.slice(0, EN_COK_KAYIT);
-  const liste = el('ul', 'kayitlar');
+  const serit = el('div', 'serit');
+  serit.setAttribute('role', 'img');
+  serit.setAttribute(
+    'aria-label',
+    `Kategori dağılımı: ${dagilim.map((k) => `${oku(k.kategori)} ${lira(k.tutar)} lira`).join(', ')}`
+  );
+  for (const k of dagilim) {
+    const parca = el('span');
+    parca.style.flexGrow = String(k.tutar);
+    parca.style.background = renkDegiskeni(k.kategori);
+    serit.append(parca);
+  }
+  blok.append(serit);
 
-  // Zemin, gün toplamına göre değil günün EN BÜYÜK kalemine göre ölçülür.
-  // Toplama göre ölçünce yalnız en büyük satır okunuyor, küçük kalemler
-  // birkaç piksellik kırıntıya iniyordu.
-  const enBuyuk = sirali[0].tl;
+  const liste = el('ul', 'kategoriler');
+  for (const k of dagilim) {
+    const nokta = el('span', 'nokta');
+    nokta.style.background = renkDegiskeni(k.kategori);
 
-  for (const x of gosterilen) {
-    const satir = el('li', 'kayit');
-    satir.style.setProperty('--oran', `${Math.round((x.tl / enBuyuk) * 100)}%`);
+    const satir = el('li', 'kategori');
     satir.append(
-      el('span', 'saat', x.h.saat || ''),
-      el('span', 'ad', kayitAdi(x.h)),
-      el('span', 'tut', lira(x.tl))
+      nokta,
+      el('span', 'ad', k.toplanmis ? 'diğer' : oku(k.kategori)),
+      el('span', 'tut', lira(k.tutar))
     );
     liste.append(satir);
   }
   blok.append(liste);
 
-  const kalan = sirali.length - gosterilen.length;
-  if (kalan > 0) {
-    const kalanTL = sirali.slice(EN_COK_KAYIT).reduce((t, x) => t + x.tl, 0);
-    blok.append(el('p', 'bos', `${kalan} küçük kalem daha, toplam ${lira(kalanTL)} lira.`));
+  return blok;
+}
+
+// --- Hafta sütunları -----------------------------------------------------
+
+function haftaBlogu(veri, bugun) {
+  const blok = el('section', 'blok blok-hafta');
+  const gunler = H.sonGunler(veri.harcamalar, veri.kur, bugun, 7);
+  const haftaToplam = gunler.reduce((t, g) => t + g.tutar, 0);
+  const enBuyuk = Math.max(...gunler.map((g) => g.tutar), 1);
+
+  const baslik = el('p', 'baslik');
+  baslik.append('son yedi gün');
+  const sag = el('span');
+  sag.append(el('b', null, lira(haftaToplam)), ' lira');
+  baslik.append(sag);
+  blok.append(baslik);
+
+  const grafik = el('div', 'hafta');
+  grafik.setAttribute('role', 'img');
+  grafik.setAttribute(
+    'aria-label',
+    `Son yedi günün harcaması: ${gunler.map((g) => `${g.gun} ${lira(g.tutar)} lira`).join(', ')}`
+  );
+
+  const etiketler = el('div', 'hafta-etiket');
+
+  for (const g of gunler) {
+    const bugunMu = g.gun === bugun;
+
+    const kutu = el('div', 'hafta-gun');
+    if (bugunMu) kutu.dataset.bugun = '';
+    const sutun = el('div', 'sutun');
+    // Boş gün de görünür bir taban bırakır; sıfır ile veri yokluğu ayrı şeyler.
+    sutun.style.height = `${Math.max((g.tutar / enBuyuk) * 100, 2)}%`;
+    kutu.append(sutun);
+    grafik.append(kutu);
+
+    const gunAdi = KISA_GUN[new Date(`${g.gun}T00:00:00`).getDay()];
+    const etiket = el('span', null, gunAdi);
+    if (bugunMu) etiket.dataset.bugun = '';
+    etiketler.append(etiket);
   }
 
+  blok.append(grafik, etiketler);
   return blok;
 }
 
@@ -170,6 +236,7 @@ function aliskanlikBlogu(veri, bugun, yenile) {
     const onay = H.onayBul(veri.onaylar, t.id, bugun);
     const bekleniyor = H.bugunBekleniyorMu(t, veri.onaylar, bugun);
     const seri = seriMetni(t, veri.onaylar, bugun);
+    const not = notMetni(onay, bekleniyor, seri);
 
     const dolu = onay && onay.durum === 'yapildi';
     const kacirildi = onay && onay.durum === 'yapilmadi';
@@ -180,13 +247,23 @@ function aliskanlikBlogu(veri, bugun, yenile) {
     dgm.dataset.dolu = dolu ? 'evet' : kacirildi ? 'kacirildi' : 'hayir';
     dgm.dataset.bekleniyor = !onay && bekleniyor ? 'evet' : 'hayir';
     dgm.setAttribute('aria-pressed', String(!!dolu));
-    dgm.setAttribute('aria-label', `${t.ad}: ${notMetni(onay, bekleniyor, seri)}`);
+    dgm.setAttribute('aria-label', `${t.ad}: ${not}`);
 
-    dgm.append(
-      el('span', 'isim', t.ad),
-      el('span', 'not', notMetni(onay, bekleniyor, seri)),
-      el('span', 'kutu')
-    );
+    const adSatiri = el('div', 'ad-satiri');
+    adSatiri.append(el('span', 'isim', t.ad), el('span', 'not', not));
+
+    const iz = el('div', 'iz');
+    const gunler = H.aliskanlikIzi(t, veri.onaylar, bugun, IZ_GUN);
+    const yapilan = gunler.filter((g) => g.durum === 'yapildi').length;
+    iz.setAttribute('aria-hidden', 'true'); // durumu ad satırı zaten söylüyor
+    iz.title = `Son ${IZ_GUN} günde ${yapilan} işaret`;
+    for (const g of gunler) {
+      const kare = el('i');
+      kare.dataset.d = g.durum;
+      iz.append(kare);
+    }
+
+    dgm.append(adSatiri, iz, el('span', 'kutu'));
     dgm.addEventListener('click', () => isaretle(dgm, veri, t, bugun, yenile));
 
     const li = el('li');
@@ -217,27 +294,20 @@ async function isaretle(dugme, veri, tanim, bugun, yenile) {
 
 const kalanMetni = (gun) => (gun === 0 ? 'bugün' : gun === 1 ? 'yarın' : `${gun} gün sonra`);
 
-/**
- * İlk ekranın alt kenarındaki tek satır: yalnız SIRADAKİ ödeme.
- * Abonelik bugünkü harcamayla eşit ağırlıkta değil; tam liste aşağıda kalır.
- */
+/** İlk ekranın alt kenarındaki tek satır: yalnız sıradaki ödeme. */
 function sonrakiOdeme(veri, bugun) {
   const blok = el('section', 'blok-sonraki');
   const satir = el('div', 'sonraki');
   satir.append(el('span', 'onek', 'SIRADAKİ'));
 
-  // Pencere geniş tutulur: bir sonraki ödeme bu hafta olmayabilir, ama
-  // "sıradaki" olduğu için yine de gösterilmeli.
+  // Pencere geniş: bir sonraki ödeme bu hafta olmayabilir ama yine de
+  // sıradaki odur.
   const yaklasan = H.yaklasanOdemeler(veri.abonelikler, bugun, 40);
 
   if (yaklasan.length === 0) {
     const aktif = veri.abonelikler.filter((a) => a.aktif).length;
     satir.append(
-      el(
-        'span',
-        'kim',
-        aktif ? 'Yenileme günleri bilinmiyor' : 'Aktif abonelik yok'
-      )
+      el('span', 'kim', aktif ? 'Yenileme günleri bilinmiyor' : 'Aktif abonelik yok')
     );
   } else {
     const y = yaklasan[0];
@@ -252,12 +322,48 @@ function sonrakiOdeme(veri, bugun) {
   return blok;
 }
 
-/** Katlamanın altındaki tam liste. */
+// --- Katlamanın altı -----------------------------------------------------
+
+/** Bugünün kalem kalem dökümü. Şerit "nereye", bu liste "tam olarak ne". */
+function dokumBlogu(veri, bugun) {
+  const bugunku = H.gununHarcamalari(veri.harcamalar, bugun);
+  if (bugunku.length === 0) return null;
+
+  const blok = el('section', 'alt-blok');
+  const baslik = el('p', 'alt-baslik');
+  baslik.append(
+    el('b', null, String(bugunku.length)),
+    el('span', null, 'kayıt, bugün')
+  );
+  blok.append(baslik);
+
+  const sirali = bugunku
+    .map((h) => ({ h, tl: H.tryeCevir(h.tutar, h.birim || 'TRY', veri.kur) }))
+    .sort((a, b) => b.tl - a.tl);
+
+  for (const x of sirali) {
+    // Renk noktası, satırı yukarıdaki şeritteki segmentine bağlar.
+    const nokta = el('span', 'nokta');
+    nokta.style.background = renkDegiskeni(x.h.kategori);
+
+    const satir = el('div', 'dokum');
+    satir.append(
+      el('span', 'saat', x.h.saat || ''),
+      nokta,
+      el('span', 'ad', kayitAdi(x.h)),
+      el('span', 'tut', lira(x.tl))
+    );
+    blok.append(satir);
+  }
+
+  return blok;
+}
+
 function abonelikBlogu(veri, bugun) {
-  const blok = el('section', 'blok-abonelik');
+  const blok = el('section', 'alt-blok');
   const aktif = veri.abonelikler.filter((a) => a.aktif);
 
-  const baslik = el('p', 'abone-baslik');
+  const baslik = el('p', 'alt-baslik');
   baslik.append(
     el('b', null, lira(H.aylikAbonelikToplami(veri.abonelikler, veri.kur))),
     el('span', null, `lira aylık, ${aktif.length} abonelik`)
@@ -275,7 +381,7 @@ function abonelikBlogu(veri, bugun) {
 
   for (const { a, tarih } of sirali) {
     const tl = H.tryeCevir(a.tutar, a.birim || 'TRY', veri.kur);
-    const satir = el('div', 'abone-satir');
+    const satir = el('div', 'dokum');
     satir.append(
       el('span', 'ad', a.ad),
       el('span', 'tut', lira(tl)),
@@ -327,22 +433,26 @@ async function ciz() {
   }
 
   // Gündüz harcama önce gelir, akşam (22:00 sonrası) alışkanlık öne çıkar.
-  // Sıra CSS order ile değil burada kurulur; ayraçlar DOM sırasına bakar.
   // Karar: kararlar.md > Ana ekran saate göre yeniden sıralanır
   const aksam = simdi.getHours() >= AKSAM_ESIGI;
   const harcama = harcamaBlogu(veri, bugun);
+  const hafta = haftaBlogu(veri, bugun);
   const aliskanlik = aliskanlikBlogu(veri, bugun, ciz);
 
-  // İlk ekran tam yüksekliktedir ve sıradaki ödeme satırıyla biter.
-  // Abonelik listesi onun kardeşidir, yani katlamanın altında kalır.
   const ilkEkran = el('div', 'ilk-ekran');
   ilkEkran.append(
-    ...(aksam ? [aliskanlik, harcama] : [harcama, aliskanlik]),
+    ...(aksam ? [aliskanlik, harcama, hafta] : [harcama, hafta, aliskanlik]),
     sonrakiOdeme(veri, bugun)
   );
 
+  const dokum = dokumBlogu(veri, bugun);
+
   ekran.dataset.kip = aksam ? 'aksam' : 'gunduz';
-  ekran.replaceChildren(ilkEkran, abonelikBlogu(veri, bugun));
+  ekran.replaceChildren(
+    ilkEkran,
+    ...(dokum ? [dokum] : []),
+    abonelikBlogu(veri, bugun)
+  );
   ekran.removeAttribute('aria-busy');
 }
 

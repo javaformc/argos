@@ -230,3 +230,39 @@ test('günlük ortalama ayın geçen günlerine bölünür', () => {
 test('boş ay ortalaması sıfır, bölme hatası vermez', () => {
   assert.equal(h.gunlukOrtalama([], KUR, '2026-08-27'), 0);
 });
+
+// --- Grafik verileri ----------------------------------------------------
+
+test('son günler listesi boş günleri de içerir, eskiden yeniye', () => {
+  const h7 = h.sonGunler(H, KUR, '2026-08-27', 7);
+  assert.equal(h7.length, 7);
+  assert.equal(h7[0].gun, '2026-08-21');
+  assert.equal(h7[6].gun, '2026-08-27', 'son eleman bugün olmalı');
+  assert.equal(h7[5].tutar, 900, 'dünkü market');
+  assert.equal(h7[0].tutar, 0, 'kayıtsız gün sıfır olarak yer alır');
+});
+
+test('alışkanlık izi, takip öncesini kaçırılmış saymaz', () => {
+  const onaylar = [
+    onay('2026-08-25', 'spor', 'yapildi', 'a', 'app'),
+    onay('2026-08-27', 'spor', 'yapildi', 'b', 'app'),
+  ];
+  const iz = h.aliskanlikIzi(SPOR, onaylar, '2026-08-27', 7);
+
+  assert.equal(iz.length, 7);
+  assert.equal(iz[6].gun, '2026-08-27');
+  assert.equal(iz[6].durum, 'yapildi');
+  assert.equal(iz[4].durum, 'yapildi', '25 ağustos');
+  assert.equal(iz[5].durum, 'beklenmiyor', '26 ağustos: dün yapıldı, beklenmiyordu');
+  assert.deepEqual(
+    iz.slice(0, 4).map((g) => g.durum),
+    ['kayitsiz', 'kayitsiz', 'kayitsiz', 'kayitsiz'],
+    'ilk kayıttan önceki günler kayıtsız'
+  );
+});
+
+test('izde bugün işaretlenmemişse bekliyor olarak durur', () => {
+  const iz = h.aliskanlikIzi(UYKU, [onay('2026-08-26', 'erken-uyku', 'yapildi', 'a', 'app')], '2026-08-27', 3);
+  assert.equal(iz[2].durum, 'bekliyor');
+  assert.equal(iz[1].durum, 'yapildi');
+});

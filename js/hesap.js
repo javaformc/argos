@@ -231,6 +231,48 @@ export function gunlukOrtalama(harcamalar, kur, bugun) {
   return toplamTL(harcamalar, kur) / gecenGun;
 }
 
+/**
+ * Son `gunSayisi` günün günlük toplamları, eskiden yeniye.
+ * Boş günler de listede yer alır - eksik sütun, sıfır harcamayla aynı şey
+ * değildir ve haftanın ritmi ancak boş günlerle okunur.
+ */
+export function sonGunler(harcamalar, kur, bugun, gunSayisi = 7) {
+  const cikti = [];
+  for (let i = gunSayisi - 1; i >= 0; i--) {
+    const gun = gunKaydir(bugun, -i);
+    cikti.push({ gun, tutar: toplamTL(gununHarcamalari(harcamalar, gun), kur) });
+  }
+  return cikti;
+}
+
+/**
+ * Bir alışkanlığın son `gunSayisi` gününün izi, eskiden yeniye.
+ * Beş durum ayrılır; özellikle `kayitsiz` ile `yapilmadi` karıştırılmaz -
+ * takip başlamadan önceki günleri kaçırılmış saymak, olmayan bir
+ * başarısızlığı ekrana yazar.
+ */
+export function aliskanlikIzi(tanim, onaylar, bugun, gunSayisi = 14) {
+  const ilkKayit = onaylar
+    .filter((o) => o.aliskanlik === tanim.id)
+    .map((o) => o.tarih)
+    .sort()[0];
+
+  const iz = [];
+  for (let i = gunSayisi - 1; i >= 0; i--) {
+    const gun = gunKaydir(bugun, -i);
+    const onay = onayBul(onaylar, tanim.id, gun);
+
+    let durum;
+    if (onay) durum = onay.durum;
+    else if (gun === bugun) durum = bugunBekleniyorMu(tanim, onaylar, gun) ? 'bekliyor' : 'beklenmiyor';
+    else if (!ilkKayit || gun < ilkKayit) durum = 'kayitsiz';
+    else durum = bugunBekleniyorMu(tanim, onaylar, gun) ? 'yapilmadi' : 'beklenmiyor';
+
+    iz.push({ gun, durum });
+  }
+  return iz;
+}
+
 // --- Abonelik -----------------------------------------------------------
 
 /** Aylık gider karşılığı (yıllık olan 12'ye bölünür). Ham TL. */

@@ -1,19 +1,21 @@
 /* Argos.
 
-   Hiyerarşi: bugünkü harcama ve alışkanlıklar birinci sıradadır ve ilk
-   ekranda durur. Abonelik ikinci sıradadır - alt kenarda yalnız SIRADAKİ
-   ödeme görünür, tam liste katlamanın altında kalır. Üç bloğun da başına
-   aynı boyda sayı koymak, aslında eşit olmayan şeyleri eşit gösteriyordu.
+   Üç ayrı görsel biçim, üç ayrı soru:
+     yığılmış şerit  -> bugün para nereye gitti (kategori kimliği, renk)
+     sütunlar        -> hafta nasıl geçiyor (büyüklük karşılaştırması)
+     ızgara          -> alışkanlık sürüyor mu (gün gün durum)
+   Aynı soruyu iki biçimde sormaz, farklı soruları aynı biçimde sormaz.
 
-   Grafik için ayrı alan ayrılmaz: her harcama satırının zemini o kalemin
-   payı kadar doludur. Bilgi taşımayan piksel yok, ama nefes alan boşluk
-   israf sayılmaz - okunmayan yoğunluk da bir kayıptır.
+   Kategori renkleri doğrulanmış bir kategorik paletten gelir; hue sırası
+   sabittir ve kategoriye bağlıdır, sıralamaya değil. Açık temada bu
+   renklerin zeminle kontrastı 3:1'in altında kaldığı için her renk yanında
+   yazılı etiketi vardır - renk tek başına hiçbir bilgiyi taşımaz.
 
-   Tek yazı ailesi (Archivo) iki eksende: sayılar geniş (wdth 112),
-   etiketler dar (wdth 74). İkinci bir aileye gerek yok.
+   Yazı tek aile (Archivo), genişlik ekseniyle ayrışır: sayılar geniş,
+   etiketler dar.
 
-   Köşe kuralı: yapı keskin (radius 0). Yalnız dokunma hedefleri tam
-   yuvarlaktır - yuvarlaklık "buna basılır" demektir, süs değildir. */
+   Köşe kuralı: yapı keskin. Veri uçları 3px yumuşak, dokunma hedefleri
+   tam yuvarlak - yuvarlaklık "buna basılır" demektir. */
 
 :root {
   color-scheme: light dark;
@@ -22,10 +24,19 @@
   --murekkep: #171a24;
   --soluk: #6b7185;
   --cizgi: #d8dae2;
-  --pay: #2743c814;
+  --olu: #c9ccd6;
+  --sutun: #a9aebd;
   --vurgu: #2743c8;
   --vurgu-zayif: #2743c81a;
   --eksi: #a83250;
+
+  /* Kategorik palet, açık zemin için doğrulanmış */
+  --k1: #2a78d6;
+  --k2: #eb6834;
+  --k3: #1baf7a;
+  --k4: #eda100;
+  --k5: #e87ba4;
+  --k6: #8a8fa0;
 
   --olcu: 1.375rem;
   --yazi: 'Archivo', ui-sans-serif, system-ui, sans-serif;
@@ -37,10 +48,19 @@
     --murekkep: #e7e9f0;
     --soluk: #8b91a5;
     --cizgi: #282d3b;
-    --pay: #8ba0ff1c;
+    --olu: #2f3547;
+    --sutun: #454c62;
     --vurgu: #8ba0ff;
     --vurgu-zayif: #8ba0ff1f;
     --eksi: #e0798f;
+
+    /* Aynı sekiz hue, koyu zemin için yeniden adımlanmış */
+    --k1: #3987e5;
+    --k2: #d95926;
+    --k3: #199e70;
+    --k4: #c98500;
+    --k5: #d55181;
+    --k6: #6d748a;
   }
 }
 
@@ -68,17 +88,17 @@ body {
 .sayfa {
   max-width: 30rem;
   margin: 0 auto;
-  padding: 1.35rem var(--olcu) 2.5rem;
+  padding: 1.25rem var(--olcu) 2.5rem;
 }
 
-/* --- Üst şerit: tek satır ----------------------------------------------- */
+/* --- Üst şerit ---------------------------------------------------------- */
 
 .ust {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  padding-bottom: 1.35rem;
+  padding-bottom: 1.1rem;
 }
 
 .tarih {
@@ -102,27 +122,26 @@ body {
   font-stretch: 78%;
 }
 
-/* İlk ekran tam yüksekliktedir; sıradaki ödeme satırı margin-top:auto
-   ile alt kenarına yapışır. Abonelik listesi bu kutunun DIŞINDA kaldığı
-   için ancak kaydırınca görünür. */
+/* İlk ekran tam yüksekliktedir; sıradaki ödeme satırı onun sonudur.
+   Döküm ve abonelik listesi bu kutunun dışında, katlamanın altında kalır. */
 .ilk-ekran {
   display: flex;
   flex-direction: column;
-  min-height: calc(100dvh - 9rem);
+  min-height: calc(100dvh - 10.5rem);
 }
 
 .blok + .blok {
-  margin-top: 3rem;
+  margin-top: 1.9rem;
 }
 
-/* --- Blok başlığı: büyük sayı solda, bağlam sağda ----------------------- */
+/* --- Bugün: büyük sayı + ay bağlamı ------------------------------------- */
 
 .tepe {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.15rem;
+  margin-bottom: 0.95rem;
 }
 
 .buyuk {
@@ -133,11 +152,11 @@ body {
 }
 
 .buyuk b {
-  font-size: 3rem;
+  font-size: 3.125rem;
   font-weight: 700;
   font-stretch: 112%;
   letter-spacing: -0.045em;
-  line-height: 0.92;
+  line-height: 0.9;
 }
 
 .buyuk .etiket {
@@ -148,14 +167,12 @@ body {
   white-space: nowrap;
 }
 
-/* Ay bağlamı: bugünün rakamının tek başına anlamı yok, neyle kıyaslandığı
-   olmadan "çok mu az mı" sorusu cevapsız kalır. */
 .baglam {
   flex: none;
   text-align: right;
   font-size: 0.8125rem;
   font-stretch: 72%;
-  line-height: 1.6;
+  line-height: 1.55;
   color: var(--soluk);
 }
 
@@ -165,76 +182,130 @@ body {
   color: var(--murekkep);
 }
 
-/* --- Harcama satırları -------------------------------------------------- */
+/* --- Yığılmış kategori şeridi ------------------------------------------- */
 
-.kayitlar {
+.serit {
+  display: flex;
+  gap: 2px; /* segmentler arası zemin boşluğu */
+  height: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.serit span {
+  border-radius: 2px;
+  min-width: 3px;
+}
+
+.serit-bos {
+  height: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: 2px;
+  background: var(--olu);
+  opacity: 0.4;
+}
+
+/* Renk tek başına bilgi taşımaz: her segmentin karşılığı burada yazılı. */
+.kategoriler {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 1.1rem;
 }
 
-.kayit {
-  position: relative;
+.kategori {
   display: flex;
-  align-items: baseline;
-  gap: 0.7rem;
-  padding: 0.72rem 0.6rem 0.72rem 0.55rem;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-stretch: 80%;
 }
 
-.kayit + .kayit {
-  border-top: 1px solid var(--cizgi);
-}
-
-/* Satırın zemini, o kalemin günün en büyük kalemine oranı kadar dolu.
-   Ayrı bir grafik alanı istemeden aynı karşılaştırmayı verir. */
-.kayit::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: var(--oran, 0%);
-  background: var(--pay);
-}
-
-.kayit > * {
-  position: relative;
-}
-
-.kayit .saat {
+.kategori .nokta {
   flex: none;
-  width: 2.5rem;
-  font-size: 0.6875rem;
-  font-weight: 500;
-  font-stretch: 68%;
-  letter-spacing: 0.05em;
-  color: var(--soluk);
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 2px;
 }
 
-.kayit .ad {
+.kategori .ad {
   flex: 1;
   min-width: 0;
-  font-size: 0.9375rem;
-  font-stretch: 82%;
   color: var(--soluk);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.kayit .tut {
+.kategori .tut {
   flex: none;
-  font-size: 1.125rem;
   font-weight: 600;
-  font-stretch: 100%;
-  letter-spacing: -0.02em;
+  font-stretch: 94%;
 }
 
-.bos {
-  margin: 0;
-  padding: 0.4rem 0 0.2rem;
-  font-size: 0.9375rem;
-  font-stretch: 78%;
-  line-height: 1.5;
+/* --- Hafta sütunları ---------------------------------------------------- */
+
+.hafta {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.4rem;
+  align-items: end;
+  height: 4.25rem;
+}
+
+.hafta-gun {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 0.35rem;
+}
+
+.sutun {
+  border-radius: 3px 3px 0 0; /* veri ucu yumuşak, taban çizgiye oturur */
+  background: var(--sutun);
+  min-height: 2px;
+}
+
+.hafta-gun[data-bugun] .sutun {
+  background: var(--vurgu);
+}
+
+.hafta-etiket {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  font-stretch: 68%;
+  letter-spacing: 0.04em;
   color: var(--soluk);
+  text-align: center;
+}
+
+.hafta-etiket span[data-bugun] {
+  color: var(--vurgu);
+  font-weight: 600;
+}
+
+.blok-hafta .baslik {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 0.7rem;
+  font-size: 0.8125rem;
+  font-stretch: 74%;
+  color: var(--soluk);
+}
+
+.blok-hafta .baslik b {
+  font-weight: 600;
+  font-stretch: 92%;
+  color: var(--murekkep);
 }
 
 /* --- Alışkanlık --------------------------------------------------------- */
@@ -246,16 +317,18 @@ body {
 }
 
 .aliskanliklar li + li {
+  margin-top: 0.15rem;
   border-top: 1px solid var(--cizgi);
 }
 
 .satir {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'isim kutu' 'iz kutu';
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.35rem 0.85rem;
   width: 100%;
-  min-height: 3.75rem;
-  padding: 0.6rem 0;
+  padding: 0.7rem 0;
   border: 0;
   background: none;
   color: var(--murekkep);
@@ -267,6 +340,14 @@ body {
 .satir:disabled {
   opacity: 0.45;
   cursor: progress;
+}
+
+.satir .ad-satiri {
+  grid-area: isim;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  min-width: 0;
 }
 
 .satir .isim {
@@ -290,14 +371,9 @@ body {
 
 .satir .not {
   flex: none;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-stretch: 72%;
   letter-spacing: 0.02em;
-  color: var(--soluk);
-  text-align: right;
-}
-
-.satir[data-dolu='evet'] .isim {
   color: var(--soluk);
 }
 
@@ -305,9 +381,53 @@ body {
   color: var(--vurgu);
 }
 
+.satir[data-dolu='evet'] .isim {
+  color: var(--soluk);
+}
+
+/* Son 14 günün izi. Dört durum dört ayrı görünüm - kayıt yokluğu ile
+   kaçırılmış gün aynı görünmemeli. */
+.iz {
+  grid-area: iz;
+  display: flex;
+  gap: 3px;
+}
+
+.iz i {
+  flex: 1;
+  height: 0.5rem;
+  max-width: 1.1rem;
+  border-radius: 2px;
+  background: var(--olu);
+}
+
+.iz i[data-d='yapildi'] {
+  background: var(--vurgu);
+}
+
+.iz i[data-d='yapilmadi'] {
+  background: var(--eksi);
+  opacity: 0.75;
+}
+
+.iz i[data-d='beklenmiyor'] {
+  background: var(--olu);
+  opacity: 0.45;
+}
+
+.iz i[data-d='kayitsiz'] {
+  background: var(--olu);
+  opacity: 0.25;
+}
+
+.iz i[data-d='bekliyor'] {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--vurgu);
+}
+
 /* Dokunma hedefi. 44px'in altına inmez. */
 .kutu {
-  flex: none;
+  grid-area: kutu;
   display: grid;
   place-items: center;
   width: 2.75rem;
@@ -340,23 +460,29 @@ body {
   border-style: dashed;
 }
 
-/* --- Sıradaki ödeme: ilk ekranın alt kenarı ----------------------------- */
+/* --- Sıradaki ödeme ----------------------------------------------------- */
 
-/* Sıradaki ödeme içeriğin hemen ardında durur. İlk ekranın artan boşluğu
-   bunun ALTINDA kalır: göz orayı sayfa sonu okur, kaydırınca abonelik
-   listesi gelir. Satırı auto ile alta itmek arada ölü boşluk bırakıyordu. */
 .blok-sonraki {
-  margin-top: 2.5rem;
-  padding-top: 1.35rem;
+  margin-top: 1.9rem;
+  padding-top: 1.1rem;
   border-top: 1px solid var(--cizgi);
 }
 
 .sonraki {
   display: flex;
   align-items: baseline;
-  gap: 0.75rem;
+  gap: 0.7rem;
   font-size: 0.9375rem;
   font-stretch: 82%;
+}
+
+.sonraki .onek {
+  flex: none;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  font-stretch: 68%;
+  letter-spacing: 0.14em;
+  color: var(--soluk);
 }
 
 .sonraki .kim {
@@ -369,15 +495,6 @@ body {
   white-space: nowrap;
 }
 
-.sonraki .onek {
-  flex: none;
-  font-size: 0.6875rem;
-  font-weight: 500;
-  font-stretch: 68%;
-  letter-spacing: 0.14em;
-  color: var(--soluk);
-}
-
 .sonraki .ne-zaman {
   flex: none;
   font-size: 0.8125rem;
@@ -385,65 +502,101 @@ body {
   color: var(--vurgu);
 }
 
-/* --- Abonelik listesi: katlamanın altında ------------------------------- */
+/* --- Katlamanın altı ---------------------------------------------------- */
 
-.blok-abonelik {
-  margin-top: 3rem;
-  padding-top: 1.35rem;
+.alt-blok {
+  margin-top: 2.75rem;
+  padding-top: 1.1rem;
   border-top: 1px solid var(--cizgi);
 }
 
-.abone-baslik {
+.alt-baslik {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
-  margin: 0 0 0.85rem;
+  margin: 0 0 0.75rem;
 }
 
-.abone-baslik b {
-  font-size: 1.5rem;
+.alt-baslik b {
+  font-size: 1.375rem;
   font-weight: 700;
   font-stretch: 105%;
   letter-spacing: -0.025em;
 }
 
-.abone-baslik span {
+.alt-baslik span {
   font-size: 0.875rem;
   font-stretch: 74%;
   color: var(--soluk);
 }
 
-.abone-satir {
+.dokum {
   display: flex;
   align-items: baseline;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
+  gap: 0.7rem;
+  padding: 0.45rem 0;
   font-size: 0.9375rem;
   font-stretch: 84%;
 }
 
-.abone-satir + .abone-satir {
+.dokum + .dokum {
   border-top: 1px solid var(--cizgi);
 }
 
-.abone-satir .tut {
+.dokum .nokta {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+  transform: translateY(-1px);
+}
+
+.dokum .saat {
+  flex: none;
+  width: 2.5rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  font-stretch: 68%;
+  letter-spacing: 0.05em;
+  color: var(--soluk);
+}
+
+.dokum .ad {
+  flex: 1;
+  min-width: 0;
+  color: var(--soluk);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dokum .tut {
   flex: none;
   margin-left: auto;
   font-weight: 600;
   font-stretch: 96%;
 }
 
-.abone-satir .ne-zaman {
+.dokum .ne-zaman {
   flex: none;
-  width: 6.5rem;
+  width: 6.25rem;
   font-size: 0.75rem;
   font-stretch: 72%;
   color: var(--soluk);
   text-align: right;
 }
 
+.bos {
+  margin: 0;
+  padding: 0.35rem 0 0.15rem;
+  font-size: 0.9375rem;
+  font-stretch: 78%;
+  line-height: 1.5;
+  color: var(--soluk);
+}
+
 .dipnot {
-  margin: 0.85rem 0 0;
+  margin: 0.8rem 0 0;
   font-size: 0.75rem;
   font-stretch: 74%;
   line-height: 1.55;
