@@ -53,6 +53,18 @@ export function gunFarki(a, b) {
   return Math.round(ms / 86400000);
 }
 
+/**
+ * "14:30" -> 870 (gün başından beri geçen dakika).
+ * Saat alanı opsiyoneldir; geçersiz veya eksikse null döner ve kayıt
+ * zaman ekseninde değil, saatsizler arasında gösterilir.
+ */
+export function dakikaya(saat) {
+  if (typeof saat !== 'string') return null;
+  const e = /^([01]?[0-9]|2[0-3]):([0-5][0-9])$/.exec(saat.trim());
+  if (!e) return null;
+  return Number(e[1]) * 60 + Number(e[2]);
+}
+
 /** Gün anahtarını n gün ileri (negatifse geri) kaydırır. */
 export function gunKaydir(anahtar, n) {
   const d = new Date(anahtar + 'T00:00:00');

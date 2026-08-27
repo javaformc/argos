@@ -3,28 +3,33 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#14131C" />
+    <meta name="theme-color" content="#eff0f4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#12151e" media="(prefers-color-scheme: dark)" />
     <title>Argos</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Tek aile, iki eksen: genişlik (wdth) başlıkla veriyi ayırır,
+         ikinci bir yazı tipine gerek bırakmaz. -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="stil.css" />
   </head>
 
   <body>
-    <header class="ust">
-      <span class="marka">ARGOS</span>
-      <span class="tarih" id="tarih"></span>
-    </header>
+    <div class="sayfa">
+      <header class="gun-basligi">
+        <p class="gun-no" id="gun-no"></p>
+        <h1 class="gun-ad" id="gun-ad"></h1>
+        <span class="imza">argos</span>
+      </header>
 
-    <main id="ekran" class="ekran" aria-busy="true">
-      <p class="yukleniyor">Nöbet devralınıyor…</p>
-    </main>
+      <main id="ekran" aria-busy="true">
+        <p class="bekle">gün açılıyor</p>
+      </main>
+    </div>
 
     <script type="module" src="js/ana.js"></script>
   </body>

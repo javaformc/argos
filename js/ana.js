@@ -5,7 +5,14 @@ import * as H from './hesap.js';
 import { yerelKaynak, veriYukle, onayIsaretle } from './veri.js';
 
 const AKSAM_ESIGI = 22; // kararlar.md > Ana ekran saate göre yeniden sıralanır
-const NOBET_GUN = 14;
+const EN_AZ_ARALIK = 42; // iki kayıt arasındaki asgari dikey mesafe (px)
+
+// Eksen yüksekliği stil.css'te tanımlıdır ve buradan okunur. İki yerde ayrı
+// yazılınca sessizce ayrıştı: JS 448'e göre konumlandırırken kutu 408'di ve
+// son saat etiketi toplamın üstüne taştı.
+const EKSEN_H =
+  parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--eksen-h')) ||
+  408;
 
 const ekran = document.getElementById('ekran');
 const kaynak = yerelKaynak();
@@ -17,172 +24,227 @@ const el = (etiket, sinif, metin) => {
   return d;
 };
 
-const KATEGORI_ADI = {
-  'yeme-icme': 'yeme içme',
-  'kisisel-bakim': 'kişisel bakım',
-  ulasim: 'ulaşım',
-  saglik: 'sağlık',
-  egitim: 'eğitim',
-  eglence: 'eğlence',
-  diger: 'diğer',
-};
-
-const kategoriAdi = (k) => KATEGORI_ADI[k] || k;
-
-const GUNLER = ['paz', 'pzt', 'sal', 'çar', 'per', 'cum', 'cmt'];
+const GUNLER = ['pazar', 'pazartesi', 'salı', 'çarşamba', 'perşembe', 'cuma', 'cumartesi'];
 const AYLAR = [
   'ocak', 'şubat', 'mart', 'nisan', 'mayıs', 'haziran',
   'temmuz', 'ağustos', 'eylül', 'ekim', 'kasım', 'aralık',
 ];
 
-function tarihYaz(d) {
-  return `${GUNLER[d.getDay()]} ${d.getDate()} ${AYLAR[d.getMonth()]}`;
+const KATEGORI_ADI = {
+  'yeme-icme': 'yeme içme',
+  'kisisel-bakim': 'kişisel bakım',
+  'toplu-tasima': 'toplu taşıma',
+  ulasim: 'ulaşım',
+  saglik: 'sağlık',
+  egitim: 'eğitim',
+  eglence: 'eğlence',
+  diger: 'diğer',
+  'elektronik-parca': 'elektronik parça',
+  'spor-salonu': 'spor salonu',
+  dogalgaz: 'doğalgaz',
+  yazilim: 'yazılım',
+  tatli: 'tatlı',
+  kirtasiye: 'kırtasiye',
+};
+
+const oku = (k) => KATEGORI_ADI[k] || k;
+
+/** Bir harcamayı tek satırda anlatır: yer varsa yer, yoksa kategori. */
+function kayitAdi(h) {
+  const alt = h.alt ? oku(h.alt) : null;
+  const kat = oku(h.kategori);
+  if (h.yer) return alt ? `${h.yer}, ${alt}` : `${h.yer}, ${kat}`;
+  return alt ? `${kat}, ${alt}` : kat;
 }
 
-// --- Nöbet şeridi --------------------------------------------------------
+// --- Zaman ekseni --------------------------------------------------------
+
+const yuzde = (dakika) => (dakika / 1440) * EKSEN_H;
 
 /**
- * Son NOBET_GUN günün her biri için bir çentik.
- * Çentik dört durumdan birini anlatır: yapıldı, kaçırıldı, beklenmiyor,
- * (yalnız bugün için) bekliyor.
+ * Günü çizer: saat etiketleri, harcamalar kendi saatinde, "şu an" çizgisi.
+ *
+ * Aynı saate yakın düşen kayıtlar üst üste binerdi; her kayıt bir öncekinden
+ * en az EN_AZ_ARALIK kadar aşağıda durmaya zorlanır. Sıra korunur, sadece
+ * konum kaydırılır.
  */
-function nobetSeridi(tanim, onaylar, bugun) {
-  const seritKutu = el('div', 'nobet');
-  seritKutu.setAttribute('role', 'img');
+function gunEkseni(harcamalar, kur, simdi, bugunMu) {
+  const gun = el('div', 'gun');
 
-  // Takibin başladığı gün. Öncesinde kayıt YOK demek, kaçırıldı demek değil —
-  // ikisini aynı göstermek olmayan bir başarısızlığı ekrana yazar.
-  const ilkKayit = onaylar
-    .filter((o) => o.aliskanlik === tanim.id)
-    .map((o) => o.tarih)
-    .sort()[0];
-
-  let yapilan = 0;
-  for (let i = NOBET_GUN - 1; i >= 0; i--) {
-    const gun = H.gunKaydir(bugun, -i);
-    const onay = H.onayBul(onaylar, tanim.id, gun);
-
-    let durum;
-    if (onay) {
-      durum = onay.durum;
-      if (onay.durum === 'yapildi') yapilan++;
-    } else if (gun === bugun) {
-      durum = H.bugunBekleniyorMu(tanim, onaylar, bugun) ? 'bekliyor' : 'beklenmiyor';
-    } else if (!ilkKayit || gun < ilkKayit) {
-      durum = 'kayitsiz';
-    } else {
-      // Geçmiş bir gün için beklenip beklenmediği o günün kendi durumundan çıkar.
-      durum = H.bugunBekleniyorMu(tanim, onaylar, gun) ? 'yapilmadi' : 'beklenmiyor';
-    }
-
-    const centik = el('span', 'centik');
-    centik.dataset.durum = durum;
-    if (gun === bugun) centik.dataset.bugun = '';
-    centik.style.animationDelay = `${(NOBET_GUN - 1 - i) * 32}ms`;
-    seritKutu.append(centik);
+  for (let s = 0; s <= 24; s += 3) {
+    const etiket = el('span', 'saat-etiket', String(s).padStart(2, '0'));
+    etiket.style.top = `${yuzde(s * 60)}px`;
+    gun.append(etiket);
   }
 
-  seritKutu.setAttribute(
-    'aria-label',
-    `Son ${NOBET_GUN} günün nöbeti: ${yapilan} gün işaretli`
-  );
-  return seritKutu;
+  const saatli = harcamalar
+    .map((h) => ({ h, dk: H.dakikaya(h.saat) }))
+    .filter((x) => x.dk !== null)
+    .sort((a, b) => a.dk - b.dk);
+
+  let oncekiUst = -Infinity;
+  saatli.forEach((x, i) => {
+    const ust = Math.min(
+      Math.max(yuzde(x.dk), oncekiUst + EN_AZ_ARALIK),
+      EKSEN_H - 18
+    );
+    oncekiUst = ust;
+
+    const satir = el('div', 'kayit');
+    satir.style.top = `${ust}px`;
+    satir.style.animationDelay = `${i * 45}ms`;
+    satir.append(
+      el('span', 'tutar', H.bicimle(H.gosterimTL(x.h.tutar, x.h.birim || 'TRY', kur))),
+      el('span', 'nerede', kayitAdi(x.h)),
+      el('span', 'ne-zaman', x.h.saat)
+    );
+    gun.append(satir);
+  });
+
+  if (harcamalar.length === 0) {
+    gun.append(
+      el(
+        'p',
+        'gun-bos',
+        bugunMu
+          ? 'Gün henüz yazılmadı. Akşam özetinde anlattığın her şey buraya düşer.'
+          : 'Bu güne kayıt girilmemiş.'
+      )
+    );
+  }
+
+  if (bugunMu) {
+    // Eksenin geçmiş kısmı dolar; ucu şu andadır.
+    const dk = simdi.getHours() * 60 + simdi.getMinutes();
+    const gecen = el('div', 'simdi');
+    gecen.style.height = `${yuzde(dk)}px`;
+    gecen.setAttribute('role', 'img');
+    gecen.setAttribute(
+      'aria-label',
+      `Saat ${String(simdi.getHours()).padStart(2, '0')}:${String(simdi.getMinutes()).padStart(2, '0')}`
+    );
+    gun.append(gecen);
+  }
+
+  return gun;
 }
 
-// --- Alışkanlık bölümü ---------------------------------------------------
+function gunBlogu(veri, bugun, simdi) {
+  const blok = el('section', 'blok blok-gun');
+  const bugunku = H.gununHarcamalari(veri.harcamalar, bugun);
+
+  blok.append(gunEkseni(bugunku, veri.kur, simdi, true));
+
+  const toplam = el('div', 'toplam');
+  toplam.append(
+    el('b', null, H.bicimle(H.yuvarla(H.toplamTL(bugunku, veri.kur)))),
+    el('span', 'birim', 'lira, bugün')
+  );
+
+  // Saati olmayan kayıtlar eksende yerini bulamaz. Toplama girerler ama
+  // sayıyı sessizce şişirmemeleri için kaç tane oldukları söylenir.
+  const saatsiz = bugunku.filter((h) => H.dakikaya(h.saat) === null).length;
+  if (saatsiz > 0) {
+    toplam.append(
+      el(
+        'span',
+        'saatsiz',
+        `${saatsiz} kaydın saati yok, eksende görünmüyor`
+      )
+    );
+  }
+
+  blok.append(toplam);
+  return blok;
+}
+
+// --- Alışkanlık ----------------------------------------------------------
 
 function seriMetni(tanim, onaylar, bugun) {
-  if (tanim.siklik?.tip === 'haftalik') {
+  if (tanim.siklik && tanim.siklik.tip === 'haftalik') {
     const d = H.haftalikDurum(tanim, onaylar, bugun);
-    return { sayi: `${d.yapilan}/${d.hedef}`, etiket: 'bu hafta' };
+    return `bu hafta ${d.yapilan}/${d.hedef}`;
   }
   const seri = H.seriHesapla(tanim, onaylar, bugun);
   if (seri === 0) return null;
-  return {
-    sayi: String(seri),
-    etiket: tanim.siklik?.tip === 'gun-arasi' ? 'tur kesintisiz' : 'gün kesintisiz',
-  };
+  const birim = tanim.siklik && tanim.siklik.tip === 'gun-arasi' ? 'tur' : 'gün';
+  return `${seri} ${birim} kesintisiz`;
 }
 
-function durumMetni(tanim, onay, bekleniyor) {
-  if (onay?.durum === 'yapildi') return 'bugün işaretlendi';
-  if (onay?.durum === 'yapilmadi') return 'bugün kaçırıldı';
-  if (!bekleniyor) return 'bugün serbest — sıradaki tur yarın';
-  return 'bugün bekleniyor';
+function durumCumlesi(onay, bekleniyor, seri) {
+  if (onay && onay.durum === 'yapildi') {
+    return seri ? ['bugün işaretlendi, ', seri] : ['bugün işaretlendi', ''];
+  }
+  if (onay && onay.durum === 'yapilmadi') return ['bugün kaçırıldı', ''];
+  if (!bekleniyor) return ['bugün serbest, sıradaki tur yarın', ''];
+  return seri ? ['bugün bekleniyor, ', seri] : ['bugün bekleniyor', ''];
 }
 
-function aliskanlikBolumu(veri, bugun, yenile) {
-  const bolum = el('section', 'bolum bolum-aliskanlik');
+function aliskanlikBlogu(veri, bugun, yenile) {
+  const blok = el('section', 'blok blok-aliskanlik');
   const tanimlar = veri.tanimlar;
 
   if (tanimlar.length === 0) {
-    bolum.append(el('h2', 'baslik', 'Alışkanlık'));
-    bolum.append(el('p', 'bos', 'Tanımlı alışkanlık yok. Claude ekleyebilir.'));
-    return bolum;
+    blok.append(el('p', 'ana-durum', 'Tanımlı alışkanlık yok. Claude ekleyebilir.'));
+    return blok;
   }
 
   const ana = tanimlar.find((t) => t.ana) || tanimlar[0];
   const digerleri = tanimlar.filter((t) => t !== ana);
 
-  const anaOnay = H.onayBul(veri.onaylar, ana.id, bugun);
-  const anaBekleniyor = H.bugunBekleniyorMu(ana, veri.onaylar, bugun);
-  const isaretli = anaOnay?.durum === 'yapildi';
+  const onay = H.onayBul(veri.onaylar, ana.id, bugun);
+  const bekleniyor = H.bugunBekleniyorMu(ana, veri.onaylar, bugun);
+  const dolu = !!onay && onay.durum === 'yapildi';
 
-  bolum.append(el('h2', 'baslik', 'Nöbet'));
-  bolum.append(nobetSeridi(ana, veri.onaylar, bugun));
-  bolum.append(el('h3', 'ana-ad', ana.ad));
+  const satir = el('div', 'ana-satir');
+  satir.append(el('h2', 'ana-ad', ana.ad));
 
-  const durum = el('p', 'ana-durum', durumMetni(ana, anaOnay, anaBekleniyor));
-  durum.dataset.bekleniyor = anaBekleniyor && !anaOnay ? 'evet' : 'hayir';
-  bolum.append(durum);
-
-  // Buton adı duruma göre DEĞİŞMEZ. Bir kontrolün adı ne yaptığını söyler;
-  // yapılıp yapılmadığını dolu/boş hali ve üstteki durum satırı söyler.
-  const dugme = el('button', 'isaret', 'Yaptım');
+  // Buton adı duruma göre değişmez. Bir kontrolün adı ne yaptığını söyler;
+  // yapılıp yapılmadığını dolu/boş hali ve alttaki cümle söyler.
+  const dugme = el('button', 'basilir', 'yaptım');
   dugme.type = 'button';
-  dugme.dataset.isaretli = isaretli ? 'evet' : 'hayir';
-  dugme.setAttribute('aria-pressed', String(isaretli));
-  dugme.addEventListener('click', () => isaretleVeCiz(dugme, veri, ana, bugun, yenile));
-  bolum.append(dugme);
+  dugme.dataset.dolu = dolu ? 'evet' : 'hayir';
+  dugme.setAttribute('aria-pressed', String(dolu));
+  dugme.addEventListener('click', () => isaretle(dugme, veri, ana, bugun, yenile));
+  satir.append(dugme);
+  blok.append(satir);
 
-  const seri = seriMetni(ana, veri.onaylar, bugun);
-  if (seri) {
-    const p = el('p', 'seri');
-    p.append(el('b', null, seri.sayi), ` ${seri.etiket}`);
-    bolum.append(p);
-  }
+  const [bas, vurgu] = durumCumlesi(onay, bekleniyor, seriMetni(ana, veri.onaylar, bugun));
+  const cumle = el('p', 'ana-durum', bas);
+  if (vurgu) cumle.append(el('b', null, vurgu));
+  blok.append(cumle);
 
   if (digerleri.length) {
     const liste = el('ul', 'yan-liste');
     for (const t of digerleri) {
-      const onay = H.onayBul(veri.onaylar, t.id, bugun);
-      const dolu = onay?.durum === 'yapildi';
+      const o = H.onayBul(veri.onaylar, t.id, bugun);
+      const d = !!o && o.durum === 'yapildi';
 
       const dgm = el('button', 'yan');
       dgm.type = 'button';
-      dgm.dataset.isaretli = dolu ? 'evet' : 'hayir';
-      dgm.setAttribute('aria-pressed', String(dolu));
-      dgm.append(el('span', 'kutu'), el('span', 'yan-ad', t.ad));
+      dgm.dataset.dolu = d ? 'evet' : 'hayir';
+      dgm.setAttribute('aria-pressed', String(d));
+      dgm.append(el('span', 'halka'), el('span', 'yan-ad', t.ad));
 
       const s = seriMetni(t, veri.onaylar, bugun);
-      if (s) dgm.append(el('span', 'yan-not', `${s.sayi} ${s.etiket}`));
+      if (s) dgm.append(el('span', 'yan-not', s));
 
-      dgm.addEventListener('click', () => isaretleVeCiz(dgm, veri, t, bugun, yenile));
+      dgm.addEventListener('click', () => isaretle(dgm, veri, t, bugun, yenile));
 
-      const satir = el('li');
-      satir.append(dgm);
-      liste.append(satir);
+      const li = el('li');
+      li.append(dgm);
+      liste.append(li);
     }
-    bolum.append(liste);
+    blok.append(liste);
   }
 
-  return bolum;
+  return blok;
 }
 
 /** Tek tuş işaretleme. Yazma başarısızsa ekran eski haline döner. */
-async function isaretleVeCiz(dugme, veri, tanim, bugun, yenile) {
+async function isaretle(dugme, veri, tanim, bugun, yenile) {
   const suAn = H.onayBul(veri.onaylar, tanim.id, bugun);
-  const yeniDurum = suAn?.durum === 'yapildi' ? 'yapilmadi' : 'yapildi';
+  const yeniDurum = suAn && suAn.durum === 'yapildi' ? 'yapilmadi' : 'yapildi';
 
   dugme.disabled = true;
   try {
@@ -194,89 +256,47 @@ async function isaretleVeCiz(dugme, veri, tanim, bugun, yenile) {
   }
 }
 
-// --- Harcama bölümü ------------------------------------------------------
+// --- Abonelik ------------------------------------------------------------
 
-function harcamaBolumu(veri, bugun) {
-  const bolum = el('section', 'bolum bolum-harcama');
-  bolum.append(el('h2', 'baslik', 'Bugün'));
-
-  const bugunku = H.gununHarcamalari(veri.harcamalar, bugun);
-
-  if (bugunku.length === 0) {
-    bolum.append(el('p', 'bos', 'Bugün için kayıt yok. Akşam özetinde anlatınca düşer.'));
-    return bolum;
-  }
-
-  const toplamHam = H.toplamTL(bugunku, veri.kur);
-  const tutar = el('p', 'tutar', H.bicimle(H.yuvarla(toplamHam)));
-  tutar.append(el('span', 'simge', '₺'));
-  bolum.append(tutar);
-
-  const kirilim = H.kategoriKirilimi(bugunku, veri.kur);
-  const liste = el('ul', 'kirilim');
-  for (const k of kirilim) {
-    const li = el('li');
-    li.style.setProperty('--pay', `${Math.round((k.tutar / toplamHam) * 100)}%`);
-    li.append(
-      el('span', 'ad', kategoriAdi(k.kategori)),
-      el('span', 'deger', `${H.bicimle(H.yuvarla(k.tutar))} ₺`)
-    );
-    liste.append(li);
-  }
-  bolum.append(liste);
-
-  return bolum;
-}
-
-// --- Abonelik bölümü -----------------------------------------------------
-
-function abonelikBolumu(veri, bugun) {
-  const bolum = el('section', 'bolum bolum-abonelik');
+function abonelikBlogu(veri, bugun) {
+  const blok = el('section', 'blok blok-abonelik');
   const aktif = veri.abonelikler.filter((a) => a.aktif);
-
-  const ust = el('div', 'abone-ust');
-  ust.append(el('h2', 'baslik', 'Abonelik'));
 
   const toplam = el('p', 'abone-toplam');
   toplam.append(
-    H.bicimle(H.yuvarla(H.aylikAbonelikToplami(veri.abonelikler, veri.kur))),
-    el('span', null, ' ₺/ay')
+    el('b', null, H.bicimle(H.yuvarla(H.aylikAbonelikToplami(veri.abonelikler, veri.kur)))),
+    el('span', null, `lira aylık abonelik, ${aktif.length} adet`)
   );
-  ust.append(toplam);
-  bolum.append(ust);
+  blok.append(toplam);
 
   if (aktif.length === 0) {
-    bolum.append(el('p', 'bos', 'Aktif abonelik yok.'));
-    return bolum;
+    blok.append(el('p', 'ana-durum', 'Aktif abonelik yok.'));
+    return blok;
   }
 
-  const yaklasan = H.yaklasanOdemeler(veri.abonelikler, bugun, 7);
-  for (const y of yaklasan) {
-    const satir = el('div', 'uyari');
+  for (const y of H.yaklasanOdemeler(veri.abonelikler, bugun, 7)) {
+    const satir = el('div', 'abone-satir');
     satir.append(el('span', null, y.abonelik.ad));
     satir.append(
-      el('span', 'kalan', y.kalanGun === 0 ? 'bugün' : `${y.kalanGun} gün sonra`)
+      el('span', 'ne-zaman', y.kalanGun === 0 ? 'bugün ödenecek' : `${y.kalanGun} gün sonra`)
     );
-    bolum.append(satir);
+    blok.append(satir);
   }
 
-  // Yenileme günü bilinmeyenleri saklamak yerine söyle: eksik veri, ekranda
-  // eksik görünmeli. Tahmin üretmek yanlış güven verir.
+  // Yenileme günü bilinmeyeni saklamak yerine söyle: eksik veri ekranda da
+  // eksik görünmeli, tahmin üretmek yanlış güven verir.
   const bilinmeyen = aktif.filter((a) => a.yenileme_gunu == null);
   if (bilinmeyen.length) {
-    bolum.append(
+    blok.append(
       el(
         'p',
-        'belirsiz',
-        `${bilinmeyen.length} aboneliğin yenileme günü bilinmiyor: ` +
-          bilinmeyen.map((a) => a.ad).join(', ')
+        'dipnot',
+        `Yenileme günü bilinmiyor: ${bilinmeyen.map((a) => a.ad).join(', ')}.`
       )
     );
-  } else if (yaklasan.length === 0) {
-    bolum.append(el('p', 'bos', 'Bu hafta ödeme yok.'));
   }
 
-  return bolum;
+  return blok;
 }
 
 // --- Çizim ---------------------------------------------------------------
@@ -294,7 +314,10 @@ function hataGoster(hata, baslik) {
 async function ciz() {
   const simdi = new Date();
   const bugun = H.gunAnahtari(simdi);
-  document.getElementById('tarih').textContent = tarihYaz(simdi);
+
+  document.getElementById('gun-no').textContent = String(simdi.getDate());
+  document.getElementById('gun-ad').textContent =
+    `${AYLAR[simdi.getMonth()]}, ${GUNLER[simdi.getDay()]}`;
 
   let veri;
   try {
@@ -304,13 +327,24 @@ async function ciz() {
     return;
   }
 
-  ekran.dataset.kip = simdi.getHours() >= AKSAM_ESIGI ? 'aksam' : 'gunduz';
+  // Gündüz gün akışı önce gelir, akşam (22:00 sonrası) alışkanlık öne çıkar.
+  // Sıra CSS order ile değil burada kurulur: bölüm ayracı DOM sırasına
+  // bakar, order kullanılınca ayraç yanlış bloğun üstünde çıkıyordu.
+  // Karar: kararlar.md > Ana ekran saate göre yeniden sıralanır
+  const aksam = simdi.getHours() >= AKSAM_ESIGI;
+  const gun = gunBlogu(veri, bugun, simdi);
+  const aliskanlik = aliskanlikBlogu(veri, bugun, ciz);
+
+  ekran.dataset.kip = aksam ? 'aksam' : 'gunduz';
   ekran.replaceChildren(
-    aliskanlikBolumu(veri, bugun, ciz),
-    harcamaBolumu(veri, bugun),
-    abonelikBolumu(veri, bugun)
+    ...(aksam ? [aliskanlik, gun] : [gun, aliskanlik]),
+    abonelikBlogu(veri, bugun)
   );
   ekran.removeAttribute('aria-busy');
 }
 
 ciz();
+
+// Gün ilerledikçe "şu an" çizgisi de ilerlemeli. Dakikada bir yeniden
+// çizmek yeterli; daha sık çizmek görünür bir şey değiştirmez.
+setInterval(ciz, 60000);

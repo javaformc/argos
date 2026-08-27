@@ -196,3 +196,21 @@ test('yaklaşan ödemeler yakından uzağa, pencere dışı elenir', () => {
     'pasif abonelik uyarı vermemeli'
   );
 });
+
+// --- Saat ayrıştırma ----------------------------------------------------
+
+test('saat dakikaya çevrilir, geçersiz saat null döner', () => {
+  assert.equal(h.dakikaya('00:00'), 0);
+  assert.equal(h.dakikaya('08:40'), 520);
+  assert.equal(h.dakikaya('23:59'), 1439);
+  assert.equal(h.dakikaya('9:05'), 545, 'tek haneli saat kabul edilir');
+});
+
+test('eksik veya bozuk saat eksende yer almaz', () => {
+  assert.equal(h.dakikaya(undefined), null);
+  assert.equal(h.dakikaya(''), null);
+  assert.equal(h.dakikaya('24:00'), null, '24:00 ertesi gündür');
+  assert.equal(h.dakikaya('12:60'), null);
+  assert.equal(h.dakikaya('aksam'), null);
+  assert.equal(h.dakikaya(830), null, 'sayı değil, metin beklenir');
+});
