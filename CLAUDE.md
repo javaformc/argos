@@ -50,6 +50,12 @@ Test koşucusu: Node yerleşik `node:test`. Barındırma: GitHub Pages.
 | Uzun koşu (soak) | **uygulanmıyor** — durumsuz gösterici, zamanla biriken durum yok |
 
 ## Aktif ek araçlar
+- **Playwright MCP** — `gorsel-kontrol` bu projede bununla koşuyor.
+  Headless çalışır, tarayıcı eklentisinin bağlı olmasını beklemez.
+  Kurulmasaydı her UI değişikliğinde ekranı kullanıcının açması gerekirdi.
+- **İki dev sunucu kalıbı** — 4173 gerçek veri (`C:wseri`), 4174
+  `ARGOS_VERI` ile örnek veri. Gerçek veri boşken dolu ekranı görmenin
+  tek dürüst yolu bu; sahte veriyi gerçek klasöre yazmak yerine ayrı kök.
 <!-- Bu proje için kurulan skill/MCP: ne için kuruldu. -->
 
 ## Bu projeye özgü tuzaklar

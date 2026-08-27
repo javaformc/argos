@@ -32,9 +32,9 @@ Ayrıntı ve gerekçeler: `C:\ws\projeler\Argos\ozet.md`
 Hedef: `node dev/sunucu.js` ile açılan sayfa vault'taki gerçek veriyi
 gösteriyor; alışkanlık, bugünkü harcama ve yaklaşan abonelik ekranda.
 
-- [ ] **P1** — Dev sunucu + veri katmanı soyutlaması (yerel kaynak) — `BEKLIYOR`
-- [ ] **P2** — Hesap çekirdeği: kur çevirme, `ceil` yuvarlama, onay birleştirme, seri, sonraki ödeme — `BEKLIYOR`
-- [ ] **P3** — Ana ekran (telefon düzeni, 22:00 eşiğiyle sıralama) — `BEKLIYOR`
+- [x] **P1** — Dev sunucu + veri katmanı soyutlaması (yerel kaynak) — `BITTI`
+- [x] **P2** — Hesap çekirdeği: kur çevirme, `ceil` yuvarlama, onay birleştirme, seri, sonraki ödeme — `BITTI`
+- [x] **P3** — Ana ekran (telefon düzeni, 22:00 eşiğiyle sıralama) — `BITTI`
 
 ### Milestone 2 — Gerçek kanal: veri depodan geliyor, onay geri yazılıyor
 Hedef: Telefondan açılan sayfa `argos-veri` deposundan okuyor ve
