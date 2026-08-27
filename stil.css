@@ -1,0 +1,493 @@
+/* Argos — nöbet defteri.
+   Tek vurgu rengi vardır: fener amberi. Durum farkı renkle değil,
+   ışığın yanıp yanmamasıyla anlatılır. Kül kırmızısı yalnız bilerek
+   kaçırılmış bir gün için görünür ve nadirdir. */
+
+:root {
+  --zemin: #14131c;
+  --kat: #1c1b26;
+  --kat-ust: #232130;
+  --cizgi: #2c2a3a;
+  --metin: #edebf2;
+  --soluk: #8b8799;
+  --sonuk: #46425a;
+  --amber: #ffb25c;
+  --amber-loş: #ffb25c33;
+  --kul: #c4566a;
+
+  --olcu: 1.5rem;
+  --yuvarlak: 14px;
+
+  --display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --govde: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--zemin);
+  color: var(--metin);
+  font-family: var(--govde);
+  font-size: 16px;
+  line-height: 1.45;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+  /* Fenerin üstten düşen soluk ışığı — tek atmosfer öğesi. */
+  background-image: radial-gradient(120% 60% at 50% -10%, #201d2e 0%, var(--zemin) 60%);
+}
+
+/* --- Üst şerit --------------------------------------------------------- */
+
+.ust {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem var(--olcu) 0.9rem;
+  border-bottom: 1px solid var(--cizgi);
+}
+
+.marka {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  color: var(--amber);
+}
+
+.tarih {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--soluk);
+  text-transform: lowercase;
+}
+
+/* --- Yerleşim ---------------------------------------------------------- */
+
+.ekran {
+  display: flex;
+  flex-direction: column;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 0 var(--olcu) 3rem;
+}
+
+.yukleniyor {
+  padding: 4rem 0;
+  text-align: center;
+  color: var(--soluk);
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+}
+
+.bolum {
+  padding: 1.75rem 0;
+  border-bottom: 1px solid var(--cizgi);
+}
+
+.bolum:last-child {
+  border-bottom: 0;
+}
+
+/* Gündüz alışkanlık listesi bilgidir, akşam görevdir.
+   DOM sırası akşam düzenidir; gündüz harcama öne alınır.
+   Karar: kararlar.md > Ana ekran saate göre yeniden sıralanır */
+.ekran[data-kip='gunduz'] .bolum-harcama {
+  order: -1;
+}
+
+.baslik {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--soluk);
+  margin: 0 0 1rem;
+}
+
+/* --- Nöbet şeridi (imza) ----------------------------------------------- */
+
+.nobet {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 46px;
+  margin-bottom: 1.5rem;
+}
+
+.centik {
+  flex: 1;
+  border-radius: 2px;
+  background: var(--sonuk);
+  height: 38%;
+  transform-origin: bottom;
+  animation: centik-ac 420ms cubic-bezier(0.2, 0.9, 0.3, 1) backwards;
+}
+
+.centik[data-durum='yapildi'] {
+  background: var(--amber);
+  height: 100%;
+  box-shadow: 0 0 14px -2px var(--amber-loş);
+}
+
+.centik[data-durum='yapilmadi'] {
+  background: var(--kul);
+  height: 26%;
+}
+
+.centik[data-durum='kayitsiz'] {
+  background: var(--sonuk);
+  height: 14%;
+  opacity: 0.4;
+}
+
+.centik[data-durum='beklenmiyor'] {
+  background: var(--sonuk);
+  height: 20%;
+  opacity: 0.55;
+}
+
+.centik[data-bugun] {
+  outline: 1px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.centik[data-bugun][data-durum='bekliyor'] {
+  animation: centik-ac 420ms cubic-bezier(0.2, 0.9, 0.3, 1) backwards,
+    nabiz 2.6s ease-in-out 600ms infinite;
+}
+
+@keyframes centik-ac {
+  from {
+    transform: scaleY(0.05);
+    opacity: 0;
+  }
+}
+
+@keyframes nabiz {
+  50% {
+    opacity: 0.42;
+  }
+}
+
+/* --- Ana alışkanlık ---------------------------------------------------- */
+
+.ana-ad {
+  font-family: var(--display);
+  font-size: clamp(2rem, 9vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.ana-durum {
+  margin: 0.4rem 0 1.25rem;
+  color: var(--soluk);
+  font-size: 0.9375rem;
+}
+
+.ana-durum[data-bekleniyor='evet'] {
+  color: var(--amber);
+}
+
+.isaret {
+  width: 100%;
+  padding: 1.05rem 1.25rem;
+  border: 1px solid var(--amber);
+  border-radius: var(--yuvarlak);
+  background: transparent;
+  color: var(--amber);
+  font-family: var(--govde);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, transform 90ms ease;
+}
+
+.isaret:hover {
+  background: var(--amber-loş);
+}
+
+.isaret:active {
+  transform: scale(0.985);
+}
+
+.isaret[data-isaretli='evet'] {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #1a1206;
+}
+
+.isaret[data-isaretli='evet']:hover {
+  background: #ffc37e;
+}
+
+.isaret:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+.seri {
+  margin: 0.9rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--soluk);
+  text-transform: uppercase;
+}
+
+.seri b {
+  color: var(--metin);
+  font-weight: 600;
+}
+
+/* --- İkincil alışkanlıklar --------------------------------------------- */
+
+.yan-liste {
+  list-style: none;
+  margin: 1.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.yan {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--cizgi);
+  border-radius: var(--yuvarlak);
+  background: var(--kat);
+  color: var(--metin);
+  font-family: var(--govde);
+  font-size: 0.9375rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.yan:hover {
+  background: var(--kat-ust);
+  border-color: var(--sonuk);
+}
+
+.yan:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+.kutu {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--sonuk);
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.yan[data-isaretli='evet'] .kutu {
+  background: var(--amber);
+  border-color: var(--amber);
+}
+
+.yan[data-isaretli='evet'] .kutu::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: solid #1a1206;
+  border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+
+.yan[data-isaretli='evet'] .yan-ad {
+  color: var(--soluk);
+}
+
+.yan-ad {
+  flex: 1;
+}
+
+.yan-not {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--soluk);
+  white-space: nowrap;
+}
+
+/* --- Harcama ----------------------------------------------------------- */
+
+.tutar {
+  font-family: var(--display);
+  font-size: clamp(2.5rem, 13vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.tutar .simge {
+  font-size: 0.42em;
+  font-weight: 600;
+  color: var(--soluk);
+  margin-left: 0.28em;
+  letter-spacing: 0;
+}
+
+.kirilim {
+  list-style: none;
+  margin: 1.35rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.kirilim li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9375rem;
+}
+
+.kirilim .ad {
+  color: var(--soluk);
+}
+
+.kirilim .deger {
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Kategori payını gösteren ince taban çizgisi. */
+.kirilim li::before {
+  content: '';
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(
+    to right,
+    var(--amber) var(--pay, 0%),
+    var(--cizgi) var(--pay, 0%)
+  );
+  opacity: 0.55;
+}
+
+.bos {
+  margin: 0;
+  color: var(--soluk);
+  font-size: 0.9375rem;
+}
+
+/* --- Abonelik ---------------------------------------------------------- */
+
+.abone-ust {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.abone-toplam {
+  font-family: var(--mono);
+  font-size: 1.0625rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.abone-toplam span {
+  color: var(--soluk);
+  font-size: 0.8125rem;
+}
+
+.uyari {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--amber-loş);
+  border-radius: var(--yuvarlak);
+  background: #ffb25c0f;
+  font-size: 0.9375rem;
+}
+
+.uyari + .uyari {
+  margin-top: 0.5rem;
+}
+
+.uyari .kalan {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--amber);
+  white-space: nowrap;
+}
+
+.belirsiz {
+  margin: 1rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  color: var(--soluk);
+}
+
+/* --- Hata -------------------------------------------------------------- */
+
+.hata {
+  margin: 2.5rem 0;
+  padding: 1.25rem;
+  border: 1px solid var(--kul);
+  border-radius: var(--yuvarlak);
+  background: #c4566a14;
+  font-size: 0.9375rem;
+}
+
+.hata code {
+  display: block;
+  margin-top: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--soluk);
+  word-break: break-word;
+}
+
+/* --- Erişilebilirlik --------------------------------------------------- */
+
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

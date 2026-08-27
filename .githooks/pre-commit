@@ -1,0 +1,118 @@
+#!/bin/sh
+#
+# Proje-bagimsiz pre-commit hook.
+# Calistirilacak komutlari repo kokundeki precommit.txt dosyasindan okur.
+# Her satir bir komuttur; # ile baslayan ve bos satirlar atlanir.
+# Ilk hata donen komutta commit durur.
+#
+# TASARIM NOTU (27-08-2026 olcumu):
+# Eski surumde dort sessiz basarisizlik vardi. Hepsi "hook kurulu gorunur,
+# hicbir sey kontrol etmez" sinifindandi:
+#   1. precommit.txt bos/eksikse exit 0 donuyordu  -> koruma sifir
+#   2. Test calisma agacini olcuyordu, index'i degil -> git add sonrasi
+#      diski duzeltince bozuk kod gecebiliyordu
+#   3. Exec biti yanlissa Unix'te git hook'u sessizce atliyordu
+#   4. Son satir newline'siz ise eklenen komut yorum satirina yapisiyordu
+# Kayit: C:\ws\kod-sistemi\calisma\sorunlar\2026-08-27-hook-bos-precommit.md
+
+REPO_ROOT=$(git rev-parse --show-toplevel) || exit 1
+LIST="$REPO_ROOT/precommit.txt"
+
+fail() {
+    echo ""
+    echo "[pre-commit] $1"
+    echo "[pre-commit] commit durduruldu."
+    exit 1
+}
+
+# --- 1. Liste dosyasi bulunmali ---
+if [ ! -f "$LIST" ]; then
+    fail "precommit.txt YOK. Hook kurulu ama kontrol edecek komut listesi yok;
+             bu haliyle hicbir koruma saglamiyor. Dosyayi olustur, en az bir
+             komut yaz. Bilerek bos birakiyorsan icine '#bos-onaylandi' koy."
+fi
+
+# --- 4. Son satir newline kontrolu ---
+# Newline'siz biten dosyada '>>' ile eklenen komut son yorum satirina yapisir.
+if [ -n "$(tail -c 1 "$LIST")" ]; then
+    fail "precommit.txt son satirinda newline yok. Bu dosyaya komut eklenirse
+             onceki satira yapisir ve sessizce yanlis calisir. Sonuna bos satir ekle."
+fi
+
+# --- Calistirilabilir komut var mi? ---
+HAS_CMD=0
+while IFS= read -r line || [ -n "$line" ]; do
+    cmd=$(printf '%s' "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+    case "$cmd" in
+        ''|'#'*) continue ;;
+    esac
+    HAS_CMD=1
+    break
+done < "$LIST"
+
+# --- 1b. Bos liste: sadece acik onayla gecilir ---
+if [ "$HAS_CMD" -eq 0 ]; then
+    if grep -q '^#bos-onaylandi' "$LIST"; then
+        echo "[pre-commit] precommit.txt bilerek bos (#bos-onaylandi). Kontrol yok."
+        exit 0
+    fi
+    fail "precommit.txt icinde calistirilabilir komut yok. Hook calisiyor ama
+             hicbir sey olcmuyor. Komut ekle, ya da bilerek bosssa dosyaya
+             '#bos-onaylandi' satirini koy."
+fi
+
+# --- 3. Exec biti kontrolu ---
+MODE=$(git ls-files -s .githooks/pre-commit 2>/dev/null | cut -d' ' -f1)
+if [ -n "$MODE" ] && [ "$MODE" != "100755" ]; then
+    fail "hook git'te $MODE modunda kayitli, 100755 olmali. Bu haliyle
+             Linux/macOS'ta git hook'u HATA VERMEDEN atlar.
+             Duzelt: git update-index --chmod=+x .githooks/pre-commit"
+fi
+
+cd "$REPO_ROOT" || exit 1
+
+# --- 2. Index'i test et, calisma agacini degil ---
+# Commit edilecek olan index'tir. Calisma agacinda duran duzeltilmis kod
+# testi yesil gosterip bozuk index'in gecmesine yol acar.
+STASHED=0
+if ! git diff --quiet 2>/dev/null; then
+    if git stash push --keep-index --include-untracked -m "pre-commit-gecici" >/dev/null 2>&1; then
+        STASHED=1
+    else
+        fail "Calisma agacinda commit'lenmemis degisiklik var ve gecici olarak
+             ayrilamadi (git stash basarisiz). Test index'i degil diski olcerdi;
+             yanlis yesil isik vermemek icin commit durduruldu."
+    fi
+fi
+
+geri_al() {
+    if [ "$STASHED" -eq 1 ]; then
+        git stash pop >/dev/null 2>&1 || {
+            echo "[pre-commit] UYARI: stash pop basarisiz. Degisikliklerin"
+            echo "[pre-commit] 'git stash list' icinde duruyor, elle geri al."
+        }
+    fi
+}
+
+STATUS=0
+while IFS= read -r line || [ -n "$line" ]; do
+    cmd=$(printf '%s' "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+    case "$cmd" in
+        ''|'#'*) continue ;;
+    esac
+
+    echo "[pre-commit] calistiriliyor: $cmd"
+    sh -c "$cmd" </dev/null
+    STATUS=$?
+    if [ "$STATUS" -ne 0 ]; then
+        geri_al
+        echo ""
+        echo "[pre-commit] BASARISIZ: $cmd"
+        echo "[pre-commit] cikis kodu: $STATUS"
+        echo "[pre-commit] commit durduruldu."
+        exit 1
+    fi
+done < "$LIST"
+
+geri_al
+exit 0

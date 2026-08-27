@@ -1,0 +1,2 @@
+# Argos pre-commit kontrolleri.
+node --test "test/*.test.js"

@@ -1,0 +1,11 @@
+{
+  "name": "argos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Kişisel ölçüm merkezi — salt gösterici PWA. Bağımlılık kullanılmaz; bu dosya yalnız ES modül kipini açar.",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "dev": "node dev/sunucu.js"
+  }
+}

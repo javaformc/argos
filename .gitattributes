@@ -1,0 +1,2 @@
+# Shell hook'lari her zaman LF olmali, CRLF ile calismaz.
+.githooks/* text eol=lf
