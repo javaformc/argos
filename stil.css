@@ -1,10 +1,11 @@
 /* Argos.
-   Ekranın omurgası günün kendisidir: 00'dan 24'e inen bir zaman ekseni.
-   Harcamalar gerçekleştikleri saatte eksende durur, "şu an" çizgisi gün
-   boyunca aşağı kayar. Ölçüm sayaç kutularında değil, günün içinde okunur.
+   Tasarım kısıtı: her şey tek ekranda, kaydırmadan. Boşa giden dikey alan
+   yok - ne büyük tarih başlığı, ne ayrı grafik alanı. Grafik yerine satırın
+   kendisi kullanılır: her harcama satırının zemini o kalemin günün
+   toplamındaki payı kadar doludur. Ayrı bir çizim alanı istemez.
 
-   Tek yazı ailesi (Archivo) iki eksende kullanılır: başlıklar geniş
-   (wdth 118), veri etiketleri dar (wdth 72). İkinci bir aileye gerek yok.
+   Tek yazı ailesi (Archivo) iki eksende kullanılır: sayılar geniş
+   (wdth 112), etiketler dar (wdth 74). İkinci bir aileye gerek yok.
 
    Köşe kuralı: yapı keskin (radius 0). Yalnız dokunma hedefleri tam
    yuvarlaktır - yuvarlaklık "buna basılır" demektir, süs değildir. */
@@ -13,32 +14,27 @@
   color-scheme: light dark;
 
   --zemin: #eff0f4;
-  --yuzey: #f8f9fb;
   --murekkep: #171a24;
   --soluk: #6b7185;
-  --cizgi: #d5d8e0;
-  --cizgi-koyu: #b9bec9;
-  --gece: #e4e6ec;
+  --cizgi: #d8dae2;
+  --pay: #dfe1e9;
   --vurgu: #2743c8;
-  --vurgu-zayif: #2743c81f;
+  --vurgu-zayif: #2743c81a;
   --eksi: #a83250;
 
-  --eksen-h: 408px;
-  --olcu: 1.375rem;
+  --olcu: 1.25rem;
   --yazi: 'Archivo', ui-sans-serif, system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --zemin: #12151e;
-    --yuzey: #1a1e2a;
     --murekkep: #e7e9f0;
-    --soluk: #868da1;
-    --cizgi: #272c3a;
-    --cizgi-koyu: #3a4154;
-    --gece: #171b26;
+    --soluk: #8b91a5;
+    --cizgi: #282d3b;
+    --pay: #1f2431;
     --vurgu: #8ba0ff;
-    --vurgu-zayif: #8ba0ff24;
+    --vurgu-zayif: #8ba0ff1f;
     --eksi: #e0798f;
   }
 }
@@ -59,438 +55,316 @@ body {
   font-family: var(--yazi);
   font-size: 16px;
   font-variant-numeric: tabular-nums;
-  line-height: 1.4;
+  line-height: 1.35;
   padding: env(safe-area-inset-top) env(safe-area-inset-right)
     env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 .sayfa {
-  max-width: 32rem;
+  max-width: 30rem;
   margin: 0 auto;
-  padding: 2.25rem var(--olcu) 4rem;
+  padding: 1.1rem var(--olcu) 2rem;
 }
 
-/* --- Gün başlığı -------------------------------------------------------- */
+/* --- Üst şerit: tek satır ----------------------------------------------- */
 
-.gun-basligi {
-  position: relative;
-  margin-bottom: 2.25rem;
+.ust {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.9rem;
 }
 
-.gun-no {
-  margin: 0;
-  font-size: 4.25rem;
-  font-weight: 700;
-  font-stretch: 118%;
-  letter-spacing: -0.045em;
-  line-height: 0.86;
-}
-
-.gun-ad {
-  margin: 0.4rem 0 0;
-  font-size: 1.0625rem;
-  font-weight: 500;
-  font-stretch: 78%;
-  letter-spacing: 0.02em;
-  color: var(--soluk);
+.tarih {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-stretch: 74%;
+  letter-spacing: 0.03em;
 }
 
 .imza {
-  position: absolute;
-  top: 0.55rem;
-  right: 0;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 500;
-  font-stretch: 72%;
-  letter-spacing: 0.16em;
+  font-stretch: 68%;
+  letter-spacing: 0.2em;
   color: var(--soluk);
 }
 
 .bekle {
-  padding: 3rem 0;
+  padding: 2.5rem 0;
   color: var(--soluk);
   font-stretch: 78%;
 }
 
-/* --- Zaman ekseni (imza) ------------------------------------------------ */
-
-.gun {
-  position: relative;
-  height: var(--eksen-h);
-  margin-bottom: 1.6rem;
+#ekran {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
 }
 
-/* Eksen çizgisi. */
-.gun::before {
-  content: '';
-  position: absolute;
-  left: 2.5rem;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--cizgi);
+.blok {
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--murekkep);
 }
 
-.saat-etiket {
-  position: absolute;
-  left: 0;
-  width: 1.9rem;
-  text-align: right;
-  font-size: 0.6875rem;
-  font-weight: 500;
-  font-stretch: 72%;
-  letter-spacing: 0.06em;
-  color: var(--soluk);
-  transform: translateY(-50%);
+/* --- Başlık satırı: büyük sayı solda, bağlam sağda ---------------------- */
+
+.tepe {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
 }
 
-.saat-etiket::after {
-  content: '';
-  position: absolute;
-  right: -0.62rem;
-  top: 50%;
-  width: 0.38rem;
-  height: 1px;
-  background: var(--cizgi);
-}
-
-/* Şu an: eksenin geçmiş kısmı doludur, kalanı boş. Günün ne kadarının
-   geçtiği tek bakışta okunur ve hiçbir kaydın üstünden geçmez. */
-.simdi {
-  position: absolute;
-  left: 2.5rem;
-  top: 0;
-  z-index: 0;
-  width: 2px;
-  margin-left: -0.5px;
-  background: var(--vurgu);
-}
-
-.simdi::after {
-  content: '';
-  position: absolute;
-  left: -2px;
-  bottom: -3px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--vurgu);
-}
-
-/* Bir harcama, kendi saatinde. */
-.kayit {
-  position: absolute;
-  left: 3.15rem;
-  right: 0;
-  z-index: 1;
-  padding: 0.15rem 0;
-  background: var(--zemin);
+.buyuk {
   display: flex;
   align-items: baseline;
-  gap: 0.55rem;
-  animation: kayit-gir 380ms cubic-bezier(0.2, 0.85, 0.3, 1) backwards;
+  gap: 0.4rem;
+  min-width: 0;
 }
 
+.buyuk b {
+  font-size: 2.375rem;
+  font-weight: 700;
+  font-stretch: 112%;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+.buyuk .etiket {
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-stretch: 74%;
+  color: var(--soluk);
+  white-space: nowrap;
+}
+
+/* Ay bağlamı: bugünün tek başına anlamı yok, neyle kıyaslandığı lazım. */
+.baglam {
+  flex: none;
+  text-align: right;
+  font-size: 0.75rem;
+  font-stretch: 72%;
+  line-height: 1.5;
+  color: var(--soluk);
+}
+
+.baglam b {
+  font-weight: 600;
+  font-stretch: 88%;
+  color: var(--murekkep);
+}
+
+/* --- Harcama satırları -------------------------------------------------- */
+
+.kayitlar {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.kayit {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.42rem 0.5rem 0.42rem 0.45rem;
+  font-size: 0.9375rem;
+  font-stretch: 84%;
+}
+
+/* Satırın zemini, o kalemin gün toplamındaki payı kadar dolu. Grafik için
+   ayrı alan ayırmadan aynı bilgiyi verir. */
 .kayit::before {
   content: '';
   position: absolute;
-  left: -0.72rem;
-  top: 0.44rem;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--murekkep);
+  inset: 0 auto 0 0;
+  width: var(--oran, 0%);
+  background: var(--pay);
 }
 
-.kayit .tutar {
+.kayit > * {
+  position: relative;
+}
+
+.kayit .saat {
   flex: none;
-  font-size: 1.3125rem;
-  font-weight: 600;
-  font-stretch: 105%;
-  letter-spacing: -0.02em;
-  line-height: 1;
+  width: 2.4rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  font-stretch: 68%;
+  letter-spacing: 0.04em;
+  color: var(--soluk);
 }
 
-.kayit .nerede {
+.kayit .ad {
   flex: 1;
   min-width: 0;
-  font-size: 0.875rem;
-  font-stretch: 78%;
-  color: var(--soluk);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.kayit .ne-zaman {
+.kayit .tut {
   flex: none;
-  font-size: 0.6875rem;
-  font-weight: 500;
-  font-stretch: 72%;
-  letter-spacing: 0.04em;
-  color: var(--cizgi-koyu);
+  font-weight: 600;
+  font-stretch: 98%;
+  letter-spacing: -0.01em;
 }
 
-@keyframes kayit-gir {
-  from {
-    opacity: 0;
-    transform: translateX(-6px);
-  }
-}
-
-.gun-bos {
-  position: absolute;
-  left: 3.15rem;
-  right: 0;
-  top: 44%;
-  font-size: 0.9375rem;
-  font-stretch: 78%;
-  line-height: 1.5;
-  color: var(--soluk);
-}
-
-/* --- Gün toplamı -------------------------------------------------------- */
-
-.toplam {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--murekkep);
-}
-
-.toplam b {
-  font-size: 2.5rem;
-  font-weight: 700;
-  font-stretch: 112%;
-  letter-spacing: -0.04em;
-  line-height: 1;
-}
-
-.toplam .birim {
-  font-size: 1rem;
-  font-weight: 500;
+.bos {
+  margin: 0;
+  padding: 0.3rem 0 0.1rem;
+  font-size: 0.875rem;
   font-stretch: 78%;
   color: var(--soluk);
-}
-
-.toplam .saatsiz {
-  margin-left: auto;
-  max-width: 11rem;
-  font-size: 0.75rem;
-  font-stretch: 72%;
-  letter-spacing: 0.03em;
-  line-height: 1.45;
-  color: var(--soluk);
-  text-align: right;
-}
-
-/* --- Bölümler ----------------------------------------------------------- */
-
-#ekran {
-  display: flex;
-  flex-direction: column;
-}
-
-.blok {
-  padding: 2.1rem 0;
-}
-
-.blok + .blok {
-  border-top: 1px solid var(--cizgi);
 }
 
 /* --- Alışkanlık --------------------------------------------------------- */
 
-.ana-satir {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.55rem;
-}
-
-.ana-ad {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  font-size: 1.875rem;
-  font-weight: 700;
-  font-stretch: 112%;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-}
-
-.basilir {
-  flex: none;
-  padding: 0.68rem 1.3rem;
-  border: 1px solid var(--murekkep);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--murekkep);
-  font-family: inherit;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  font-stretch: 84%;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background 130ms ease, color 130ms ease, transform 90ms ease;
-}
-
-.basilir:hover {
-  background: var(--vurgu-zayif);
-}
-
-.basilir:active {
-  transform: translateY(1px);
-}
-
-.basilir[data-dolu='evet'] {
-  background: var(--murekkep);
-  color: var(--zemin);
-}
-
-.basilir[data-dolu='evet']:hover {
-  background: var(--soluk);
-}
-
-.basilir:disabled {
-  opacity: 0.45;
-  cursor: progress;
-}
-
-.ana-durum {
-  margin: 0;
-  font-size: 0.9375rem;
-  font-stretch: 78%;
-  color: var(--soluk);
-}
-
-.ana-durum b {
-  color: var(--murekkep);
-  font-weight: 600;
-  font-stretch: 84%;
-}
-
-.yan-liste {
+.aliskanliklar {
   list-style: none;
-  margin: 1.5rem 0 0;
+  margin: 0;
   padding: 0;
 }
 
-.yan {
+.aliskanliklar li + li {
+  border-top: 1px solid var(--cizgi);
+}
+
+.satir {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 0.75rem;
   width: 100%;
-  padding: 0.62rem 0;
+  min-height: 3rem;
+  padding: 0.5rem 0;
   border: 0;
   background: none;
   color: var(--murekkep);
   font-family: inherit;
-  font-size: 1rem;
-  font-stretch: 84%;
   text-align: left;
   cursor: pointer;
 }
 
-.yan:disabled {
+.satir:disabled {
   opacity: 0.45;
   cursor: progress;
 }
 
-.halka {
+.satir .isim {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  font-stretch: 92%;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.satir[data-ana='evet'] .isim {
+  font-size: 1.3125rem;
+  font-stretch: 105%;
+  letter-spacing: -0.02em;
+}
+
+.satir .not {
   flex: none;
-  width: 15px;
-  height: 15px;
-  border: 1.5px solid var(--cizgi-koyu);
+  font-size: 0.75rem;
+  font-stretch: 72%;
+  letter-spacing: 0.02em;
+  color: var(--soluk);
+  text-align: right;
+}
+
+.satir[data-dolu='evet'] .isim {
+  color: var(--soluk);
+}
+
+.satir[data-bekleniyor='evet'] .not {
+  color: var(--vurgu);
+}
+
+/* Dokunma hedefi. 44px'in altına inmez. */
+.kutu {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-right: -0.6rem;
+  border-radius: 50%;
+  transition: background 130ms ease;
+}
+
+.satir:hover .kutu {
+  background: var(--vurgu-zayif);
+}
+
+.kutu::after {
+  content: '';
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 1.5px solid var(--soluk);
   border-radius: 50%;
   transition: background 130ms ease, border-color 130ms ease;
 }
 
-.yan[data-dolu='evet'] .halka {
+.satir[data-dolu='evet'] .kutu::after {
   background: var(--murekkep);
   border-color: var(--murekkep);
 }
 
-.yan[data-dolu='evet'] .yan-ad {
-  color: var(--soluk);
-}
-
-.yan-ad {
-  flex: 1;
-  min-width: 0;
-}
-
-.yan-not {
-  flex: none;
-  font-size: 0.75rem;
-  font-stretch: 72%;
-  letter-spacing: 0.03em;
-  color: var(--soluk);
+.satir[data-dolu='kacirildi'] .kutu::after {
+  border-color: var(--eksi);
+  border-style: dashed;
 }
 
 /* --- Abonelik ----------------------------------------------------------- */
-
-.abone-toplam {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  margin: 0 0 0.85rem;
-}
-
-.abone-toplam b {
-  font-size: 1.5rem;
-  font-weight: 700;
-  font-stretch: 105%;
-  letter-spacing: -0.025em;
-}
-
-.abone-toplam span {
-  font-size: 0.9375rem;
-  font-stretch: 78%;
-  color: var(--soluk);
-}
 
 .abone-satir {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
-  padding: 0.5rem 0;
-  font-size: 1rem;
+  padding: 0.32rem 0;
+  font-size: 0.9375rem;
   font-stretch: 84%;
 }
 
 .abone-satir .ne-zaman {
   flex: none;
   margin-left: auto;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-stretch: 72%;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   color: var(--vurgu);
 }
 
 .dipnot {
-  margin: 1rem 0 0;
-  font-size: 0.8125rem;
-  font-stretch: 78%;
-  line-height: 1.55;
+  margin: 0.55rem 0 0;
+  font-size: 0.75rem;
+  font-stretch: 74%;
+  line-height: 1.5;
   color: var(--soluk);
 }
 
 /* --- Hata --------------------------------------------------------------- */
 
 .hata {
-  margin: 2rem 0;
-  padding: 1.1rem 1.25rem;
+  margin: 1.5rem 0;
+  padding: 1rem 1.15rem;
   border-left: 2px solid var(--eksi);
-  background: var(--yuzey);
   font-size: 0.9375rem;
   font-stretch: 84%;
 }
 
 .hata code {
   display: block;
-  margin-top: 0.55rem;
+  margin-top: 0.5rem;
   font-family: ui-monospace, 'Cascadia Mono', monospace;
   font-size: 0.75rem;
   color: var(--soluk);
@@ -501,15 +375,13 @@ body {
 
 :focus-visible {
   outline: 2px solid var(--vurgu);
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

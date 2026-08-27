@@ -214,3 +214,19 @@ test('eksik veya bozuk saat eksende yer almaz', () => {
   assert.equal(h.dakikaya('aksam'), null);
   assert.equal(h.dakikaya(830), null, 'sayı değil, metin beklenir');
 });
+
+// --- Ay özeti -----------------------------------------------------------
+
+test('günlük ortalama ayın geçen günlerine bölünür', () => {
+  const ay = [
+    { tarih: '2026-08-01', tutar: 300, birim: 'TRY', kategori: 'market' },
+    { tarih: '2026-08-02', tutar: 200, birim: 'TRY', kategori: 'market' },
+  ];
+  assert.equal(h.ayToplami(ay, KUR), 500);
+  assert.equal(h.gunlukOrtalama(ay, KUR, '2026-08-04'), 125, '4 güne bölünür');
+  assert.equal(h.gunlukOrtalama(ay, KUR, '2026-08-02'), 250);
+});
+
+test('boş ay ortalaması sıfır, bölme hatası vermez', () => {
+  assert.equal(h.gunlukOrtalama([], KUR, '2026-08-27'), 0);
+});

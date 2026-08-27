@@ -216,6 +216,21 @@ export function kategoriKirilimi(harcamalar, kur) {
     .sort((a, b) => b.tutar - a.tutar);
 }
 
+/** Ayın tamamının ham TL toplamı. */
+export function ayToplami(harcamalar, kur) {
+  return toplamTL(harcamalar, kur);
+}
+
+/**
+ * Ay başından bugüne günlük ortalama. Bölen, ayın geçen gün sayısıdır -
+ * ay sonuna kadar olan günlere bölmek ortalamayı olduğundan küçük gösterir.
+ */
+export function gunlukOrtalama(harcamalar, kur, bugun) {
+  const gecenGun = Number(bugun.slice(8, 10));
+  if (!gecenGun) return 0;
+  return toplamTL(harcamalar, kur) / gecenGun;
+}
+
 // --- Abonelik -----------------------------------------------------------
 
 /** Aylık gider karşılığı (yıllık olan 12'ye bölünür). Ham TL. */
