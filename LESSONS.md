@@ -12,5 +12,9 @@
 > Kötü: "Tarihler bazen UTC geliyordu."
 > İyi: "Tarihleri her zaman UTC sakla, sadece gösterirken yerele çevir."
 
-- ÖRNEK (yer tutucu — ilk gerçek ders eklendiğinde sil): Shell script'lerini
-  LF satır sonuyla sakla, CRLF ile çalışmaz.
+- Renk haritasından renk alan HER yeni liste `renkleriAyir`'dan geçsin;
+  sekiz hue on yediden fazla kategoriye yetmiyor ve çakışma yalnız liste
+  uzayınca görünür hale geliyor (kategori barlarında tavan 7'den
+  kalkınca "Fatura" ile "Diğer" aynı renk oldu).
+- Bir listeyi kısaltan tavanı kaldırmadan önce o listenin gizlediği
+  başka ne varsa ara: tavan, bir kusuru düzeltmez, görünmez tutar.

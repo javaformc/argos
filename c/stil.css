@@ -1038,6 +1038,294 @@ body[data-kip='gunduz'] .kart-ikincil {
      saate göre    · kayıttaki `saat` alanı ilk kez kullanılıyor
    Renk sistemi, tipografi ve kart dili aynı; değişen yoğunluk ve sorular. */
 
+
+/* --- Ayrıntı sayfası ----------------------------------------------------
+   Ayrı bir tasarım değil, aynı dilin ikinci cümlesi: aynı kart yüzeyi,
+   aynı üç ses, aynı kategori renkleri. Değişen tek şey ölçek — ana ekran
+   günü, bu sayfa ayı anlatıyor. */
+
+/* Blok başlığı kapı olduğunda: aynı etiket, sonunda bir ok. Ok, başlığın
+   tıklanabilir olduğunu söyleyen tek işaret — renk tek başına söyleseydi
+   renk körü bir okuyucu için kapı görünmez olurdu. */
+.etiket-bag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  color: var(--soluk);
+  text-decoration: none;
+  /* Dokunma hedefi metnin kendisinden büyük: 11px'lik bir etiket parmak
+     için hedef değildir. Negatif kenar boşluğu, büyüyen hedefin yerleşimi
+     kaydırmasını engelliyor. */
+  margin: -6px -8px;
+  padding: 6px 8px;
+  border-radius: 3px;
+}
+
+.etiket-ok {
+  font-size: 15px;
+  line-height: 1;
+  font-stretch: 100%;
+  transform: translateY(-1px);
+}
+
+.etiket-bag:hover,
+.etiket-bag:focus-visible {
+  color: var(--vurgu);
+  background: var(--vurgu-yumusak);
+}
+
+.etiket-bag:focus-visible {
+  outline: 2px solid var(--vurgu);
+  outline-offset: 1px;
+}
+
+/* --- Gezinme satırı ----------------------------------------------------- */
+
+.gezinme {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gezinme-geri {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: -8px -10px;
+  padding: 8px 10px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  font-stretch: 62%;
+  letter-spacing: 0.12em;
+  color: var(--vurgu);
+  text-decoration: none;
+}
+
+.gezinme-ok {
+  font-size: 14px;
+  line-height: 1;
+  font-stretch: 100%;
+  transform: translateY(-1px);
+}
+
+.gezinme-geri:hover,
+.gezinme-geri:focus-visible {
+  background: var(--vurgu-yumusak);
+}
+
+.gezinme-geri:focus-visible {
+  outline: 2px solid var(--vurgu);
+  outline-offset: 1px;
+}
+
+.gezinme-ay {
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.12em;
+  color: var(--soluk);
+}
+
+/* --- Gün gün döküm ------------------------------------------------------
+   Ana ekranın kayıt ızgarasının aynısı; tek ekleme gün ayracı. Ayraç
+   ızgaranın İÇİNDE ve tam genişlikte durur: her günü kendi listesine
+   ayırmak sütun genişliklerini günden güne kaydırır ve saat/kategori/tutar
+   hizası kaybolurdu. Hiza, uzun bir dökümü tarayarak okumanın tek yolu. */
+
+.gun-ayrac {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 7px;
+  border-top: 1px solid var(--cizgi);
+  font-size: 11px;
+  font-weight: 700;
+  font-stretch: 62%;
+  letter-spacing: 0.12em;
+}
+
+/* İlk ayraç listenin kendi üst çizgisiyle çakışmasın. */
+.dokum > .gun-ayrac:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.gun-tarih {
+  color: var(--soluk);
+}
+
+.gun-ayrac[data-bugun] .gun-tarih {
+  color: var(--vurgu);
+}
+
+.gun-toplam {
+  font-weight: 700;
+  font-stretch: 84%;
+  letter-spacing: 0;
+  color: var(--murekkep);
+}
+
+/* --- Ay modülleri -------------------------------------------------------
+   Bu üç grafik ana ekranda YALNIZ masaüstünde çizilir ama kuralları medya
+   sorgusunun içinde duramaz: harcama ayrıntı sayfası aynı grafikleri her
+   genişlikte kullanıyor. Yükseklikler vh tabanlı clamp — telefonda küçük,
+   geniş ekranda büyük, ikisinde de aynı tanımla. */
+
+/* --- Ayın günleri --------------------------------------------------- */
+
+.ay-alan {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: clamp(80px, 21vh, 300px);
+  margin-top: 8px;
+}
+
+.ay-alan > i {
+  flex: 1;
+  min-width: 3px;
+  border-radius: 2px 2px 0 0;
+  background: var(--sutun);
+}
+
+/* Hafta sonu ayrı tonda: ayın ritmi çoğu zaman haftaya bağlı ve bu ayrım
+   olmadan otuz sütun tek bir gürültü kütlesi gibi okunuyor. */
+.ay-alan > i[data-haftasonu] {
+  background: var(--sutun-hs);
+}
+
+.ay-alan > i[data-bugun] {
+  background: var(--vurgu);
+}
+
+.ay-etiket {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.06em;
+  color: var(--soluk);
+}
+
+/* --- Kategori barları ------------------------------------------------ */
+
+.kategori-barlar {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.kategori-bar {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: 62%;
+}
+
+.kb-ad {
+  color: var(--soluk);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kb-yol {
+  height: 9px;
+  border-radius: 2px;
+  background: var(--bos);
+  overflow: hidden;
+}
+
+.kb-yol > i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--k1);
+}
+
+/* Renk kategoriye bağlı, sıraya değil — şeritteki kural burada da
+   geçerli: market bugün üçüncü sırada olsa da aynı mavi. */
+.kb-yol > i[data-renk='1'] { background: var(--k1); }
+.kb-yol > i[data-renk='2'] { background: var(--k2); }
+.kb-yol > i[data-renk='3'] { background: var(--k3); }
+.kb-yol > i[data-renk='4'] { background: var(--k4); }
+.kb-yol > i[data-renk='5'] { background: var(--k5); }
+.kb-yol > i[data-renk='6'] { background: var(--k6); }
+.kb-yol > i[data-renk='7'] { background: var(--k7); }
+.kb-yol > i[data-renk='8'] { background: var(--k8); }
+
+/* Alışkanlık doluluğu: tam ise durum yeşili, eksikse nötr. Yargı
+   rengi burada meşru — harcamada "iyi/kötü" yoktu, alışkanlıkta var. */
+.kb-yol > i[data-durum='tam'] {
+  background: var(--durum);
+}
+
+.kb-yol > i[data-durum='eksik'] {
+  background: var(--p3);
+}
+
+.kb-tutar {
+  font-size: 12px;
+  font-stretch: 84%;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Saat dağılımı --------------------------------------------------- */
+
+.saat-alan {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: end;
+  gap: 10px;
+  height: clamp(84px, 16vh, 230px);
+  margin-top: 10px;
+}
+
+.saat-oge {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
+  height: 100%;
+}
+
+.saat-oge > i {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  background: var(--vurgu-serit);
+}
+
+.saat-tutar {
+  font-size: 12px;
+  font-weight: 700;
+  font-stretch: 92%;
+  font-variant-numeric: tabular-nums;
+}
+
+.saat-ad {
+  font-size: 10px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.08em;
+  color: var(--soluk);
+}
+
 @media (min-width: 1024px) {
   .sayfa {
     min-height: 100dvh;
@@ -1050,6 +1338,27 @@ body[data-kip='gunduz'] .kart-ikincil {
   .ust {
     flex: 0 0 30px;
     padding-bottom: 10px;
+  }
+
+  /* Ayrıntı sayfası iki sütun: solda ayın özeti ve grafikleri, sağda
+     döküm. Döküm tek başına bir sütunu hak ediyor çünkü ay ilerledikçe
+     uzayan tek şey o — grafikler aynı boyda kalır, liste büyür. */
+  #ekran[data-duzen='ayrinti'] {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    align-items: start;
+    gap: 14px;
+  }
+
+  #ekran[data-duzen='ayrinti'] .gezinme {
+    grid-column: 1 / -1;
+  }
+
+  [data-alan='dokum'] .dokum {
+    grid-template-columns: 44px auto minmax(0, 1fr) auto;
+    column-gap: 12px;
+    line-height: 21px;
+    font-size: 13px;
   }
 
   #ekran[data-duzen='pano'] {
@@ -1114,154 +1423,6 @@ body[data-kip='gunduz'] .kart-ikincil {
     font-size: 11px;
     font-weight: 600;
     font-stretch: 62%;
-    color: var(--soluk);
-  }
-
-  /* --- Ayın günleri --------------------------------------------------- */
-
-  .ay-alan {
-    position: relative;
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: clamp(80px, 21vh, 300px);
-    margin-top: 8px;
-  }
-
-  .ay-alan > i {
-    flex: 1;
-    min-width: 3px;
-    border-radius: 2px 2px 0 0;
-    background: var(--sutun);
-  }
-
-  /* Hafta sonu ayrı tonda: ayın ritmi çoğu zaman haftaya bağlı ve bu ayrım
-     olmadan otuz sütun tek bir gürültü kütlesi gibi okunuyor. */
-  .ay-alan > i[data-haftasonu] {
-    background: var(--sutun-hs);
-  }
-
-  .ay-alan > i[data-bugun] {
-    background: var(--vurgu);
-  }
-
-  .ay-etiket {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 4px;
-    font-size: 10px;
-    font-weight: 600;
-    font-stretch: 62%;
-    letter-spacing: 0.06em;
-    color: var(--soluk);
-  }
-
-  /* --- Kategori barları ------------------------------------------------ */
-
-  .kategori-barlar {
-    list-style: none;
-    margin: 8px 0 0;
-    padding: 0;
-    display: grid;
-    gap: 7px;
-  }
-
-  .kategori-bar {
-    display: grid;
-    grid-template-columns: 82px minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 9px;
-    font-size: 12px;
-    font-weight: 600;
-    font-stretch: 62%;
-  }
-
-  .kb-ad {
-    color: var(--soluk);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .kb-yol {
-    height: 9px;
-    border-radius: 2px;
-    background: var(--bos);
-    overflow: hidden;
-  }
-
-  .kb-yol > i {
-    display: block;
-    height: 100%;
-    border-radius: 2px;
-    background: var(--k1);
-  }
-
-  /* Renk kategoriye bağlı, sıraya değil — şeritteki kural burada da
-     geçerli: market bugün üçüncü sırada olsa da aynı mavi. */
-  .kb-yol > i[data-renk='1'] { background: var(--k1); }
-  .kb-yol > i[data-renk='2'] { background: var(--k2); }
-  .kb-yol > i[data-renk='3'] { background: var(--k3); }
-  .kb-yol > i[data-renk='4'] { background: var(--k4); }
-  .kb-yol > i[data-renk='5'] { background: var(--k5); }
-  .kb-yol > i[data-renk='6'] { background: var(--k6); }
-  .kb-yol > i[data-renk='7'] { background: var(--k7); }
-  .kb-yol > i[data-renk='8'] { background: var(--k8); }
-
-  /* Alışkanlık doluluğu: tam ise durum yeşili, eksikse nötr. Yargı
-     rengi burada meşru — harcamada "iyi/kötü" yoktu, alışkanlıkta var. */
-  .kb-yol > i[data-durum='tam'] {
-    background: var(--durum);
-  }
-
-  .kb-yol > i[data-durum='eksik'] {
-    background: var(--p3);
-  }
-
-  .kb-tutar {
-    font-size: 12px;
-    font-stretch: 84%;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* --- Saat dağılımı --------------------------------------------------- */
-
-  .saat-alan {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    align-items: end;
-    gap: 10px;
-    height: clamp(84px, 16vh, 230px);
-    margin-top: 10px;
-  }
-
-  .saat-oge {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 5px;
-    height: 100%;
-  }
-
-  .saat-oge > i {
-    width: 100%;
-    border-radius: 3px 3px 0 0;
-    background: var(--vurgu-serit);
-  }
-
-  .saat-tutar {
-    font-size: 12px;
-    font-weight: 700;
-    font-stretch: 92%;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .saat-ad {
-    font-size: 10px;
-    font-weight: 600;
-    font-stretch: 62%;
-    letter-spacing: 0.08em;
     color: var(--soluk);
   }
 }
