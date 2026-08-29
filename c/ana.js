@@ -410,16 +410,13 @@ function harcamaBlogu(veri, bugun, aksam) {
   const dagilim = kategoriDagilimi(bugunku, veri.kur);
   const k = kiyas(veri, bugun);
 
-  const saatliler = bugunku.filter((h) => H.dakikaya(h.saat) != null);
-  const son = saatliler.sort((a, b) => H.dakikaya(b.saat) - H.dakikaya(a.saat))[0];
-
   blok.append(el('p', 'etiket', aksam ? 'BUGÜN HARCANAN' : 'BUGÜN'));
   blok.append(buyukSayi(lira(toplam), '₺', aksam ? 'orta' : 'dev', { bos }));
 
-  // Gündüz: sayı -> cümle -> şerit. Akşam: sayı -> şerit -> özet -> cümle.
-  // Akşamın sorusu "gün nasıl geçti"; cevabın sırası da o yüzden farklı.
-  const yorum = el('p', 'yorum', kiyasCumlesi(k, toplam));
-  if (!aksam) blok.append(yorum);
+  // Kıyas cümlesi büyük sayının HEMEN ALTINDA, iki kipte de. Sayı ile
+  // bağlamı arasına grafik girerse cümle sayıya değil grafiğe ait gibi
+  // okunuyor.
+  blok.append(el('p', 'yorum', kiyasCumlesi(k, toplam)));
 
   // Boş gün: şerit YERİNİ korur ama çizilmez. Boş bir yüzdelik çubuk
   // sıfır bilgi taşıyıp "yükleniyor iskeleti" silueti veriyordu.
@@ -430,22 +427,10 @@ function harcamaBlogu(veri, bugun, aksam) {
 
   blok.append(haftaCiz(veri, bugun, k.ortalama));
 
-  if (aksam) {
-    // Akşam tek tek kayıtlar gereksizleşir; toplam, dağılım ve hafta yeter.
-    blok.append(
-      el(
-        'p',
-        'veri',
-        bos
-          ? 'Bugün kayıt yok'
-          : `${bugunku.length} kayıt${son ? ` · son kayıt ${son.saat}` : ''}`
-      )
-    );
-    blok.append(yorum);
-    return blok;
-  }
-
-  // Gündüz ham gerçek: kalem kalem ne harcandı.
+  // Son üç harcama İKİ kipte de durur. Akşam sürümü bir zamanlar bunu
+  // "6 kayıt · son kayıt 19:00" özetine indiriyordu (tek ekran kısıtından
+  // kalma); kaydırma serbest olunca o tasarrufun karşılığı kalmadı ve
+  // "bugün ne aldım" sorusu akşam da sorulan bir soru.
   const liste = el('ul', 'kayitlar');
 
   if (bos) {
@@ -620,6 +605,9 @@ function izCiz(tanim, veri, bugun) {
  */
 function aliskanlikKarti(tanim, veri, bugun, secenek, isaretle) {
   const kart = el('div', `kart ${secenek.ikincil ? 'kart-ikincil' : 'kart-ana'}`);
+  // Geçiş bu adla eşleşir: kart bloklar arası taşınsa da tarayıcı onu
+  // "aynı kart" olarak tanır ve eski konumundan yenisine kaydırır.
+  kart.style.viewTransitionName = `alk-${tanim.id}`;
   const govde = el('div', 'kart-govde');
 
   const onay = H.onayBul(veri.onaylar, tanim.id, bugun);
@@ -966,6 +954,24 @@ function hataGoster(hata, baslik) {
   console.error(hata);
 }
 
+/**
+ * YUMUŞAK GEÇİŞ — kart bloklar arası taşınırken kayar, sıçramaz.
+ *
+ * İşaretleme, alışkanlık kartını akşam üst bloğundan gündüzkü yerine
+ * taşıyor. DOM baştan kurulduğu için kart eski yerinde kaybolup yenisinde
+ * beliriyor; hareket görünmüyor, ekran "zıplıyor". View Transitions API
+ * eski ve yeni kareyi kendisi eşleştirip aradaki yolu oynatıyor.
+ *
+ * Destek yoksa (ya da kullanıcı azaltılmış hareket istiyorsa) çizim
+ * doğrudan yapılır: animasyon bir süs değil, kaybolan hareketin yerine
+ * konan şey — olmadığında da ekran doğru çalışır.
+ */
+function yumusakGecis(cizimi) {
+  const azalt = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (azalt || !document.startViewTransition) return cizimi();
+  return document.startViewTransition(cizimi).finished.catch(() => {});
+}
+
 let cizimSurdu = false;
 
 async function ciz() {
@@ -998,7 +1004,9 @@ async function ciz() {
     try {
       await onayIsaretle(kaynak, veri, tanim.id, bugun, yeniDurum);
       cizimSurdu = false;
-      await ciz();
+      // İşaretleme kartı bir bloktan diğerine taşıyor; sert bir sıçrama
+      // yerine kayarak gitsin (yumuşakGecis).
+      await yumusakGecis(() => ciz());
     } catch (hata) {
       dugme.disabled = false;
       hataGoster(hata, 'İşaret kaydedilemedi.');

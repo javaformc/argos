@@ -1020,3 +1020,21 @@ body[data-kip='aksam'] .kart-ikincil {
   color: var(--soluk);
   word-break: break-word;
 }
+
+/* --- Yumuşak geçiş -------------------------------------------------------
+   İşaretleme kartı bir bloktan diğerine taşıyor. Süre kısa: bu bir gösteri
+   değil, kaybolan hareketin yerine konan şey. Uzun animasyon günde birkaç
+   kez basılan bir tuşta yorucu olur. */
+
+::view-transition-group(*) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
