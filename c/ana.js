@@ -559,12 +559,20 @@ function anaCumle(tanim, onay, bekleniyor, aksam) {
     return aksam ? 'Bugün ara günü, atlamak seriyi bozmaz.' : 'Bugün ara günü.';
   }
 
-  const bas = gunArasi
-    ? `Bugün ${tanim.ad.toLocaleLowerCase('tr')} günü`
-    : 'Bugün de bekleniyor';
-  if (yapildi) return `${bas}, yapıldı.`;
-  if (kacirildi) return `${bas}, kaçırıldı.`;
-  return aksam ? `${bas}, henüz işaretlenmedi.` : `${bas}.`;
+  // Gün-arası alışkanlıkta "bugün spor günü" bir BİLGİDİR (ritim bugüne
+  // denk geldi) ve sonucuyla birlikte okunabilir. Günlük alışkanlıkta ise
+  // "bekleniyor" bir DURUMDUR; yapılmışken hâlâ beklendiğini söylemek
+  // kendini çürütür — "Bugün de bekleniyor, yapıldı." çıkıyordu.
+  if (gunArasi) {
+    const bas = `Bugün ${tanim.ad.toLocaleLowerCase('tr')} günü`;
+    if (yapildi) return `${bas}, yapıldı.`;
+    if (kacirildi) return `${bas}, kaçırıldı.`;
+    return aksam ? `${bas}, henüz işaretlenmedi.` : `${bas}.`;
+  }
+
+  if (yapildi) return 'Bugün de yapıldı.';
+  if (kacirildi) return 'Bugün kaçırıldı.';
+  return aksam ? 'Bugün de bekleniyor, henüz işaretlenmedi.' : 'Bugün de bekleniyor.';
 }
 
 /** 02:00'ye kalan süre — akşam kipine özel, hesaplanabilir tek bilgi. */
@@ -675,7 +683,29 @@ function aliskanlikKarti(tanim, veri, bugun, secenek, isaretle) {
   return kart;
 }
 
-function aliskanlikBlogu(veri, bugun, aksam, simdi, isaretle) {
+/**
+ * Bir alışkanlık akşam YUKARI ÇIKMAYI hak ediyor mu?
+ *
+ * Akşam kipinin varlık sebebi işaretlemedir: gün kapanırken bugün beklenen
+ * ama henüz işaretlenmemiş alışkanlıklar öne alınır. İşaretlendiği anda o
+ * görev biter ve kart gündüzkü yerine döner — akşam boyunca yukarıda
+ * durması, yapılmış bir işi yapılacakmış gibi göstermek olurdu. Aynı
+ * sebeple gündüz işaretlenmiş bir alışkanlık akşam hiç yukarı çıkmaz.
+ *
+ * Ara günü (bugün beklenmiyor) de yukarı çıkmaz: yapılacak bir şey yok.
+ */
+function aksamOncelikli(tanim, veri, bugun) {
+  const onay = H.onayBul(veri.onaylar, tanim.id, bugun);
+  if (onay) return false; // işaretlenmiş (yapıldı ya da kaçırıldı): iş bitti
+  return H.bugunBekleniyorMu(tanim, veri.onaylar, bugun);
+}
+
+/**
+ * @param {'bekleyen'|'kalan'|'tumu'} kume
+ *   Akşam kipinde alışkanlıklar iki bloğa bölünür: bekleyenler ekranın
+ *   üstüne, kalanlar gündüzkü yerine. Gündüz tek blok vardır (`tumu`).
+ */
+function aliskanlikBlogu(veri, bugun, aksam, simdi, isaretle, kume) {
   const blok = el('section', 'blok blok-aliskanlik');
 
   if (veri.tanimlar.length === 0) {
@@ -696,8 +726,15 @@ function aliskanlikBlogu(veri, bugun, aksam, simdi, isaretle) {
   // kartlara dağılmış olsaydı (büyük, küçük, büyük, küçük) liste bir
   // ızgaraya değil kazaya benzerdi; sınıf sınıf dizilince boyut farkı
   // sıralamanın kendisini anlatan bir işarete dönüşüyor.
-  const onemliler = veri.tanimlar.filter((t) => t.ana);
-  const basitler = veri.tanimlar.filter((t) => !t.ana);
+  const secili = veri.tanimlar.filter((t) => {
+    if (kume === 'bekleyen') return aksamOncelikli(t, veri, bugun);
+    if (kume === 'kalan') return !aksamOncelikli(t, veri, bugun);
+    return true;
+  });
+  if (secili.length === 0) return null;
+
+  const onemliler = secili.filter((t) => t.ana);
+  const basitler = secili.filter((t) => !t.ana);
   // Hiç önemli işaretlenmemişse ilki öne çıkar: ekran sınıfsız kalmasın.
   if (onemliler.length === 0 && basitler.length > 0) onemliler.push(basitler.shift());
 
@@ -970,16 +1007,30 @@ async function ciz() {
 
   const harcama = harcamaBlogu(veri, bugun, aksam);
   const odeme = sonrakiOdemeBlogu(veri, bugun);
-  const aliskanlik = aliskanlikBlogu(veri, bugun, aksam, simdi, isaretle);
   const abonelik = abonelikBlogu(veri, bugun);
 
-  // Kip yalnız sırayı değiştirmez; bloklar zaten farklı detay seviyesinde
-  // kuruldu. Sıradaki ödeme her iki kipte de harcamanın hemen altında:
-  // cevabı bir satırlık bir soru, listeye inmeden görünmeli. Abonelik
-  // listesi her iki kipte de sonuncu — sabit çapa.
+  // Akşam alışkanlıklar İKİYE bölünür: bekleyenler ekranın en üstüne,
+  // kalanlar (işaretlenmiş ya da bugün beklenmeyenler) gündüzkü yerine.
+  // Bir alışkanlık işaretlendiği anda kart aşağı iner — akşam boyunca
+  // yukarıda kalması yapılmış işi yapılacakmış gibi gösterirdi. Hepsi
+  // işaretliyse üst blok hiç oluşmaz ve ekran gündüz düzenine döner.
+  const bekleyen = aksam
+    ? aliskanlikBlogu(veri, bugun, aksam, simdi, isaretle, 'bekleyen')
+    : null;
+  const kalan = aliskanlikBlogu(
+    veri,
+    bugun,
+    aksam,
+    simdi,
+    isaretle,
+    aksam ? 'kalan' : 'tumu'
+  );
+
+  // Sıradaki ödeme her iki kipte de harcamanın hemen altında: cevabı bir
+  // satırlık bir soru, listeye inmeden görünmeli. Abonelik listesi her iki
+  // kipte de sonuncu — sabit çapa.
   ekran.replaceChildren(
-    ...(aksam ? [aliskanlik, harcama, odeme] : [harcama, odeme, aliskanlik]),
-    abonelik
+    ...[bekleyen, harcama, odeme, kalan, abonelik].filter(Boolean)
   );
   ekran.removeAttribute('aria-busy');
   cizimSurdu = false;
