@@ -178,22 +178,30 @@ export function buyukSayi(sayi, birim, boy, secenek) {
 }
 
 /**
- * Ayrıntı sayfasına açılan blok başlığı.
+ * Ayrıntı sayfasına açılan blok başlığı — hedef BLOĞUN TAMAMIDIR.
  *
  * Argos'ta gezinme çubuğu yok ve bilerek yok: kalıcı bir sekme şeridi,
  * ekranın altından yer yiyor ve tıklanabilir öğe sayısını iki katına
  * çıkarıyordu (şu an ekranda basılan tam iki şey var, o da alışkanlık
- * onayı). Bunun yerine bloğun KENDİ başlığı kapıdır: hangi başlığa
- * basıldığı, nereye gidileceğini zaten söylüyor.
+ * onayı). Bunun yerine bloğun KENDİSİ kapıdır.
+ *
+ * İlk sürüm başlığın üstüne küçük bir düğme koyuyordu: kutunun içi
+ * ölüyken tepesinde ayrı bir hedef duruyordu, hem bulunması gereken bir
+ * şeydi hem de kutuyla ilişkisi belirsizdi. Şimdi bağlantı `::after` ile
+ * bloğun tamamını kaplıyor — okunacak metin yine kısa ("BUGÜN"), ama
+ * basılacak alan kutunun kendisi.
  *
  * <a> olması gerekli: geri tuşu, klavye odağı ve "yeni sekmede aç"
  * bedavaya geliyor; aynı işi yapan bir <button> üçünü de elde ister.
+ * Ok işareti bağlantının DIŞINDA: ekran okuyucu "BUGÜN" der, "BUGÜN ›"
+ * demez, ama gören göz kutunun açıldığını okun varlığından anlar.
  */
-export function baslikBagi(metin, rota) {
-  const bag = el('a', 'etiket etiket-bag');
+export function kapiBasligi(metin, rota) {
+  const satir = el('div', 'ust-satir');
+  const bag = el('a', 'etiket kapi-bag', metin);
   bag.href = '#' + rota;
-  bag.append(el('span', null, metin), el('span', 'etiket-ok', '›'));
-  return bag;
+  satir.append(bag, el('span', 'kapi-ok', '›'));
+  return satir;
 }
 
 /** Solda etiket, sağda ham veri — blok başlıkları hep bu biçimde. */

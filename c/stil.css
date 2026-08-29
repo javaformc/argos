@@ -1044,40 +1044,66 @@ body[data-kip='gunduz'] .kart-ikincil {
    aynı üç ses, aynı kategori renkleri. Değişen tek şey ölçek — ana ekran
    günü, bu sayfa ayı anlatıyor. */
 
-/* Blok başlığı kapı olduğunda: aynı etiket, sonunda bir ok. Ok, başlığın
-   tıklanabilir olduğunu söyleyen tek işaret — renk tek başına söyleseydi
-   renk körü bir okuyucu için kapı görünmez olurdu. */
-.etiket-bag {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  align-self: flex-start;
-  color: var(--soluk);
-  text-decoration: none;
-  /* Dokunma hedefi metnin kendisinden büyük: 11px'lik bir etiket parmak
-     için hedef değildir. Negatif kenar boşluğu, büyüyen hedefin yerleşimi
-     kaydırmasını engelliyor. */
-  margin: -6px -8px;
-  padding: 6px 8px;
-  border-radius: 3px;
+/* Kapı olan blok: hedef KUTUNUN TAMAMI.
+   Bağlantı görünürde yalnız başlıktır ama `::after` ile bloğun her
+   yerini kaplar — 11px'lik bir etiket parmak için hedef değil, kutu ise
+   zaten oraya bakarken gözün durduğu yer. Ok sağ üst köşede: kutunun
+   açıldığını söyleyen tek işaret, çünkü renk tek başına söyleseydi renk
+   körü bir okuyucu için kapı görünmez olurdu. */
+.blok-kapi {
+  position: relative;
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease;
 }
 
-.etiket-ok {
+/* Odak da hover da BLOĞA uygulanır, başlığa değil: tepki hedefin
+   kendisinden küçük bir yerde belirirse tıklanan şeyin ne olduğu
+   belirsizleşir. */
+.blok-kapi:hover,
+.blok-kapi:focus-within {
+  border-color: var(--vurgu-serit);
+}
+
+.blok-kapi:focus-within {
+  outline: 2px solid var(--vurgu);
+  outline-offset: 1px;
+}
+
+.kapi-bag {
+  color: var(--soluk);
+  text-decoration: none;
+}
+
+/* Görünmez kaplama. Kaplamanın görünen bir yüzeyi yok, yalnız tıklama
+   alanı — ama `z-index` şart: blok içindeki hafta grafiği konumlandırılmış
+   bir kutu ve DOM'da sonra geldiği için kaplamanın üstünde boyanıyor,
+   grafiğin üzerine yapılan tıklama kapıya ulaşmıyordu. */
+.kapi-bag::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Odak halkası bloğun kendisinde belirdiği için bağlantının kendi
+   halkası bastırılır; iki halka üst üste binerdi. */
+.kapi-bag:focus-visible {
+  outline: none;
+}
+
+.blok-kapi:hover .kapi-bag,
+.blok-kapi:focus-within .kapi-bag,
+.blok-kapi:hover .kapi-ok,
+.blok-kapi:focus-within .kapi-ok {
+  color: var(--vurgu);
+}
+
+.kapi-ok {
   font-size: 15px;
   line-height: 1;
   font-stretch: 100%;
+  color: var(--soluk);
   transform: translateY(-1px);
-}
-
-.etiket-bag:hover,
-.etiket-bag:focus-visible {
-  color: var(--vurgu);
-  background: var(--vurgu-yumusak);
-}
-
-.etiket-bag:focus-visible {
-  outline: 2px solid var(--vurgu);
-  outline-offset: 1px;
 }
 
 /* --- Gezinme satırı ----------------------------------------------------- */

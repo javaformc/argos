@@ -17,7 +17,7 @@ import * as H from '../js/hesap.js';
 import { yerelKaynak, veriYukle, onayIsaretle } from '../js/veri.js';
 import { harcamaSayfasi } from './harcama.js';
 import {
-  baslikBagi,
+  kapiBasligi,
   genisEkran,
   el,
   AYLAR,
@@ -171,9 +171,11 @@ function harcamaBlogu(veri, bugun, aksam) {
   const dagilim = kategoriDagilimi(bugunku, veri.kur);
   const k = kiyas(veri, bugun);
 
-  // Başlık aynı zamanda ayrıntı sayfasının kapısı: burada kesilen her
-  // şey (üç kayıt, beş dilim, yedi gün) orada tam duruyor.
-  blok.append(baslikBagi(aksam ? 'BUGÜN HARCANAN' : 'BUGÜN', 'harcama'));
+  // Blok aynı zamanda ayrıntı sayfasının kapısı: burada kesilen her şey
+  // (üç kayıt, beş dilim, yedi gün) orada tam duruyor. Tıklama hedefi
+  // başlık değil kutunun tamamı — kapiBasligi'ndeki nota bak.
+  blok.classList.add('blok-kapi');
+  blok.append(kapiBasligi(aksam ? 'BUGÜN HARCANAN' : 'BUGÜN', 'harcama'));
   blok.append(buyukSayi(lira(toplam), '₺', aksam ? 'orta' : 'dev', { bos }));
 
   // Kıyas cümlesi büyük sayının HEMEN ALTINDA, iki kipte de. Sayı ile
