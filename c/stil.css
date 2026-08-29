@@ -1,0 +1,1006 @@
+/* Argos C — A'nın görselliği, B'nin yapısı.
+
+   NEREDEN NE ALINDI
+     B'den : tek ekran + yükseklik bütçesi, kart yüzeyi, üç tipografik ses,
+             zorunlu bağlam cümlesi, ölçülmüş sığdırma, saatin katmanlama
+             ekseni olması (kip yalnız sırayı değil detay seviyesini de
+             değiştirir).
+     A'dan : kategori kimliğini kodlayan renkli palet, haftalık sütun
+             grafiği, 14 günlük alışkanlık izi, ve KOYU TEMANIN ZEMİNİ —
+             bu tasarımın ana yüzü koyu tema, açık tema onun çevrilmişi.
+
+   DÖRT GÖRSEL BİÇİM, DÖRT AYRI SORU
+     yığın şeridi -> para nereye gitti       (parça-bütün)
+     sütun dizisi -> hafta nasıl gidiyor     (zamanda büyüklük)
+     iz şeridi    -> alışkanlık sürüyor mu   (gün gün durum)
+     halka        -> bugün ne oldu, basılır  (durum kütlesi + dokunma hedefi)
+   B'nin "en fazla iki biçim" kuralı burada bilerek esnetildi. O kural
+   Exist'in yedi grafiğine karşı yazılmıştı; asıl yasak "aynı soruyu iki
+   biçimde sormak". Dördü de ayrı soru soruyor ve parça-bütün taşıyan İKİ
+   veri de (kategori payı, abonelik payı) tek biçimle, yığın şeridiyle
+   çiziliyor — ikincisi için grafik icat edilmiyor.
+
+   RENK — üç rol, karışmaz
+     kategori hue'ları (8 + nötr) : "bu ne"          yalnız şerit ve lejant
+     vurgu (periwinkle)           : "bu bugün/şimdi" bugünkü sütun, odak
+     durum (yeşil / gül)          : "yapıldı/kaçırıldı" yalnız alışkanlık
+   B'nin "en fazla 3 hue" kuralı da bilerek esnetildi. O kuralın gerçek
+   gerekçesi renk sayısı değil, renge ETİKETSİZ bilgi yüklemekti. Burada
+   A'nın koruması geçerli: renkli her öğenin yanında yazılı adı ve tutarı
+   var; renk tek başına hiçbir bilgiyi taşımaz, kaybolsa tablo okunur.
+   Yargı ekseni yok: hiçbir TUTAR kırmızı ya da yeşil değil. Yeşil yalnız
+   alışkanlık onayında, gül yalnız kaçırılan günde.
+
+   KÖŞE: yapı keskin (3px). Yalnız dokunulabilen şey tam yuvarlaktır ve
+   ekranda basılabilen tam iki şey var. */
+
+:root {
+  color-scheme: light;
+
+  --zemin: #e8eaf0;
+  --kart: #ffffff;
+  --cizgi: #d3d7e1;
+  --murekkep: #131722;
+  --soluk: #666d80;
+  --sutun: #b4bbca;
+  --bos: #dfe2ea;
+
+  --vurgu: #2743c8;
+  --vurgu-yumusak: #2743c81f;
+  --durum: #12704f;
+  --durum-zemin: #d6ede1;
+  --eksi: #b03654;
+
+  /* Kategorik palet, açık zemin için adımlanmış. Renk KATEGORİYE bağlıdır,
+     sıraya değil: market bugün birinci de olsa dördüncü de olsa aynı
+     mavidir. Sırayı takip eden bir palet, iki günü üst üste okumayı
+     imkânsız kılar — A'nın en iyi kararı buydu. */
+  --k1: #2a6fd6;
+  --k2: #d95f22;
+  --k3: #128a63;
+  --k4: #a97a06;
+  --k5: #c9558a;
+  --k6: #7550d2;
+  --k7: #0f7f96;
+  --k8: #5f7a1e;
+  --kn: #8d94a6;
+
+  /* Sıra kademeleri — vurgu renginin dört parlaklığı. */
+  --p1: #1b3a86;
+  --p2: #3f5fb4;
+  --p3: #7a8fd0;
+  --p4: #b3bfe3;
+
+  --yazi: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --kenar: 18px;
+  --ara: 10px;
+}
+
+/* KOYU TEMA — tasarımın ana yüzü, ilk o çizildi.
+   A'nın koyu zemini (#12151e ailesi) korundu ama bir kademe
+   derinleştirildi: A kartsızdı, C'de kartın zeminin ÜSTÜNDE durması
+   gerekiyor ve bunun için zeminin altta kalacak yeri olmalı.
+   Vurgu A'nın periwinkle'ı: koyu ekranda tek ışıklı renk olması A'nın
+   koyu temasını taşıyan şeydi, korundu. */
+:root[data-tema='koyu'] {
+  color-scheme: dark;
+
+  --zemin: #0e111a;
+  --kart: #181c28;
+  --cizgi: #2b3140;
+  --murekkep: #e7e9f0;
+  --soluk: #8b91a5;
+  --sutun: #454c62;
+  --bos: #232837;
+
+  --vurgu: #8ba0ff;
+  --vurgu-yumusak: #8ba0ff26;
+  --durum: #4fd39b;
+  --durum-zemin: #113526;
+  --eksi: #e0798f;
+
+  /* Aynı sekiz hue, koyu zemin için yeniden adımlanmış — opaklık
+     düşürülerek değil. Opaklık hue'yu zemine karıştırır ve sekiz renk
+     görsel olarak beşe iner. */
+  --k1: #5b96f5;
+  --k2: #f08246;
+  --k3: #35bb8c;
+  --k4: #d5a52c;
+  --k5: #e578ab;
+  --k6: #a889f0;
+  --k7: #3fb0c6;
+  --k8: #9cb84a;
+  --kn: #737a8e;
+
+  /* Kademe sırası "koyudan açığa" değil "yüksek kontrasttan düşüğe"
+     tanımlı: koyu temada literal parlaklık ters döner ama okuma yönü
+     aynı kalır. Tema geçişinde sessizce bozulan tipik hata budur. */
+  --p1: #b3c6ff;
+  --p2: #7f95dd;
+  --p3: #5f74b0;
+  --p4: #47578a;
+}
+
+/* KİP RENGİ — akşam bir kademe koyulaşır, iki temada da AYNI YÖNE.
+   Blok sırası okunmadan hangi kipte olunduğu anlaşılmalı. Ters yön
+   ("günü kapat" derken ekranın parlaması) kipin anlamını bozar. */
+body[data-kip='aksam'] {
+  --zemin: #d6d9e2;
+  --kart: #f6f7fa;
+  --cizgi: #c5cad7;
+  --bos: #d5d8e1;
+}
+
+:root[data-tema='koyu'] body[data-kip='aksam'] {
+  --zemin: #05070c;
+  --kart: #10131c;
+  --cizgi: #262c3b;
+  --bos: #1b2029;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Dikey kaydırma yok. Bütçe aşılırsa blok BÜYÜMEZ, içerik kısılır —
+   bu yüzden her yerde overflow:hidden + min-height:0. */
+body {
+  margin: 0;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--zemin);
+  color: var(--murekkep);
+  font-family: var(--yazi);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sayfa {
+  height: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  padding: 8px var(--kenar) 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Üst şerit ---------------------------------------------------------- */
+
+.ust {
+  flex: 0 0 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ust-tarih,
+.ust-saat {
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.12em;
+  color: var(--soluk);
+}
+
+/* Saat mürekkep renginde: kipi o belirliyor, tarihten daha çok işi var. */
+.ust-saat {
+  color: var(--murekkep);
+}
+
+/* Yalnız akşam doluyor. Zemin tonu kipi zaten söylüyor; bu rozet onu
+   kelimeyle yedekliyor — renk tek başına hiçbir bilgiyi taşımaz kuralı
+   kip için de geçerli. */
+.ust-kip {
+  margin-left: auto;
+  margin-right: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  font-stretch: 62%;
+  letter-spacing: 0.12em;
+  color: var(--vurgu);
+  white-space: nowrap;
+}
+
+/* --- Yükseklik bütçesi --------------------------------------------------
+   Oranlar ölçülmüş içerikten geldi, yuvarlak sayıdan değil:
+     gündüz  harcama    339 = sayı 59 + cümle 31 + şerit 17 + lejant 54
+                            + hafta 77 + 3 kayıt satırı 65 + çerçeve 36
+             alışkanlık 173 = spor 104 + ara 8 + erken uyku 61
+             abonelik   152
+     akşam   alışkanlık 256 (kartlar büyür, geri sayım eklenir)
+             harcama    258 (sayı küçülür, kayıt listesi kapanır)
+             abonelik   152 — iki kipte de aynı: sabit çapa.
+   Sabit px yerine ORAN: 667'de her şey orantılı kısılır ve sığdırma
+   devreye girer, 844'te fazlalık en çok yeri hak eden bloğa gider. */
+
+#ekran {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: var(--ara);
+  grid-template-rows: minmax(0, 350fr) minmax(0, 174fr) minmax(0, 168fr);
+}
+
+body[data-kip='aksam'] #ekran {
+  grid-template-rows: minmax(0, 256fr) minmax(0, 268fr) minmax(0, 173fr);
+}
+
+/* --- Bloklar ------------------------------------------------------------ */
+
+.blok {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--kart);
+  border: 1px solid var(--cizgi);
+  border-radius: 3px;
+  padding: 8px 12px;
+}
+
+/* Alışkanlık bloğu yüzeysizdir: içindeki iki kart zaten yüzey, yüzey
+   içinde yüzey blok sınırlarını bulanıklaştırır. */
+.blok-aliskanlik {
+  background: none;
+  border: 0;
+  padding: 0;
+  gap: 8px;
+}
+
+/* --- Üç ses -------------------------------------------------------------
+   SINAV: cümle kuruyorsan (özne-yüklem, sonunda nokta) yerin .yorum'dur.
+   Cümle kuramıyorsan .veri kalırsın. "6 gündür bekliyor" gibi yarım
+   cümleler iki sesin arasına düşer ve ekranı tek sesli gösterir. */
+
+.etiket {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.12em;
+  color: var(--soluk);
+}
+
+.yorum {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  font-stretch: 118%;
+  line-height: 1.25;
+  color: var(--murekkep);
+}
+
+.veri {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.04em;
+  color: var(--soluk);
+}
+
+.dipnot {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.04em;
+  color: var(--soluk);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ust-satir {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* --- Büyük sayı ---------------------------------------------------------
+   Ekranda tek bir "en büyük sayı" olur, ikinci en büyük ondan belirgin
+   şekilde küçüktür. Gündüz o sayı harcama toplamı (60px), akşam ana
+   alışkanlığın serisi (62px): kip, hangi sorunun sorulduğunu punto ile
+   söyler. Genişlik ekseni 110 — 100 büyük puntoda zayıf duruyordu. */
+
+.sayi {
+  margin: 0;
+  /* line-height 0.9 satır kutusunu rakamdan alçak yapar; alt dolgu
+     olmadan kartın overflow:hidden'ı rakamın altını tıraşlar. */
+  padding-bottom: 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-stretch: 110%;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.sayi b {
+  font-weight: 700;
+  line-height: 0.9;
+}
+
+/* Para birimi rakamla AYNI ağırlıkta: 700'lük rakamın yanındaki 600'lük
+   ₺ büyük puntoda iki ayrı yazı tipi gibi okunuyor. Seri birimi
+   ("GÜNDÜR") bu kuralın dışında — o bir etiket, 600 kalır. */
+.sayi span {
+  font-stretch: 100%;
+  font-weight: 700;
+  color: var(--soluk);
+}
+
+.sayi[data-boy='dev'] b { font-size: 54px; }
+.sayi[data-boy='dev'] span { font-size: 22px; }
+
+.sayi[data-boy='orta'] b { font-size: 38px; }
+.sayi[data-boy='orta'] span { font-size: 17px; }
+
+.sayi[data-boy='kucuk'] b { font-size: 27px; }
+.sayi[data-boy='kucuk'] span { font-size: 14px; }
+
+/* Seri sayısının birimi bir ETİKET; veri sesiyle dizilir. */
+.sayi[data-seri] span {
+  font-size: 10px;
+  font-stretch: 62%;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.sayi[data-boy='seri-dev'] b { font-size: 62px; }
+.sayi[data-boy='seri-orta'] b { font-size: 40px; }
+.sayi[data-boy='seri-kucuk'] b { font-size: 36px; }
+.sayi[data-boy='seri-mini'] { padding-bottom: 2px; }
+.sayi[data-boy='seri-mini'] b { font-size: 21px; }
+
+/* Boş gün geçerli bir gündür: soluk ton, uyarı rengi değil. */
+.sayi[data-bos='evet'] b,
+.sayi[data-bos='evet'] span {
+  color: var(--soluk);
+}
+
+/* --- Biçim 1: yığın şeridi ----------------------------------------------
+   Dilimler arası GAP YOK: 2px boşluk büyük dilimde görünmez ama %2'lik
+   kuyruk dilimini şeritten kopmuş bir çentiğe çevirir. Ayrım kart zemini
+   renginde bir kıl payı iç gölgeyle verilir — dilimin genişliğinden
+   yemez, hizayı bozmaz. */
+
+.serit {
+  display: flex;
+  height: 12px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--bos);
+}
+
+.serit-ince {
+  height: 9px;
+}
+
+/* Boş gün: şerit YERİNİ korur, çizilmez. Boş bir yüzdelik çubuk sıfır
+   bilgi taşıyıp "yükleniyor iskeleti" silueti veriyordu; yeri korunur ki
+   dolu ve boş ekranda bloklar aynı dikey konumda başlasın. */
+.serit[data-bos='evet'] {
+  visibility: hidden;
+}
+
+.serit i {
+  display: block;
+  min-width: 8px;
+}
+
+.serit i + i {
+  box-shadow: inset 1px 0 0 var(--kart);
+}
+
+.serit i[data-renk='1'] { background: var(--k1); }
+.serit i[data-renk='2'] { background: var(--k2); }
+.serit i[data-renk='3'] { background: var(--k3); }
+.serit i[data-renk='4'] { background: var(--k4); }
+.serit i[data-renk='5'] { background: var(--k5); }
+.serit i[data-renk='6'] { background: var(--k6); }
+.serit i[data-renk='7'] { background: var(--k7); }
+.serit i[data-renk='8'] { background: var(--k8); }
+.serit i[data-renk='n'] { background: var(--kn); }
+
+/* Abonelik şeridi kategori değil SIRA kodlar: kademe 1 en büyük pay. */
+.serit i[data-kademe='1'] { background: var(--p1); }
+.serit i[data-kademe='2'] { background: var(--p2); }
+.serit i[data-kademe='3'] { background: var(--p3); }
+.serit i[data-kademe='4'] { background: var(--p4); }
+.serit i[data-kademe='n'] { background: var(--kn); }
+
+/* --- Kategori lejantı ---------------------------------------------------
+   A'dan alındı ve TL değeriyle: yüzde ancak toplam akılda tutulursa işe
+   yarar, TL doğrudan eyleme çevrilebilir bir sayıdır. Şeritteki dilim
+   sayısı ile buradaki satır sayısı HER ZAMAN eşit — yalnız renkle
+   temsil edilen dilim kalmaz. */
+
+.lejant {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.02em;
+}
+
+.lejant li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  line-height: 16px;
+}
+
+.lejant .nokta {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.lejant .ad {
+  flex: 1;
+  min-width: 0;
+  color: var(--soluk);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lejant .tut {
+  flex: none;
+  font-weight: 700;
+  color: var(--murekkep);
+}
+
+.nokta[data-renk='1'] { background: var(--k1); }
+.nokta[data-renk='2'] { background: var(--k2); }
+.nokta[data-renk='3'] { background: var(--k3); }
+.nokta[data-renk='4'] { background: var(--k4); }
+.nokta[data-renk='5'] { background: var(--k5); }
+.nokta[data-renk='6'] { background: var(--k6); }
+.nokta[data-renk='7'] { background: var(--k7); }
+.nokta[data-renk='8'] { background: var(--k8); }
+.nokta[data-renk='n'] { background: var(--kn); }
+.nokta[data-kademe='1'] { background: var(--p1); }
+.nokta[data-kademe='2'] { background: var(--p2); }
+.nokta[data-kademe='3'] { background: var(--p3); }
+.nokta[data-kademe='4'] { background: var(--p4); }
+.nokta[data-kademe='n'] { background: var(--kn); }
+
+/* --- Biçim 2: hafta sütunları -------------------------------------------
+   A'nın en pahalı ama en verimli öğesi, C'ye olduğu gibi alındı. Tek
+   kıyas cümlesi farkın NEREDEN geldiğini söylemez; sütunlar haftanın
+   ritmini bir bakışta verir.
+
+   Kesikli ortalama çizgisi C'nin eklemesi: "815 ₺ fazla" cümlesindeki
+   ortalama, çizginin tam olarak durduğu yerdir. Cümle ile grafik böylece
+   aynı şeyi iki dilde söyler, birbirini doğrular. */
+
+.hafta {
+  margin-top: 8px;
+}
+
+.hafta-alan {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  align-items: end;
+  height: clamp(28px, 4.6vh, 36px);
+  margin-top: 4px;
+}
+
+.hafta-alan i {
+  display: block;
+  border-radius: 2px 2px 0 0;
+  background: var(--sutun);
+  /* Boş gün de görünür bir taban bırakır: sıfır harcama ile kayıtsız gün
+     ayrı şeylerdir, sütunun tümden kaybolması ikincisini ima eder. */
+  min-height: 2px;
+}
+
+.hafta-alan i[data-bugun] {
+  background: var(--vurgu);
+}
+
+.hafta-ort {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed var(--soluk);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.hafta-etiket {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.06em;
+  color: var(--soluk);
+  text-align: center;
+}
+
+.hafta-etiket span[data-bugun] {
+  color: var(--vurgu);
+  font-weight: 700;
+}
+
+/* --- Harcama bloğu ------------------------------------------------------ */
+
+.blok-harcama .yorum {
+  margin: 4px 0 8px;
+}
+
+.blok-harcama .hafta + .veri {
+  margin-top: 6px;
+}
+
+body[data-kip='aksam'] .blok-harcama .yorum {
+  margin: 6px 0 0;
+}
+
+body[data-kip='aksam'] .blok-harcama .hafta {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-kip='aksam'] .blok-harcama .hafta-alan {
+  flex: 1;
+  /* Kısa telefonda taban 28 olunca başlık + alan + gün etiketi 55px
+     istiyor, kutuya 40px düşüyordu ve etiket satırı kesiliyordu. */
+  min-height: 22px;
+  max-height: 72px;
+}
+
+/* Izgara LİSTEDE tanımlı, satırda değil: her satır kendi grid'ini
+   kursaydı sütunlar satırlar arasında paylaşılmaz ve "detay" sütunu her
+   satırda başka bir x'ten başlardı. display:contents satırın kutusunu
+   kaldırır, hücreler doğrudan listenin sütunlarına oturur. */
+.kayitlar {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  margin: 7px 0 0;
+  padding: 5px 0 3px;
+  list-style: none;
+  border-top: 1px solid var(--cizgi);
+  display: grid;
+  grid-template-columns: 38px auto minmax(0, 1fr) auto;
+  column-gap: 9px;
+  align-content: start;
+  align-items: baseline;
+  line-height: 19px;
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: 62%;
+}
+
+.kayit {
+  display: contents;
+}
+
+.kayit .saat,
+.kayit .detay {
+  color: var(--soluk);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.kayit .tutar {
+  font-weight: 700;
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.kayit-fazla {
+  grid-column: 1 / -1;
+  line-height: 19px;
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.04em;
+  color: var(--soluk);
+}
+
+/* Boş liste: üst AYRAÇ çizilmez. Sınırı çizilip içi boş bırakılan alan
+   "burada içerik vardı ve yüklenemedi" der; kasıtlı boşluk sessizdir. */
+.kayitlar-bos {
+  border-top: 0;
+  padding-top: 0;
+  grid-template-columns: 1fr;
+  align-content: center;
+  place-items: center;
+}
+
+.kayit-bos {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: 62%;
+  color: var(--soluk);
+  white-space: nowrap;
+}
+
+/* --- Alışkanlık kartları ------------------------------------------------
+   Halka için SABİT sütun: 72px'lik ve 44px'lik hedefler gövdeyi farklı
+   genişlikte bıraksaydı iki kartın ritim etiketi ve durum kelimesi
+   birbirine göre kayardı. Halka boyutu farkı kasıtlı, kelimelerin
+   kayması değildi. */
+
+.kart {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px;
+  align-items: center;
+  gap: 10px;
+  background: var(--kart);
+  border: 1px solid var(--cizgi);
+  border-radius: 3px;
+  /* Yatay dolgu blok dolgusuyla eşit (12px): kartlar yüzeysiz bloğun
+     içinde olduğu için farklı bir değer, iki iz şeridini birbirinin
+     altında kayık gösterirdi. */
+  padding: 8px 12px;
+  overflow: hidden;
+}
+
+/* İki alışkanlık HİÇBİR KİPTE eşit boyutta çizilmez: eşit iki kart
+   ızgara değil "eksik ızgara" gibi görünür. Oran iki kipte de ~1.7 —
+   kip değişince ikisi de büyür ama hangisinin ana olduğu değişmez. */
+body[data-kip='gunduz'] .kart-ana {
+  flex: 107;
+}
+
+body[data-kip='gunduz'] .kart-ikincil {
+  flex: 58;
+  padding: 6px 12px;
+}
+
+body[data-kip='aksam'] .kart-ana {
+  flex: 150;
+  /* Yüksek kartta ortalanmış gövde asılı kalır: ad üste, seri ortaya,
+     cümle alta yaslanır ve boşluk kasıtlı görünür. */
+  align-items: stretch;
+}
+
+body[data-kip='aksam'] .kart-ana .kart-govde {
+  justify-content: space-between;
+}
+
+body[data-kip='aksam'] .kart-ikincil {
+  flex: 96;
+}
+
+.kart-govde {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+
+.kart-ad {
+  font-size: 12px;
+  font-weight: 700;
+  font-stretch: 62%;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kart-ritim {
+  font-size: 10px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.06em;
+  color: var(--soluk);
+  white-space: nowrap;
+}
+
+.kart-seri {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Durumun ÜÇÜNCÜ kanalı: kütle (dolu/boş halka) ve renk kaybolsa da
+   kelime kalır. Renk körlüğünde, gri tonlamada, güneşte bilgi okunur. */
+.durum-kelime {
+  font-size: 10px;
+  font-weight: 700;
+  font-stretch: 62%;
+  letter-spacing: 0.12em;
+  color: var(--soluk);
+  white-space: nowrap;
+}
+
+.durum-kelime[data-durum='yapildi'] { color: var(--durum); }
+.durum-kelime[data-durum='kacirildi'] { color: var(--eksi); }
+.durum-kelime[data-durum='bekliyor'] { color: var(--vurgu); }
+
+/* --- Biçim 3: 14 günlük iz ----------------------------------------------
+   A'dan alındı. Seri sayısı ŞU ANKİ seriyi verir, iz DESENİ verir:
+   "hafta içi düzenliyim, hafta sonu değil" ancak burada görünür ve bir
+   alışkanlık takipçisinin asıl vaadi budur.
+
+   A'nın kusuru düzeltildi: A beş durumu tek gri ve iki opaklık kademesiyle
+   (0.45 ve 0.25) ayırıyordu, "kayıtsız" ile "ara günü" ayırt edilemiyordu.
+   Burada ayrım BİÇİMLE yapılıyor:
+     yapıldı   -> tam kütle, durum yeşili
+     kaçırıldı -> tam kütle, gül
+     bugün     -> tam boy çerçeve, vurgu
+     ara günü  -> ince orta çizgi; atlanan gün bir başarısızlık değildir
+     kayıtsız  -> hiç iz yok; takip başlamadan önceki güne işaret uydurulmaz */
+
+.iz {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  align-items: center;
+}
+
+.iz i {
+  flex: 1;
+  min-width: 0;
+  max-width: 14px;
+  height: 8px;
+  border-radius: 2px;
+  background: transparent;
+}
+
+.iz i[data-d='yapildi'] { background: var(--durum); }
+.iz i[data-d='yapilmadi'] { background: var(--eksi); }
+.iz i[data-d='bekliyor'] { box-shadow: inset 0 0 0 1.5px var(--vurgu); }
+
+.iz i[data-d='kayitsiz'] {
+  background: var(--bos);
+}
+
+.iz i[data-d='beklenmiyor'] {
+  height: 2px;
+  border-radius: 1px;
+  background: var(--sutun);
+}
+
+/* --- Biçim 4: halka (tek dokunma hedefi) -------------------------------- */
+
+.onay {
+  align-self: center;
+  justify-self: center;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px dashed var(--cizgi);
+  background: transparent;
+  color: var(--soluk);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.onay-kucuk {
+  width: 44px;
+  height: 44px;
+}
+
+.onay svg {
+  width: 32px;
+  height: 32px;
+  display: block;
+}
+
+.onay-kucuk svg {
+  width: 20px;
+  height: 20px;
+}
+
+.onay[data-durum='yapildi'] {
+  border: 2px solid var(--durum);
+  background: var(--durum-zemin);
+  color: var(--durum);
+}
+
+.onay[data-durum='kacirildi'] {
+  border: 2px solid var(--eksi);
+  color: var(--eksi);
+}
+
+.onay[data-durum='bekliyor'] {
+  border: 2px dashed var(--vurgu);
+  color: var(--vurgu);
+}
+
+/* Ara günü halkası SÖNÜKTÜR ama görünür kalır. Sönüklüğü opaklıkla
+   vermek kenarı kart zeminine karıştırıp ekranın en büyük dokunma
+   hedefini güneşte kaybediyordu; ayrı bir kenar rengiyle veriliyor. */
+.onay[data-durum='beklenmiyor'] {
+  border: 2px solid var(--sutun);
+  color: var(--soluk);
+}
+
+.onay:disabled {
+  opacity: 0.5;
+}
+
+.onay:focus-visible {
+  outline: 2px solid var(--vurgu);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .onay {
+    transition: background-color 120ms ease, border-color 120ms ease;
+  }
+}
+
+/* --- Kısa telefon (667px ve altı) ---------------------------------------
+   Alışkanlık bloğunun MUTLAK tabanı iki halkanın toplamıdır:
+   72 + 44 + dolgular + ara = 158px. 667'de bloğa 145px düşüyordu ve kart
+   kendi dokunma hedefini kesiyordu — sığdırma cümleyi ve izi atsa bile
+   halka kalıyor, çünkü halka feda edilemez.
+
+   Çözüm ölçüye iniyor: ana halka 72 -> 64. 44px erişilebilirlik tabanının
+   hâlâ epey üstünde ve iki halka arasındaki boyut farkı korunuyor.
+   Bütçeden de 25 birim alışkanlığa kayıyor; abonelik bu boyda zaten tek
+   satıra düşmüş durumda, kaybı en az olan blok o. Akşam kipine
+   dokunulmuyor: orada blok zaten 221px alıyor ve taban sorunu yok. */
+@media (max-height: 700px) {
+  .kart {
+    grid-template-columns: minmax(0, 1fr) 64px;
+  }
+
+  /* :not(.onay-kucuk) ŞART: düz `.onay` yazıldığında bu kural sonra
+     geldiği için ikincil halkayı da 64'e çıkarıyordu — iki alışkanlığın
+     boyut asimetrisi kısa telefonda sessizce yok oluyor ve tam kaçınılan
+     "eksik ızgara" silueti geri geliyordu. */
+  .onay:not(.onay-kucuk) {
+    width: 64px;
+    height: 64px;
+  }
+
+  .onay:not(.onay-kucuk) svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  body[data-kip='gunduz'] #ekran {
+    grid-template-rows: minmax(0, 330fr) minmax(0, 185fr) minmax(0, 160fr);
+  }
+
+  body[data-kip='gunduz'] .kart-ana {
+    flex: 100;
+  }
+
+  body[data-kip='gunduz'] .kart-ikincil {
+    flex: 65;
+  }
+
+  /* Akşamda iki halka da 72 (kip, iki alışkanlığı eşit ağırlıkta sorar).
+     Kısa telefonda iki 64'lük halka bloğun tabanını 174px'e çıkarıyor ve
+     ikincil kart kendi hedefini kesiyordu. Boyut farkı geri getiriliyor:
+     asimetri hiçbir kipte kaybolmamalı, en dar ekranda bile. */
+  .kart-ikincil {
+    grid-template-columns: minmax(0, 1fr) 44px;
+  }
+
+  .kart-ikincil .onay {
+    width: 44px;
+    height: 44px;
+  }
+
+  .kart-ikincil .onay svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* --- Abonelik bloğu -----------------------------------------------------
+   En sıkı bütçeli blok: sayı + yorum + şerit + dört satır + dipnot.
+   Sayı ve yorum AYNI SATIRDA — ayrı satırlardayken bloğun yaklaşık
+   %40'ı çerçeveye gidiyor ve dört abonelikten yalnız biri görünüyordu.
+   Ekranın altıda birini alıp işini yapmayan blok yer hak etmemiş olur. */
+
+.abone-tepe {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.abone-tepe .yorum {
+  flex: 0 1 auto;
+  text-align: right;
+  font-size: 13px;
+}
+
+.blok-abonelik .serit {
+  margin-bottom: 4px;
+}
+
+.aboneler {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  margin: 0 0 3px;
+  padding: 0 0 3px;
+  list-style: none;
+}
+
+.abone {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto 30px;
+  gap: 9px;
+  align-items: baseline;
+  line-height: 17px;
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: 62%;
+}
+
+.abone .nokta {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  align-self: center;
+}
+
+.abone .ad {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.abone .tutar {
+  color: var(--soluk);
+  white-space: nowrap;
+  justify-self: end;
+}
+
+.abone .pay {
+  font-weight: 700;
+  justify-self: end;
+}
+
+/* --- Hata --------------------------------------------------------------- */
+
+.hata {
+  grid-row: 1 / -1;
+  align-self: start;
+}
+
+.hata code {
+  display: block;
+  margin-top: 8px;
+  font-family: ui-monospace, 'Cascadia Mono', monospace;
+  font-size: 11px;
+  color: var(--soluk);
+  word-break: break-word;
+}

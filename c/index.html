@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Argos C</title>
+
+    <!-- Tema, ilk boyamadan ÖNCE seçilir. CSS'te iki ayrı token bloğu
+         tutmak (bir @media, bir [data-tema]) ikisinin zamanla ayrışması
+         demekti; tek blok bırakıp seçimi buraya almak o riski kaldırıyor.
+         Ayrıca ?tema=koyu / ?tema=acik ile zorlanabilir: koyu tema bu
+         tasarımın ana yüzü ve her doğrulamada elle görülebilmeli. -->
+    <script>
+      (function () {
+        var kok = document.documentElement;
+        var sorgu = new URLSearchParams(location.search).get('tema');
+        var medya = matchMedia('(prefers-color-scheme: dark)');
+        var uygula = function () {
+          kok.dataset.tema = (sorgu ? sorgu === 'koyu' : medya.matches) ? 'koyu' : 'acik';
+        };
+        uygula();
+        if (!sorgu) medya.addEventListener('change', uygula);
+      })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Tek aile, üç ses. Genişlik ekseni (wdth 62..125) ikinci bir yazı
+         ailesinin işini yapar: 62 = etiket ve ham veri, 100..110 = sayı,
+         118 = yorum cümlesi. B'den alındı; iki tasarımın en ucuz fikri. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+
+  <body data-kip="gunduz">
+    <div class="sayfa">
+      <header class="ust">
+        <span class="ust-tarih" id="tarih"></span>
+        <!-- Kip rozeti üst şeritte durur, blok içinde değil: "GÜNÜ KAPAT"
+             başlığı bloğa konsaydı akşam alışkanlık kartlarından 15px
+             yerdi ve 72px dokunma hedefi sıkışırdı. Üst şeritte bedava. -->
+        <span class="ust-kip" id="kip"></span>
+        <span class="ust-saat" id="saat"></span>
+      </header>
+
+      <main id="ekran" aria-busy="true">
+        <section class="blok">
+          <p class="etiket">BUGÜN</p>
+          <p class="yorum">Gün açılıyor.</p>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="ana.js"></script>
+  </body>
+</html>
