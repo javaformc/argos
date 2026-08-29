@@ -1,0 +1,802 @@
+/* Argos B.
+
+   Şartname: b/karar-raporu.md — bölüm 4 (iskelet + yükseklik bütçesi),
+   bölüm 5 (36 kabul kriteri). Buradaki her ölçü oradan gelir.
+
+   ÜÇ SES, TEK AİLE (rapor 1.8, 3.6c)
+     wdth 62  + wght 600  -> etiket ve ham veri   (.etiket, .veri, .kayit)
+     wdth 100 + wght 700  -> büyük sayı           (.dev, .orta, .kucuk)
+     wdth 118 + wght 400  -> yorum cümlesi        (.yorum)
+   Karışırsa ekran tek sesli görünür; reddedilen 1. tasarımın hatası budur.
+   SINAV: condensed 62 ekseninde yalnız ETİKET ve HAM VERİ durur. Cümle
+   kuruyorsan (özne-yüklem, sonunda nokta) yerin .yorum'dur — orada da
+   blok başına bir tane (kriter 26). Cümle kuramıyorsan .veri kalırsın;
+   "6 gündür bekliyor" gibi yarım cümleler bu yüzden ekrandan kalktı.
+
+   İKİ GÖRSEL BİÇİM, DAHA FAZLASI DEĞİL (rapor 2.4, kriter 21)
+     1) yığın şeridi  -> parça-bütün (kategori payı VE abonelik payı)
+     2) dolu/boş kütle -> alışkanlık durumu
+   Donut yok, sütun dizisi yok, ızgara yok.
+
+   RENK (rapor 4.5, kriter 17-20, 35)
+   Nötrler dışında iki hue: veri (mavi) ve durum (yeşil). Renk kategoriyi
+   KODLAMAZ; şeritteki kademe yalnız büyüklük sırasını söyler ve her
+   kademenin yanında yazılı payı vardır. Kademe sırası "koyudan açığa"
+   değil "yüksek kontrasttan düşüğe" tanımlıdır — koyu temada literal
+   parlaklık ters döner ama okuma yönü aynı kalır (rapor 3.6e).
+
+   KÖŞE: yapı keskin (3px), dokunma hedefi tam yuvarlak. Yuvarlaklık
+   "buna basılır" demektir; ekranda basılabilen tam iki şey var. */
+
+:root {
+  color-scheme: light dark;
+
+  --zemin: #e9e7e2;
+  --kart: #fbfaf8;
+  --cizgi: #cdc8bd;
+  --murekkep: #14171c;
+  --soluk: #6a6559;
+  --bos: #ded9cf;
+
+  /* Veri hue'su — d1 en yüksek kontrast (en büyük dilim), d4 en düşük. */
+  --d1: #1b3a86;
+  --d2: #3f5fb4;
+  --d3: #7a8fd0;
+  --d4: #b3bfe3;
+
+  /* Durum hue'su — yalnız "yapıldı" için, başka hiçbir yerde. */
+  --durum: #1a6549;
+  --durum-zemin: #d9ece2;
+
+  --yazi: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --kenar: 20px;
+  --ara: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Gündüz zemini bir kademe açık: akşam zaten dipte (#05070a) ve daha
+       fazla karartılamıyordu, kip farkı ise ΔL* 2.7'de kalıyordu. Fark
+       artık gündüzü açarak alınıyor. */
+    --zemin: #15191d;
+    --kart: #232830;
+    --cizgi: #3f4650;
+    --murekkep: #e9eaed;
+    --soluk: #989ea8;
+    --bos: #2a2f36;
+
+    /* Aynı okuma yönü: d1 hâlâ en yüksek kontrast, ama artık en AÇIK.
+       En sönük kademe kart zemininden (#1d2126 / akşam #161a1f) zar zor
+       ayrılıyordu; d3-d4 bir kademe yukarı alındı. Sıra korunuyor. */
+    --d1: #b3c6ff;
+    --d2: #7f95dd;
+    --d3: #5f74b0;
+    --d4: #47578a;
+
+    --durum: #74d8a5;
+    --durum-zemin: #143528;
+  }
+}
+
+/* Kip rengi: akşam zemini bir kademe koyulaşır (kriter 36).
+   Blok sırası okunmadan hangi kipte olunduğu anlaşılmalı. */
+body[data-kip='aksam'] {
+  --zemin: #dbd6cb;
+  --kart: #f3f0e9;
+  --cizgi: #c2bcaf;
+  --bos: #d0cabe;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Akşam iki temada da AYNI YÖNE gider: koyulaşır. Bir ara sürüm koyu
+     temada kartı açıyordu; kart/zemin kontrastı 7.6'dan 15'e fırlıyor ve
+     "günü kapat" anında ekran parlıyordu.
+
+     Ölçülen fark (CIE L*, hexten hesaplandı, iddia değil):
+       zemin #15191d (8.51) -> #05070a (1.86) = ΔL* 6.65
+       kart  #232830 (15.94) -> #12161b (7.06) = ΔL* 8.88
+     Akşam dipte olduğu için fark gündüz açılarak alındı. */
+  body[data-kip='aksam'] {
+    --zemin: #05070a;
+    --kart: #12161b;
+    --cizgi: #2b3138;
+    --bos: #1e2329;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Dikey kaydırma yok (kriter 1-2). Bütçe aşılırsa blok büyümez, içerik
+   kısılır — bu yüzden her yerde overflow:hidden ve min-height:0. */
+body {
+  margin: 0;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--zemin);
+  color: var(--murekkep);
+  font-family: var(--yazi);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sayfa {
+  height: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  padding: 8px var(--kenar) 14px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Üst şerit (32px, kartsız) ------------------------------------------ */
+
+.ust {
+  flex: 0 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ust-tarih,
+.ust-saat {
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.1em;
+  color: var(--soluk);
+}
+
+.ust-saat {
+  color: var(--murekkep);
+}
+
+/* --- Yükseklik bütçesi (rapor 4.1) --------------------------------------
+   Oranlar bütçe tablosundan gelir. Sabit px yerine oran kullanmak, farklı
+   telefon yüksekliklerinde de aynı hiyerarşiyi verir; birincil blok her
+   durumda kullanılabilir alanın %35'inin üstünde kalır (kriter 10).
+
+   TEK SAPMA: ikincil ile üçüncül arasındaki paylaşım. Toplam bütçe (gündüz
+   688, akşam 686) korunuyor, yalnız 16 birim alışkanlıktan aboneliğe
+   kaydırıldı. Sebep: rapor 4.2'nin abonelik çizimi 174'e yorum cümlesi
+   OLMADAN sığıyor, ama kriter 26 blok başına bir yorum istiyor. O satır
+   eklenince 174 taşıyor ve dört abonelik satırının ikisi kesiliyordu —
+   kesik satır rapor 2.10'un yasakladığı şeydir. Alışkanlık bloğu ise
+   tasarımı gereği (120 + 64) 184'e sığıyor, fazlası boşta duruyordu. */
+
+#ekran {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: var(--ara);
+  grid-template-rows: minmax(0, 314fr) minmax(0, 184fr) minmax(0, 190fr);
+}
+
+/* AKŞAM BÜTÇESİ — kriter 10 tek tek KARTA bakar, bloğa değil.
+   Eski dağılım (296/200/190) ekranda 327/221/210 üretiyordu: alışkanlık
+   bloğu iki ayrı kenarlıklı karta bölündüğü için en büyük TEK kart 146px
+   kalıyor, ekranın fiziksel olarak en büyük kartı ise ikincil harcama
+   bloğu (221px) oluyordu. Birincil blok, en büyük kartı da taşımalı.
+
+   Yeni dağılım 758 birim üzerinden: alışkanlık 363 (etiket 16 + spor 228
+   + ara 10 + erken uyku 109), harcama 188, abonelik 207. En büyük kart
+   artık spor kartı; sıra 228 > 207 > 188 > 109. */
+body[data-kip='aksam'] #ekran {
+  grid-template-rows: minmax(0, 363fr) minmax(0, 188fr) minmax(0, 207fr);
+}
+
+/* --- Bloklar ------------------------------------------------------------ */
+
+.blok {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--kart);
+  border: 1px solid var(--cizgi);
+  border-radius: 3px;
+  padding: 12px 14px;
+}
+
+/* Alışkanlık bloğu yüzeysizdir: içindeki iki kart zaten yüzeydir,
+   yüzey içinde yüzey sınırları bulanıklaştırır (rapor 2.11). */
+.blok-aliskanlik {
+  background: none;
+  border: 0;
+  padding: 0;
+  gap: 10px;
+}
+
+/* --- Ortak tipografi ---------------------------------------------------- */
+
+.etiket {
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.12em;
+  color: var(--soluk);
+}
+
+.yorum {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  font-stretch: 118%;
+  line-height: 1.25;
+  color: var(--murekkep);
+}
+
+.veri {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.02em;
+  color: var(--soluk);
+}
+
+.dipnot {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.04em;
+  color: var(--soluk);
+}
+
+/* --- Büyük sayı ---------------------------------------------------------
+   Ekranda 64px+ tam bir sayı olur (kriter 5): gündüz harcama toplamı,
+   akşam ana alışkanlığın serisi. İkinci en büyük ondan en az %40 küçük
+   (kriter 6) — 72/40, 76/44 oranları bunun için seçildi. */
+
+.sayi {
+  margin: 0;
+  /* line-height 0.92 satır kutusunu rakamdan kısa yapar; alttaki dolgu
+     olmadan kartın overflow:hidden'ı rakamın altını tıraşlar. */
+  padding-bottom: 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-stretch: 100%;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.sayi b {
+  font-weight: 700;
+  line-height: 0.92;
+}
+
+.sayi span {
+  font-stretch: 100%;
+  font-weight: 600;
+  color: var(--soluk);
+}
+
+/* ₺ (U+20BA) HAKKINDA — ölçüldü, tahmin edilmedi.
+   Denetimde "₺ başka bir yazı tipinden geliyor, fallback'e düşüyor"
+   denmişti. Tarayıcıda ölçtüm: U+20BA, Archivo'nun latin-ext dosyasında
+   VAR ve o dosya yükleniyor. Kanıt — glif her iki değişken eksene de
+   tepki veriyor, fallback bir glif veremez:
+     wdth  62 / 100 / 125 -> 39.8 / 52.9 / 66.3 px
+     wght 400 / 700 (100) -> 52.9 / 59.7 px
+   Yani yüklenecek bir şey yok; `&text=` ile alt küme daraltmak da
+   gereksiz ve zararlı olurdu.
+
+   Gerçek kusur AĞIRLIK ayrımıydı: `340` 700'de çizilirken yanındaki `₺`
+   600'de çiziliyordu ve 72px'te iki farklı kalınlık iki farklı yazı tipi
+   gibi okunuyordu. Para birimi 700'e alındı; rakamla aynı ağırlık.
+   Seri birimi ("GÜNDÜR") bu kuralın dışında — o bir etiket, 600 kalır. */
+.sayi[data-boy='dev'] span,
+.sayi[data-boy='orta'] span,
+.sayi[data-boy='kucuk'] span {
+  font-weight: 700;
+}
+
+.sayi[data-boy='dev'] b {
+  font-size: 72px;
+}
+.sayi[data-boy='dev'] span {
+  font-size: 28px;
+}
+
+.sayi[data-boy='seri-dev'] b {
+  font-size: 76px;
+}
+.sayi[data-boy='seri-dev'] span {
+  font-size: 11px;
+  font-stretch: 62%;
+  letter-spacing: 0.12em;
+}
+
+.sayi[data-boy='orta'] b {
+  font-size: 44px;
+}
+.sayi[data-boy='orta'] span {
+  font-size: 18px;
+}
+
+.sayi[data-boy='seri-orta'] b {
+  font-size: 44px;
+}
+.sayi[data-boy='seri-orta'] span {
+  font-size: 11px;
+  font-stretch: 62%;
+  letter-spacing: 0.12em;
+}
+
+.sayi[data-boy='seri-kucuk'] b {
+  font-size: 40px;
+}
+.sayi[data-boy='seri-kucuk'] span {
+  font-size: 11px;
+  font-stretch: 62%;
+  letter-spacing: 0.12em;
+}
+
+/* Gündüz ikincil alışkanlığın serisi. 22px, kart adının 13px'inden
+   büyük (kriter 9): Streaks'in "ürünün ana vaadi hiyerarşinin dibinde"
+   hatası ikincil alışkanlıkta da tekrarlanmamalı (rapor 2.6). */
+.sayi[data-boy='seri-mini'] {
+  padding-bottom: 2px;
+}
+.sayi[data-boy='seri-mini'] b {
+  font-size: 22px;
+}
+.sayi[data-boy='seri-mini'] span {
+  font-size: 11px;
+  font-stretch: 62%;
+  letter-spacing: 0.12em;
+}
+
+.sayi[data-boy='kucuk'] b {
+  font-size: 36px;
+}
+.sayi[data-boy='kucuk'] span {
+  font-size: 16px;
+}
+
+/* Boş gün geçerli bir gündür: soluk ton, uyarı rengi değil (kriter 16). */
+.sayi[data-bos='evet'] b,
+.sayi[data-bos='evet'] span {
+  color: var(--soluk);
+}
+
+/* --- Görsel biçim 1: yığın şeridi --------------------------------------- */
+
+/* Dilimler arasında GAP YOK. 2px'lik boşluk büyük dilimlerde görünmezdi
+   ama %2'lik kuyruk dilimini (~7px) şeritten kopmuş hasarlı bir çentiğe
+   çeviriyordu. Kademeler arası ayrım parlaklık farkıyla zaten okunuyor;
+   yığın şeridi bütünlüğünü boşlukla değil tonla bölmeli. */
+.serit {
+  display: flex;
+  height: 14px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--bos);
+}
+
+/* Boş gün: şerit yerini korur, görünmez olur. Yükleme iskeleti silueti
+   vermemesi için (rapor 3.3) ama iskelet çökmemesi için (kriter 3). */
+.serit[data-bos='evet'] {
+  visibility: hidden;
+}
+
+.serit-ince {
+  height: 10px;
+}
+
+.serit i {
+  display: block;
+  /* Şerit ve liste birebir eşleşir (kriter 19); kuyruk birleştirilmediği
+     için %2'lik dilim de çizilir. Çentik gibi durmasın diye taban genişlik
+     verilir — pay okunacak sayı değil, sıra göstergesidir. */
+  min-width: 10px;
+}
+
+.serit i[data-kademe='1'] {
+  background: var(--d1);
+}
+.serit i[data-kademe='2'] {
+  background: var(--d2);
+}
+.serit i[data-kademe='3'] {
+  background: var(--d3);
+}
+.serit i[data-kademe='4'] {
+  background: var(--d4);
+}
+
+/* --- Harcama bloğu ------------------------------------------------------ */
+
+.blok-harcama .yorum {
+  margin: 8px 0 12px;
+}
+
+body[data-kip='aksam'] .blok-harcama .yorum {
+  margin: 6px 0 0;
+}
+
+.blok-harcama .serit {
+  margin-bottom: 6px;
+}
+
+.paylar {
+  margin: 0 0 8px;
+}
+
+/* Izgara LİSTEDE tanımlı, satırda değil. Her satır kendi grid'ini kurduğunda
+   sütunlar satırlar arasında paylaşılmıyordu ve "yer" sütunu altı satırda
+   altı farklı x'ten başlıyordu. display:contents ile satır kendi kutusunu
+   bırakır, hücreler doğrudan listenin sütunlarına oturur. */
+.kayitlar {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 3px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--cizgi);
+  padding-top: 4px;
+  display: grid;
+  grid-template-columns: 42px auto minmax(0, 1fr) auto;
+  column-gap: 10px;
+  row-gap: 0;
+  align-content: start;
+  align-items: baseline;
+  line-height: 24px;
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: 62%;
+}
+
+.kayit {
+  display: contents;
+}
+
+.kayit .saat,
+.kayit .yer {
+  color: var(--soluk);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.kayit .tutar {
+  font-size: 13px;
+  font-weight: 700;
+  justify-self: end;
+}
+
+.kayit-fazla {
+  grid-column: 1 / -1;
+  line-height: 24px;
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.04em;
+  color: var(--soluk);
+}
+
+/* Boş liste: üst ayraç ÇİZİLMEZ. Bir alanın sınırını çizip içini boş
+   bırakmak "burada içerik vardı ve yüklenemedi" der; kasıtlı boşluk
+   sessiz durur (rapor 3.3-2, kriter 16). Mesaj ayracın üstünde asılı
+   kalmaz, boş alanın dikey ortasına oturur. */
+.kayitlar-bos {
+  border-top: 0;
+  padding-top: 0;
+  align-content: center;
+  /* Izgara sütunları yalnız dolu listede geçerli. Boşken tek hücre var
+     ve mesaj 42px genişliğindeki saat sütununa sıkışıyordu. */
+  grid-template-columns: 1fr;
+  place-items: center;
+}
+
+.kayit-bos {
+  grid-column: 1 / -1;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.02em;
+  color: var(--soluk);
+}
+
+/* --- Alışkanlık kartları ------------------------------------------------ */
+
+/* Halka için SABİT sütun. Kartlar flex olduğunda 72px'lik ve 44px'lik
+   hedefler gövdeyi farklı genişlikte bırakıyor, iki kartın durum kelimesi
+   ve ritim etiketi 30px kayık duruyordu. Halka boyutu farkı kasıtlıdır
+   (rapor 3.1); kelimelerin kayması değildi. */
+.kart {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px;
+  align-items: center;
+  gap: 12px;
+  background: var(--kart);
+  border: 1px solid var(--cizgi);
+  border-radius: 3px;
+  /* Yatay dolgu blok dolgusuyla eşit (14px): alışkanlık kartları yüzeysiz
+     bloğun içinde olduğu için 12px'te iki piksel içeriden başlıyor, ekranın
+     imza öğesi olan iki şerit birbirinin altında kayık duruyordu. */
+  padding: 10px 14px;
+  overflow: hidden;
+}
+
+/* İki alışkanlık HİÇBİR KİPTE eşit boyutta çizilmez (rapor 3.1,
+   kriter 8): eşit iki kart ızgara değil "eksik ızgara" gibi görünür.
+   Gündüz 118/70, akşam 235/112 — oran iki kipte de ~1.7.
+   Akşam eskiden 1/1 idi ve tam da kaçınılan silueti üretiyordu. */
+body[data-kip='gunduz'] .kart-ana {
+  flex: 118;
+}
+
+/* Yatay dolgu diğer bloklarla eşit kalmalı; 12px iki halkayı 16px kaydırıyordu. */
+body[data-kip='gunduz'] .kart-ikincil {
+  flex: 70;
+  padding: 6px 14px;
+}
+
+body[data-kip='aksam'] .kart-ana {
+  flex: 235;
+  /* 228px'lik kartta ortalanmış 125px'lik gövde asılı kalırdı: ad üste,
+     seri ortaya, cümle alta yaslanır — boşluk kasıtlı görünür. */
+  align-items: stretch;
+}
+
+body[data-kip='aksam'] .kart-ana .kart-govde {
+  justify-content: space-between;
+}
+
+body[data-kip='aksam'] .kart-ikincil {
+  flex: 112;
+}
+
+.kart-govde {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.kart-ust {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.kart-ad {
+  font-size: 13px;
+  font-weight: 700;
+  font-stretch: 62%;
+  letter-spacing: 0.08em;
+}
+
+.kart-ritim {
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.04em;
+  color: var(--soluk);
+  white-space: nowrap;
+}
+
+.kart-seri {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Üçüncü kanal: kütle ve renk kaybolsa da durum kelimeyle okunur
+   (rapor 1.2, kriter 19). */
+.durum-kelime {
+  font-size: 11px;
+  font-weight: 700;
+  font-stretch: 62%;
+  letter-spacing: 0.12em;
+  color: var(--soluk);
+  white-space: nowrap;
+}
+
+.durum-kelime[data-durum='yapildi'] {
+  color: var(--durum);
+}
+
+/* --- Görsel biçim 2: dolu/boş kütle (dokunma hedefi) -------------------- */
+
+.onay {
+  flex: 0 0 auto;
+  /* Kart `align-items: stretch` olduğunda da dokunma hedefi büyümez. */
+  align-self: center;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px dashed var(--cizgi);
+  background: transparent;
+  color: var(--soluk);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.onay-kucuk {
+  width: 44px;
+  height: 44px;
+}
+
+.onay svg {
+  width: 34px;
+  height: 34px;
+  display: block;
+}
+
+.onay-kucuk svg {
+  width: 20px;
+  height: 20px;
+}
+
+.onay[data-durum='yapildi'] {
+  border: 2px solid var(--durum);
+  background: var(--durum-zemin);
+  color: var(--durum);
+}
+
+.onay[data-durum='kacirildi'] {
+  border-style: solid;
+}
+
+/* Ara günü: beklenmeyen gün boş halkadan da sönük durur — atlanan gün
+   bir başarısızlık değildir (rapor 3.1). */
+/* Ara günü halkası SÖNÜKTÜR ama görünür kalır. opacity kenarı kart
+   zeminine karıştırıyordu (açık temada ΔL* 7.8) ve ekranın iki dokunma
+   hedefinden büyük olanı güneşte kaybolmuştu. Sönüklük ayrı bir kenar
+   rengiyle verilir; saydamlıkla değil. */
+.onay[data-durum='beklenmiyor'] {
+  border-style: solid;
+  border-color: #a9a294;
+  color: var(--soluk);
+}
+
+/* Koyu temada opacity halkayı kart zeminine karıştırıyordu (ΔL* ~4) ve
+   72×72'lik dokunma hedefi görünmez oluyordu. Sönüklük mesajı korunur ama
+   ayrı bir kenar rengiyle verilir; saydamlıkla değil. */
+@media (prefers-color-scheme: dark) {
+  .onay[data-durum='beklenmiyor'] {
+    border-color: #5c6470;
+    color: #8a929e;
+  }
+}
+
+.onay:disabled {
+  opacity: 0.5;
+}
+
+/* Küçük hedef, büyük hedefle AYNI dikey eksende durur. Sağ kenara yaslamak
+   kenarları hizalıyor ama merkezleri 16px ayırıyordu; boş ekranda iki çıplak
+   halka yan yana dururken bu doğrudan göze çarpıyor. */
+.onay-kucuk {
+  justify-self: center;
+}
+
+.onay:focus-visible {
+  outline: 2px solid var(--d1);
+  outline-offset: 3px;
+}
+
+/* --- Abonelik bloğu ----------------------------------------------------- */
+
+/* Üçüncül blok en sıkı bütçeye sahip olan: dört satır + şerit + dipnot +
+   zorunlu yorum cümlesi. Ölçüler buna göre kısıldı; satır 22 yerine 19,
+   büyük sayı 36 yerine 34. Sıkışan blok büyümez, ölçü küçülür (rapor 2.10). */
+/* Yatay dolgu .blok ile aynı (14px): iki yığın şeridi üst üste dururken
+   2px kayıyordu ve ekranın imza öğesi hizasız görünüyordu. */
+/* Sayı ve bağlam cümlesi yan yana: ayrı satırdayken blok yüksekliğinin
+   %40'ı çerçeveye gidiyor ve liste tek satıra düşüyordu. */
+.abone-tepe {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.abone-tepe .yorum {
+  flex: 0 1 auto;
+  text-align: right;
+}
+
+.blok-abonelik {
+  padding: 10px 14px;
+}
+
+.blok-abonelik .etiket {
+  margin-bottom: 0;
+}
+
+.blok-abonelik .sayi[data-boy='kucuk'] b {
+  font-size: 34px;
+}
+
+.blok-abonelik .yorum {
+  margin: 2px 0 4px;
+}
+
+.blok-abonelik .serit {
+  margin-bottom: 4px;
+}
+
+.aboneler {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 3px;
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.abone {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 34px;
+  gap: 10px;
+  align-items: baseline;
+  line-height: 19px;
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: 62%;
+}
+
+.abone .ad {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.abone .tutar {
+  color: var(--soluk);
+  white-space: nowrap;
+  justify-self: end;
+}
+
+.abone .pay {
+  font-weight: 700;
+  justify-self: end;
+}
+
+/* --- Hata / bekleme ----------------------------------------------------- */
+
+.hata {
+  grid-row: 1 / -1;
+  align-self: start;
+}
+
+.hata code {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--soluk);
+  word-break: break-word;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .onay {
+    transition: background-color 120ms ease, border-color 120ms ease;
+  }
+}

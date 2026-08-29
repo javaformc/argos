@@ -109,7 +109,10 @@ const sunucu = createServer(async (istek, yanit) => {
   }
 
   // --- Statik dosyalar --------------------------------------------------
-  const hedef = guvenliYol(PROJE_KOK, yol === '/' ? '/index.html' : yol);
+  // Klasör isteği (/b/) o klasörün index.html'ine düşer; tarayıcı adres
+  // çubuğuna klasör yazıldığında 404 dönüyordu.
+  const istenen = yol.endsWith('/') ? yol + 'index.html' : yol;
+  const hedef = guvenliYol(PROJE_KOK, istenen);
   if (!hedef) return void yanit.writeHead(403).end('yol dışı');
   dosyaGonder(yanit, hedef);
 });
