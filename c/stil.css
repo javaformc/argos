@@ -662,31 +662,16 @@ body[data-kip='aksam'] .blok-harcama .hafta-alan {
   padding: 8px 12px;
 }
 
-/* İki alışkanlık HİÇBİR KİPTE eşit boyutta çizilmez: eşit iki kart
-   ızgara değil "eksik ızgara" gibi görünür. Oran iki kipte de ~1.7 —
-   kip değişince ikisi de büyür ama hangisinin ana olduğu değişmez. */
-body[data-kip='gunduz'] .kart-ana {
-  flex: 107;
-}
+/* Kartlar İÇERİĞİ KADAR yer alır, şişirilmez.
+   Eskiden  oranlarıyla (107/58) kutuya yayılıyorlardı; o oranlar
+   tek ekran bütçesinden kalmaydı ve kaydırma serbest olunca karşılığı
+   kalmadı. Şişirilen kart içi boş görünüyor, aralar anlamsız açılıyordu.
 
+   Asimetri kayboluyor mu? Hayır — zaten içerikten geliyor: önemli kartta
+   40px seri + yorum cümlesi var, basit kartta 22px seri ve cümle yok.
+   Boyut farkı ölçüden değil taşınan bilgiden doğuyor. */
 body[data-kip='gunduz'] .kart-ikincil {
-  flex: 58;
   padding: 6px 12px;
-}
-
-body[data-kip='aksam'] .kart-ana {
-  flex: 150;
-  /* Yüksek kartta ortalanmış gövde asılı kalır: ad üste, seri ortaya,
-     cümle alta yaslanır ve boşluk kasıtlı görünür. */
-  align-items: stretch;
-}
-
-body[data-kip='aksam'] .kart-ana .kart-govde {
-  justify-content: space-between;
-}
-
-body[data-kip='aksam'] .kart-ikincil {
-  flex: 96;
 }
 
 .kart-govde {
@@ -885,14 +870,6 @@ body[data-kip='aksam'] .kart-ikincil {
     height: 28px;
   }
 
-  body[data-kip='gunduz'] .kart-ana {
-    flex: 100;
-  }
-
-  body[data-kip='gunduz'] .kart-ikincil {
-    flex: 65;
-  }
-
   /* Akşamda iki halka da 72 (kip, iki alışkanlığı eşit ağırlıkta sorar).
      Kısa telefonda iki 64'lük halka bloğun tabanını 174px'e çıkarıyor ve
      ikincil kart kendi hedefini kesiyordu. Boyut farkı geri getiriliyor:
@@ -1045,11 +1022,14 @@ body[data-kip='aksam'] .kart-ikincil {
 
 
 /* --- MASAÜSTÜ ------------------------------------------------------------
-   Bilgisayarda ekran bir sayfa değil PANO: her şey aynı anda görünür.
-   Ama "kaydırma yok" mutlak bir kural değil — kesmek kaydırmaktan kötüdür.
-   Yeterli yükseklik varsa (>= 860px) pano tam ekrana kilitlenir; daha kısa
-   bir monitörde kilit açılır ve sayfa kaydırılabilir olur. Önceki sürüm
-   100vh'yi koşulsuz uyguluyordu ve yan monitörde alt şerit kesiliyordu.
+   Bilgisayarda ekran bir sayfa değil PANO: bloklar tek sütunda alt alta
+   dizilmez, üç sütuna dağılır ve büyük ekranda hepsi aynı anda görünür.
+
+   Ama KAYDIRMA HİÇBİR ZAMAN KİLİTLENMEZ. Önceki iki sürüm önce koşulsuz,
+   sonra 860px eşiğiyle kilitliyordu; ikisinde de yan monitörde alt sıra
+   görünmez oluyordu. Ekran yüksekliği önceden bilinemez ve kilit,
+   sığmayan içeriği görünmez yapmaktan başka bir şey yapmıyor. Sığdığında
+   zaten kaydırma çubuğu çıkmaz — kilide gerek yok.
 
    Telefondaki kutular BİREBİR taşınmadı. Geniş ekran kendi sorularını
    soruyor ve üç modül yalnız burada var:
@@ -1274,48 +1254,4 @@ body[data-kip='aksam'] .kart-ikincil {
   }
 }
 
-/* Uzun monitörde pano tam ekrana kilitlenir: kaydırma gerekmez.
-   Kısa monitörde kilit AÇILIR — kesmektense kaydırmak. */
-@media (min-width: 1024px) and (min-height: 860px) {
-  body {
-    height: 100vh;
-    overflow: hidden;
-  }
 
-  .sayfa {
-    height: 100vh;
-    min-height: 0;
-  }
-
-  #ekran[data-duzen='pano'] {
-    flex: 1;
-    min-height: 0;
-    align-items: stretch;
-  }
-
-  .sutun {
-    min-height: 0;
-  }
-
-  /* Kayıt listesi sütunun kalanını alır; diğer bloklar içerikleri kadar. */
-  [data-alan='harcama'] {
-    flex: 1;
-    min-height: 0;
-  }
-
-  [data-alan='harcama'] .kayitlar {
-    flex: 1;
-    min-height: 0;
-    align-content: start;
-  }
-
-  .sutun-orta .blok-aliskanlik {
-    flex: 1;
-    min-height: 0;
-  }
-
-  .sutun-sag [data-alan='abonelik'] {
-    flex: 1;
-    min-height: 0;
-  }
-}
