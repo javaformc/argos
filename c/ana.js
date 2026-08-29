@@ -20,13 +20,21 @@ const AKSAM_ESIGI = 22;
 const KIYAS_GUN = 7; // "son 7 günün ortalaması"
 const KIYAS_ESIGI = 3; // altında kıyas cümlesi kurulmaz
 const HAFTA_GUN = 7; // sütun grafiğindeki gün sayısı
-const IZ_GUN = 14; // alışkanlık izindeki gün sayısı
+const IZ_GUN = 14; // telefonda alışkanlık izindeki gün sayısı
+const IZ_GUN_GENIS = 30; // masaüstünde: alan varken pencereyi dar tutmanın gerekçesi yok
 const EN_COK_DILIM = 5; // şerit + lejant; fazlası "+N kategori"e iner
+// Masaüstünde kuyruk toplanmaz: sekiz kademe var ve lejant iki sütuna rahat
+// sığıyor. Beş dilim telefondaki okunabilirlik sınırıydı, burada değil.
+const EN_COK_DILIM_GENIS = 8;
 // Listede yalnız SON ÜÇ harcama durur, kalanı tek satırda özetlenir.
 // Sayfa kaydırılabiliyor ama bu blok "bugün ne oldu" sorusunun kısa
 // cevabı; altı satırlık dökümü ekranın en üstünde taşımak kalabalık
 // ediyordu. Tam döküm gerektiğinde ayrı bir ekranın işi.
 const KAYIT_SATIR = 3;
+// Masaüstünde liste kısılmaz: telefonda üç satır "kalabalık etmesin" diye
+// seçilmişti, geniş ekranda o gerekçe yok.
+const KAYIT_SATIR_GENIS = 9;
+const genisEkran = () => matchMedia('(min-width: 1024px)').matches;
 const ABONE_SATIR = 4;
 const UYKU_SINIRI = 2; // erken uyku hedefi: 02:00
 
@@ -265,13 +273,15 @@ function kategoriDagilimi(harcamalar, kur) {
 
   const yap = (k) => ({ ad: oku(k.kategori), tutar: k.tutar, renk: renkNo(k.kategori) });
 
+  const tavan = genisEkran() ? EN_COK_DILIM_GENIS : EN_COK_DILIM;
+
   let dilimler;
-  if (tumu.length <= EN_COK_DILIM) {
+  if (tumu.length <= tavan) {
     dilimler = tumu.map(yap);
   } else {
-    const kuyruk = tumu.slice(EN_COK_DILIM - 1);
+    const kuyruk = tumu.slice(tavan - 1);
     dilimler = [
-      ...tumu.slice(0, EN_COK_DILIM - 1).map(yap),
+      ...tumu.slice(0, tavan - 1).map(yap),
       {
         ad: `+${kuyruk.length} kategori`,
         tutar: kuyruk.reduce((t, k) => t + k.tutar, 0),
@@ -404,6 +414,7 @@ function kayitSatiri(h, kur) {
 
 function harcamaBlogu(veri, bugun, aksam) {
   const blok = el('section', 'blok blok-harcama');
+  blok.dataset.alan = 'harcama';
   const bugunku = H.gununHarcamalari(veri.harcamalar, bugun);
   const toplam = H.toplamTL(bugunku, veri.kur);
   const bos = bugunku.length === 0;
@@ -451,7 +462,7 @@ function harcamaBlogu(veri, bugun, aksam) {
     return db - da; // yeniden eskiye
   });
 
-  const gosterilen = sirali.slice(0, KAYIT_SATIR);
+  const gosterilen = sirali.slice(0, genisEkran() ? KAYIT_SATIR_GENIS : KAYIT_SATIR);
   for (const h of gosterilen) liste.append(kayitSatiri(h, veri.kur));
 
   // Tavan yüzünden gizlenen kayıt da SAYILIR. 844px'te altı kayıttan beşi
@@ -471,7 +482,35 @@ function harcamaBlogu(veri, bugun, aksam) {
 
   blok.append(liste);
 
+  // Masaüstünde ay bağlamı da görünür. Telefonda bu satır yok: orada blok
+  // "bugün ne oldu" sorusunun kısa cevabı ve kıyas cümlesi yetiyor. Geniş
+  // ekranda blok sütunun tamamını kapladığı için altında boşluk kalıyordu;
+  // boşluğu süsle değil, zaten hesaplanan ama gösterilmeyen veriyle
+  // doldurmak doğrusu.
+  if (genisEkran()) {
+    const ayToplam = H.ayToplami(veri.harcamalar, veri.kur);
+    const ortalama = H.gunlukOrtalama(veri.harcamalar, veri.kur, bugun);
+    const ay = el('div', 'ay-ozet');
+    ay.append(
+      ayOzetOgesi('BU AY', lira(ayToplam)),
+      ayOzetOgesi('GÜNDE ORTALAMA', lira(ortalama)),
+      ayOzetOgesi('KAYIT', String(bugunku.length), 'bugün')
+    );
+    blok.append(ay);
+  }
+
   return blok;
+}
+
+/** Ay özetindeki tek öğe: etiket üstte, sayı altta. */
+function ayOzetOgesi(etiket, deger, ek) {
+  const kutu = el('div', 'ay-oge');
+  kutu.append(el('p', 'etiket', etiket));
+  const satir = el('p', 'ay-deger');
+  satir.append(el('b', null, deger));
+  satir.append(el('span', null, ek || '₺'));
+  kutu.append(satir);
+  return kutu;
 }
 
 // --- Alışkanlık bloğu ----------------------------------------------------
@@ -580,7 +619,8 @@ function uykuGeriSayim(simdi) {
  * beklenmeyen gün kaçırılamaz. Çekirdek değiştirilmedi, çıktısı düzeltildi.
  */
 function izCiz(tanim, veri, bugun) {
-  const gunler = H.aliskanlikIzi(tanim, veri.onaylar, bugun, IZ_GUN).map((g) =>
+  const izGun = genisEkran() ? IZ_GUN_GENIS : IZ_GUN;
+  const gunler = H.aliskanlikIzi(tanim, veri.onaylar, bugun, izGun).map((g) =>
     g.durum === 'yapilmadi' && !H.bugunBekleniyorMu(tanim, veri.onaylar, g.gun)
       ? { gun: g.gun, durum: 'beklenmiyor' }
       : g
@@ -590,7 +630,7 @@ function izCiz(tanim, veri, bugun) {
   const yapilan = gunler.filter((g) => g.durum === 'yapildi').length;
   // Durumu ad satırı ve durum kelimesi zaten söylüyor; iz görsel bir ek.
   iz.setAttribute('aria-hidden', 'true');
-  iz.title = `Son ${IZ_GUN} günde ${yapilan} işaret`;
+  iz.title = `Son ${izGun} günde ${yapilan} işaret`;
   for (const g of gunler) {
     const kare = el('i');
     kare.dataset.d = g.durum;
@@ -695,6 +735,7 @@ function aksamOncelikli(tanim, veri, bugun) {
  */
 function aliskanlikBlogu(veri, bugun, aksam, simdi, isaretle, kume) {
   const blok = el('section', 'blok blok-aliskanlik');
+  blok.dataset.alan = 'aliskanlik';
 
   if (veri.tanimlar.length === 0) {
     // İskelet çökmez: blok yerini korur, yalnız içi boştur.
@@ -817,6 +858,7 @@ function abonelikDipnotu(aktif, veri, bugun) {
  */
 function sonrakiOdemeBlogu(veri, bugun) {
   const blok = el('section', 'blok blok-odeme');
+  blok.dataset.alan = 'odeme';
   const aktif = veri.abonelikler.filter((a) => a.aktif);
   const y = H.yaklasanOdemeler(veri.abonelikler, bugun, 400)[0];
 
@@ -852,6 +894,7 @@ function sonrakiOdemeBlogu(veri, bugun) {
 
 function abonelikBlogu(veri, bugun) {
   const blok = el('section', 'blok blok-abonelik');
+  blok.dataset.alan = 'abonelik';
   const aktif = veri.abonelikler.filter((a) => a.aktif);
   const toplam = H.aylikAbonelikToplami(veri.abonelikler, veri.kur);
 
@@ -1034,12 +1077,32 @@ async function ciz() {
     aksam ? 'kalan' : 'tumu'
   );
 
-  // Sıradaki ödeme her iki kipte de harcamanın hemen altında: cevabı bir
-  // satırlık bir soru, listeye inmeden görünmeli. Abonelik listesi her iki
-  // kipte de sonuncu — sabit çapa.
-  ekran.replaceChildren(
-    ...[bekleyen, harcama, odeme, kalan, abonelik].filter(Boolean)
-  );
+  if (genisEkran()) {
+    // MASAÜSTÜ: ekran bir sayfa değil bir PANO. Bloklar tek sütunda alt
+    // alta dizilmez; üç bölgeye dağılır ve hepsi aynı anda görünür.
+    //
+    // Sütunlar CSS ızgarasıyla değil burada kuruluyor: blok sayısı değişken
+    // (akşam bekleyen bloğu var, gündüz yok) ve değişken satır sayısına
+    // `grid-row: 1 / -1` ile sütun kurmak sağ sütunu boş bırakıp abonelik
+    // bloğunu ekrandan taşırıyordu.
+    const sol = el('div', 'sutun sutun-sol');
+    const sag = el('div', 'sutun sutun-sag');
+    const alt = el('div', 'sutun sutun-alt');
+
+    sol.append(harcama);
+    for (const b of [bekleyen, kalan].filter(Boolean)) sag.append(b);
+    alt.append(odeme, abonelik);
+
+    ekran.dataset.duzen = 'pano';
+    ekran.replaceChildren(sol, sag, alt);
+  } else {
+    // Telefon: tek sütun. Sıradaki ödeme harcamanın hemen altında — cevabı
+    // bir satırlık bir soru, listeye inmeden görünmeli. Abonelik sonuncu.
+    ekran.dataset.duzen = 'sutun';
+    ekran.replaceChildren(
+      ...[bekleyen, harcama, odeme, kalan, abonelik].filter(Boolean)
+    );
+  }
   ekran.removeAttribute('aria-busy');
   cizimSurdu = false;
 }
@@ -1053,6 +1116,13 @@ ciz();
 // oysa kutu sonradan iki satır alacak kadar büyüyordu. Atılan satır geri
 // gelmez, o yüzden yazı hazır olunca bir kez yeniden çizilir.
 if (document.fonts) document.fonts.ready.then(() => ciz());
+
+// Pencere telefon genişliğiyle masaüstü arasında geçerse düzen değişmeli:
+// sütunlar JS'te kurulduğu için CSS tek başına yetişemiyor.
+matchMedia('(min-width: 1024px)').addEventListener('change', () => {
+  cizimSurdu = false;
+  ciz();
+});
 
 // Gün ve kip kendiliğinden dönmeli; akşam geri sayımı da dakikada bir
 // tazelenir. Daha sık çizmek görünür bir şey değiştirmez.
