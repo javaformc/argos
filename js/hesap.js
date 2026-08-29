@@ -273,6 +273,44 @@ export function aliskanlikIzi(tanim, onaylar, bugun, gunSayisi = 14) {
   return iz;
 }
 
+/**
+ * Günün saat dilimlerine göre harcama. Saat alanı opsiyonel; saatsiz
+ * kayıtlar hiçbir dilime girmez ve ayrı sayılır — bir dilime atmak,
+ * bilinmeyen bir saati biliniyormuş gibi göstermek olurdu.
+ *
+ * Dilimler kullanıcının gününe göre: sabah işe/okula gidiş, öğle arası,
+ * akşamüstü dönüş, gece. Eşit dört parçaya bölmek takvimsel olarak temiz
+ * ama davranışsal olarak anlamsızdı.
+ */
+export const SAAT_DILIMLERI = [
+  { ad: 'sabah', bas: 6, son: 12 },
+  { ad: 'öğle', bas: 12, son: 17 },
+  { ad: 'akşam', bas: 17, son: 22 },
+  { ad: 'gece', bas: 22, son: 6 },
+];
+
+export function saatDagilimi(harcamalar, kur) {
+  const kova = SAAT_DILIMLERI.map((d) => ({ ad: d.ad, tutar: 0, adet: 0 }));
+  let saatsiz = 0;
+
+  for (const h of harcamalar) {
+    const dk = dakikaya(h.saat);
+    if (dk === null) {
+      saatsiz++;
+      continue;
+    }
+    const saat = Math.floor(dk / 60);
+    const i = SAAT_DILIMLERI.findIndex((d) =>
+      d.bas < d.son ? saat >= d.bas && saat < d.son : saat >= d.bas || saat < d.son
+    );
+    if (i < 0) continue;
+    kova[i].tutar += tryeCevir(h.tutar, h.birim || 'TRY', kur);
+    kova[i].adet++;
+  }
+
+  return { dilimler: kova, saatsiz };
+}
+
 // --- Abonelik -----------------------------------------------------------
 
 /** Aylık gider karşılığı (yıllık olan 12'ye bölünür). Ham TL. */

@@ -513,6 +513,150 @@ function ayOzetOgesi(etiket, deger, ek) {
   return kutu;
 }
 
+
+// --- Masaüstü modülleri --------------------------------------------------
+// Bunlar YALNIZ geniş ekranda çizilir. Telefonda yer yok ve zaten orada
+// ekran "bugün ne oldu" sorusunun kısa cevabı; bu üçü "son zamanlarda ne
+// oluyor" sorusunu cevaplıyor, o soru bilgisayar başında sorulan bir soru.
+
+/**
+ * AYIN GÜNLERİ — ayın 1'inden bugüne her gün bir sütun.
+ *
+ * Hafta grafiği "bu hafta nasıl geçti" der; bu grafik ayın şeklini gösterir:
+ * maaş günü sıçraması, hafta sonu tepeleri, sakin geçen aralıklar. Yedi
+ * sütunda görünmeyen desen otuz sütunda görünüyor.
+ */
+function ayGrafigiBlogu(veri, bugun) {
+  const blok = el('section', 'blok blok-ay');
+  blok.dataset.alan = 'ay';
+
+  const gecenGun = Number(bugun.slice(8, 10));
+  const gunler = H.sonGunler(veri.harcamalar, veri.kur, bugun, gecenGun);
+  const toplam = gunler.reduce((t, g) => t + g.tutar, 0);
+  const ortalama = gecenGun > 0 ? toplam / gecenGun : 0;
+  const enBuyuk = Math.max(...gunler.map((g) => g.tutar), ortalama, 1);
+
+  const ayAdi = AYLAR[Number(bugun.slice(5, 7)) - 1];
+  blok.append(ustSatir(ayAdi, `${gecenGun} gün · ort. ${lira(ortalama)} ₺`));
+
+  const alan = el('div', 'ay-alan');
+  alan.setAttribute('role', 'img');
+  alan.setAttribute(
+    'aria-label',
+    `${ayAdi} ayının günlük harcaması: ` +
+      gunler.map((g) => `${g.gun.slice(8)} ${lira(g.tutar)} lira`).join(', ')
+  );
+
+  if (ortalama > 0) {
+    const cizgi = el('div', 'hafta-ort');
+    cizgi.style.bottom = `${Math.min((ortalama / enBuyuk) * 100, 100)}%`;
+    alan.append(cizgi);
+  }
+
+  for (const g of gunler) {
+    const sutun = el('i');
+    sutun.style.height = `${Math.max((g.tutar / enBuyuk) * 100, 3)}%`;
+    if (g.gun === bugun) sutun.dataset.bugun = '';
+    // Hafta sonu ayrı tonda: ayın ritmi çoğu zaman haftaya bağlı ve bu
+    // ayrım olmadan otuz sütun tek bir gürültü kütlesi gibi okunuyor.
+    const gun = new Date(`${g.gun}T00:00:00`).getDay();
+    if (gun === 0 || gun === 6) sutun.dataset.haftasonu = '';
+    sutun.title = `${g.gun.slice(8)} · ${lira(g.tutar)} ₺`;
+    alan.append(sutun);
+  }
+
+  const etiket = el('div', 'ay-etiket');
+  etiket.append(el('span', null, '1'), el('span', null, String(gecenGun)));
+  blok.append(alan, etiket);
+
+  return blok;
+}
+
+/**
+ * KATEGORİ (BU AY) — yatay barlar, büyükten küçüğe.
+ *
+ * Bugünün şeridi günü anlatıyor; bu liste ayı anlatıyor. Aynı biçimi
+ * (yığın şeridi) ikinci kez kullanmak yerine yatay bar seçildi: burada
+ * soru "parça-bütün" değil "hangisi daha büyük" ve sıralı barlar o soruyu
+ * yığından daha doğrudan cevaplıyor.
+ */
+function ayKategoriBlogu(veri, bugun) {
+  const blok = el('section', 'blok blok-kategori');
+  blok.dataset.alan = 'kategori';
+
+  const kirilim = H.kategoriKirilimi(veri.harcamalar, veri.kur).slice(0, 7);
+  blok.append(ustSatir('KATEGORİ · BU AY', null));
+
+  if (kirilim.length === 0) {
+    blok.append(el('p', 'veri', 'Bu ay kayıt yok'));
+    return blok;
+  }
+
+  const enBuyuk = kirilim[0].tutar;
+  const liste = el('ul', 'kategori-barlar');
+
+  for (const k of kirilim) {
+    const satir = el('li', 'kategori-bar');
+    const ad = el('span', 'kb-ad', oku(k.kategori));
+
+    const yol = el('span', 'kb-yol');
+    const dolgu = el('i');
+    dolgu.style.width = `${Math.max((k.tutar / enBuyuk) * 100, 2)}%`;
+    dolgu.dataset.renk = String(renkNo(k.kategori));
+    yol.append(dolgu);
+
+    satir.append(ad, yol, el('span', 'kb-tutar', lira(k.tutar)));
+    liste.append(satir);
+  }
+
+  blok.append(liste);
+  return blok;
+}
+
+/**
+ * SAAT DAĞILIMI — günün hangi diliminde harcanıyor.
+ *
+ * Harcama kaydında `saat` alanı vardı ve hiçbir ekranda kullanılmıyordu.
+ * Dilimler takvimsel dörde bölme değil, günün gerçek parçaları: sabah,
+ * öğle, akşam, gece.
+ */
+function saatBlogu(veri, bugun) {
+  const blok = el('section', 'blok blok-saat');
+  blok.dataset.alan = 'saat';
+
+  const { dilimler, saatsiz } = H.saatDagilimi(veri.harcamalar, veri.kur);
+  const toplam = dilimler.reduce((t, d) => t + d.tutar, 0);
+
+  blok.append(
+    ustSatir('SAATE GÖRE · BU AY', saatsiz > 0 ? `${saatsiz} kayıt saatsiz` : null)
+  );
+
+  if (toplam === 0) {
+    blok.append(el('p', 'veri', 'Saatli kayıt yok'));
+    return blok;
+  }
+
+  const enBuyuk = Math.max(...dilimler.map((d) => d.tutar), 1);
+  const alan = el('div', 'saat-alan');
+
+  for (const d of dilimler) {
+    const kutu = el('div', 'saat-oge');
+    const sutun = el('i');
+    // Sıfır dilim de görünür bir taban bırakır: "o saatte harcamadım"
+    // ile "o dilim yok" ayrı şeyler.
+    sutun.style.height = `${Math.max((d.tutar / enBuyuk) * 100, 7)}%`;
+    kutu.append(
+      el('span', 'saat-tutar', lira(d.tutar)),
+      sutun,
+      el('span', 'saat-ad', d.ad)
+    );
+    alan.append(kutu);
+  }
+
+  blok.append(alan);
+  return blok;
+}
+
 // --- Alışkanlık bloğu ----------------------------------------------------
 
 function ritimMetni(tanim) {
@@ -1086,15 +1230,19 @@ async function ciz() {
     // `grid-row: 1 / -1` ile sütun kurmak sağ sütunu boş bırakıp abonelik
     // bloğunu ekrandan taşırıyordu.
     const sol = el('div', 'sutun sutun-sol');
+    const orta = el('div', 'sutun sutun-orta');
     const sag = el('div', 'sutun sutun-sag');
-    const alt = el('div', 'sutun sutun-alt');
 
-    sol.append(harcama);
-    for (const b of [bekleyen, kalan].filter(Boolean)) sag.append(b);
-    alt.append(odeme, abonelik);
+    // Sol: günün parası, altında ayın şekli.
+    sol.append(harcama, ayGrafigiBlogu(veri, bugun));
+    // Orta: alışkanlıklar (bekleyenler üstte), altında sıradaki ödeme.
+    for (const b of [bekleyen, kalan].filter(Boolean)) orta.append(b);
+    orta.append(odeme);
+    // Sağ: ayın dökümü — kategori, saat, abonelik.
+    sag.append(ayKategoriBlogu(veri, bugun), saatBlogu(veri, bugun), abonelik);
 
     ekran.dataset.duzen = 'pano';
-    ekran.replaceChildren(sol, sag, alt);
+    ekran.replaceChildren(sol, orta, sag);
   } else {
     // Telefon: tek sütun. Sıradaki ödeme harcamanın hemen altında — cevabı
     // bir satırlık bir soru, listeye inmeden görünmeli. Abonelik sonuncu.

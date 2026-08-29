@@ -266,3 +266,37 @@ test('izde bugün işaretlenmemişse bekliyor olarak durur', () => {
   assert.equal(iz[2].durum, 'bekliyor');
   assert.equal(iz[1].durum, 'yapildi');
 });
+
+// --- Saat dilimi dağılımı -----------------------------------------------
+
+test('harcamalar saat dilimlerine dağılır, saatsizler ayrı sayılır', () => {
+  const kayitlar = [
+    { saat: '08:40', tutar: 100, birim: 'TRY', kategori: 'yeme-icme' }, // sabah
+    { saat: '13:10', tutar: 200, birim: 'TRY', kategori: 'market' },    // öğle
+    { saat: '19:00', tutar: 300, birim: 'TRY', kategori: 'ulasim' },    // akşam
+    { saat: '23:30', tutar: 400, birim: 'TRY', kategori: 'diger' },     // gece
+    { tutar: 50, birim: 'TRY', kategori: 'diger' },                     // saatsiz
+  ];
+  const d = h.saatDagilimi(kayitlar, KUR);
+
+  assert.equal(d.saatsiz, 1);
+  assert.deepEqual(
+    d.dilimler.map((x) => [x.ad, x.tutar]),
+    [['sabah', 100], ['öğle', 200], ['akşam', 300], ['gece', 400]]
+  );
+});
+
+test('gece dilimi gün dönümünü aşar', () => {
+  const geceyarisi = h.saatDagilimi(
+    [{ saat: '02:15', tutar: 60, birim: 'TRY', kategori: 'diger' }],
+    KUR
+  );
+  assert.equal(geceyarisi.dilimler[3].tutar, 60, '02:15 gece dilimine düşer');
+  assert.equal(geceyarisi.dilimler[0].tutar, 0, 'sabah boş kalır');
+});
+
+test('boş liste tüm dilimleri sıfırla döndürür', () => {
+  const d = h.saatDagilimi([], KUR);
+  assert.equal(d.saatsiz, 0);
+  assert.deepEqual(d.dilimler.map((x) => x.adet), [0, 0, 0, 0]);
+});
