@@ -482,23 +482,32 @@ function harcamaBlogu(veri, bugun, aksam) {
 
   blok.append(liste);
 
-  // Masaüstünde ay bağlamı da görünür. Telefonda bu satır yok: orada blok
-  // "bugün ne oldu" sorusunun kısa cevabı ve kıyas cümlesi yetiyor. Geniş
-  // ekranda blok sütunun tamamını kapladığı için altında boşluk kalıyordu;
-  // boşluğu süsle değil, zaten hesaplanan ama gösterilmeyen veriyle
-  // doldurmak doğrusu.
-  if (genisEkran()) {
-    const ayToplam = H.ayToplami(veri.harcamalar, veri.kur);
-    const ortalama = H.gunlukOrtalama(veri.harcamalar, veri.kur, bugun);
-    const ay = el('div', 'ay-ozet');
-    ay.append(
-      ayOzetOgesi('BU AY', lira(ayToplam)),
-      ayOzetOgesi('GÜNDE ORTALAMA', lira(ortalama)),
-      ayOzetOgesi('KAYIT', String(bugunku.length), 'bugün')
-    );
-    blok.append(ay);
-  }
+  return blok;
+}
 
+/**
+ * AY ÖZETİ — masaüstünde kendi bloğu.
+ *
+ * Önce harcama bloğunun içindeydi; sol sütun zaten en uzunuydu ve orada
+ * durunca dengesizliği artırıyordu. Sağ sütun ise kısa kalıyordu. Blok
+ * olarak ayrılınca hem yer dengelendi hem de ayın üç sayısı (toplam,
+ * ortalama, kayıt) kendi başlığı altında okunur oldu.
+ */
+function ayOzetBlogu(veri, bugun) {
+  const blok = el('section', 'blok blok-ayozet');
+  blok.dataset.alan = 'ayozet';
+
+  const bugunku = H.gununHarcamalari(veri.harcamalar, bugun);
+  const ayToplam = H.ayToplami(veri.harcamalar, veri.kur);
+  const ortalama = H.gunlukOrtalama(veri.harcamalar, veri.kur, bugun);
+
+  const ay = el('div', 'ay-ozet');
+  ay.append(
+    ayOzetOgesi('BU AY', lira(ayToplam)),
+    ayOzetOgesi('GÜNDE ORTALAMA', lira(ortalama)),
+    ayOzetOgesi('KAYIT', String(bugunku.length), 'bugün')
+  );
+  blok.append(ay);
   return blok;
 }
 
@@ -606,6 +615,63 @@ function ayKategoriBlogu(veri, bugun) {
     yol.append(dolgu);
 
     satir.append(ad, yol, el('span', 'kb-tutar', lira(k.tutar)));
+    liste.append(satir);
+  }
+
+  blok.append(liste);
+  return blok;
+}
+
+
+/**
+ * ALIŞKANLIK / BU AY — masaüstünde, orta sütunun altında.
+ *
+ * Kartlar bugünü anlatıyor: yapıldı mı, seri kaç. Bu blok ayı anlatıyor:
+ * ayın kaç gününde işaretlendi. İz şeridi deseni gösteriyor ama saymıyor;
+ * burada sayı var ve alışkanlıklar birbiriyle karşılaştırılabiliyor.
+ *
+ * Payda BEKLENEN gün sayısı: günlük bir alışkanlıkta ayın tamamı, iki
+ * günde birde yarısı. Aynı paydayla ölçmek "2 günde bir" olanı yarı yarıya
+ * başarısız gösterirdi.
+ */
+function aliskanlikAyBlogu(veri, bugun) {
+  const blok = el('section', 'blok blok-alay');
+  blok.dataset.alan = 'alay';
+
+  const gecenGun = Number(bugun.slice(8, 10));
+  blok.append(ustSatir('ALIŞKANLIK · BU AY', `${gecenGun} gün`));
+
+  if (veri.tanimlar.length === 0) {
+    blok.append(el('p', 'veri', 'Tanımlı alışkanlık yok'));
+    return blok;
+  }
+
+  const liste = el('ul', 'kategori-barlar');
+
+  for (const t of veri.tanimlar) {
+    const iz = H.aliskanlikIzi(t, veri.onaylar, bugun, gecenGun);
+    const yapilan = iz.filter((g) => g.durum === 'yapildi').length;
+
+    const tip = (t.siklik || {}).tip;
+    const aralik = tip === 'gun-arasi' ? (t.siklik.deger || 1) : 1;
+    const beklenen =
+      tip === 'haftalik'
+        ? Math.round((gecenGun / 7) * (t.siklik.deger || 1))
+        : Math.ceil(gecenGun / aralik);
+    const oran = beklenen > 0 ? Math.min(yapilan / beklenen, 1) : 0;
+
+    const satir = el('li', 'kategori-bar');
+    const yol = el('span', 'kb-yol');
+    const dolgu = el('i');
+    dolgu.style.width = `${Math.max(oran * 100, 2)}%`;
+    dolgu.dataset.durum = yapilan >= beklenen ? 'tam' : 'eksik';
+    yol.append(dolgu);
+
+    satir.append(
+      el('span', 'kb-ad', kartAdi(t).toLocaleLowerCase('tr')),
+      yol,
+      el('span', 'kb-tutar', `${yapilan}/${beklenen}`)
+    );
     liste.append(satir);
   }
 
@@ -1237,9 +1303,14 @@ async function ciz() {
     sol.append(harcama, ayGrafigiBlogu(veri, bugun));
     // Orta: alışkanlıklar (bekleyenler üstte), altında sıradaki ödeme.
     for (const b of [bekleyen, kalan].filter(Boolean)) orta.append(b);
-    orta.append(odeme);
+    orta.append(aliskanlikAyBlogu(veri, bugun), odeme);
     // Sağ: ayın dökümü — kategori, saat, abonelik.
-    sag.append(ayKategoriBlogu(veri, bugun), saatBlogu(veri, bugun), abonelik);
+    sag.append(
+      ayOzetBlogu(veri, bugun),
+      ayKategoriBlogu(veri, bugun),
+      saatBlogu(veri, bugun),
+      abonelik
+    );
 
     ekran.dataset.duzen = 'pano';
     ekran.replaceChildren(sol, orta, sag);

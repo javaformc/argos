@@ -1041,8 +1041,10 @@ body[data-kip='gunduz'] .kart-ikincil {
 @media (min-width: 1024px) {
   .sayfa {
     min-height: 100dvh;
-    max-width: 1460px;
-    padding: 14px 24px 20px;
+    /* Sabit tavan yok: 1460px, 1920'lik ekranda sağda 400px boş bırakıyordu.
+       Tavan yalnız satır uzunluğunun okunmaz hale gelmesini engelliyor. */
+    max-width: min(2000px, 100%);
+    padding: clamp(12px, 1.6vh, 22px) clamp(20px, 2.2vw, 40px);
   }
 
   .ust {
@@ -1068,12 +1070,15 @@ body[data-kip='gunduz'] .kart-ikincil {
     padding: 12px 16px;
   }
 
+  /* Grafik yükseklikleri pencereye bağlı. Sabit pikselde tam ekranda
+     ekranın yarısı boş kalıyordu; grafiği büyütmek boşluğu ŞİŞİRMEDEN
+     doldurur, çünkü büyüyen şey kutu değil verinin kendisi. */
   [data-alan='harcama'] .hafta {
-    height: 88px;
+    height: clamp(76px, 15vh, 210px);
   }
 
   .sayi[data-boy='dev'] b {
-    font-size: 54px;
+    font-size: clamp(48px, 5.4vw, 78px);
   }
 
   .kart {
@@ -1084,14 +1089,11 @@ body[data-kip='gunduz'] .kart-ikincil {
     padding: 10px 16px;
   }
 
-  /* Ay özeti üç sütun: alt alta dizilince sol sütunun yarısını yiyordu. */
+  /* Ay özeti kendi bloğunda, üç sütun. */
   .ay-ozet {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 14px;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid var(--cizgi);
   }
 
   .ay-deger {
@@ -1122,7 +1124,7 @@ body[data-kip='gunduz'] .kart-ikincil {
     display: flex;
     align-items: flex-end;
     gap: 2px;
-    height: 92px;
+    height: clamp(80px, 21vh, 300px);
     margin-top: 8px;
   }
 
@@ -1206,6 +1208,16 @@ body[data-kip='gunduz'] .kart-ikincil {
   .kb-yol > i[data-renk='7'] { background: var(--k7); }
   .kb-yol > i[data-renk='8'] { background: var(--k8); }
 
+  /* Alışkanlık doluluğu: tam ise durum yeşili, eksikse nötr. Yargı
+     rengi burada meşru — harcamada "iyi/kötü" yoktu, alışkanlıkta var. */
+  .kb-yol > i[data-durum='tam'] {
+    background: var(--durum);
+  }
+
+  .kb-yol > i[data-durum='eksik'] {
+    background: var(--p3);
+  }
+
   .kb-tutar {
     font-size: 12px;
     font-stretch: 84%;
@@ -1219,7 +1231,7 @@ body[data-kip='gunduz'] .kart-ikincil {
     grid-template-columns: repeat(4, 1fr);
     align-items: end;
     gap: 10px;
-    height: 96px;
+    height: clamp(84px, 16vh, 230px);
     margin-top: 10px;
   }
 
