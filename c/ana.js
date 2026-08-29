@@ -22,7 +22,11 @@ const KIYAS_ESIGI = 3; // altında kıyas cümlesi kurulmaz
 const HAFTA_GUN = 7; // sütun grafiğindeki gün sayısı
 const IZ_GUN = 14; // alışkanlık izindeki gün sayısı
 const EN_COK_DILIM = 5; // şerit + lejant; fazlası "+N kategori"e iner
-const KAYIT_SATIR = 8; // yalnız DOM tavanı; asıl kararı sigdir() ölçerek verir
+// Listede yalnız SON ÜÇ harcama durur, kalanı tek satırda özetlenir.
+// Sayfa kaydırılabiliyor ama bu blok "bugün ne oldu" sorusunun kısa
+// cevabı; altı satırlık dökümü ekranın en üstünde taşımak kalabalık
+// ediyordu. Tam döküm gerektiğinde ayrı bir ekranın işi.
+const KAYIT_SATIR = 3;
 const ABONE_SATIR = 4;
 const UYKU_SINIRI = 2; // erken uyku hedefi: 02:00
 
@@ -166,7 +170,16 @@ function renkleriAyir(dilimler) {
 
 const SEMBOL = { USD: '$', EUR: '€', GBP: '£', TRY: '₺' };
 
-const oku = (k) => KATEGORI_ADI[k] || k;
+/**
+ * Kategori adı. Baş harf BÜYÜK: lejantta tümü küçük harfle dizilince
+ * adlar tutarların yanında siliniyordu — büyük harf onlara satır içinde
+ * kendi ağırlığını veriyor. `text-transform` kullanılmaz (Türkçe "i"yi
+ * bozar); ilk harf elle yükseltilir, Türkçe kurala göre ("i" → "İ").
+ */
+const basHarf = (s) =>
+  s ? s[0].toLocaleUpperCase('tr') + s.slice(1) : s;
+
+const oku = (k) => basHarf(KATEGORI_ADI[k] || k);
 const lira = (ham) => H.bicimle(H.yuvarla(ham));
 const ikiHane = (n) => String(n).padStart(2, '0');
 
@@ -209,76 +222,6 @@ function ustSatir(etiket, sag) {
   satir.append(el('p', 'etiket', etiket));
   if (sag) satir.append(el('p', 'veri', sag));
   return satir;
-}
-
-/**
- * Listeyi kutusuna SIĞDIRIR; kırpmaz.
- *
- * `overflow: hidden` her yükseklikte "sığdım" der, hiçbir zaman
- * "sığmadım" demez: 844px'lik pencerede kusursuz görünen tasarım
- * 763px'lik gerçek PWA yüksekliğinde bir satırı harflerin ortasından
- * kesebilir, üstelik sessizce. Bu yüzden çizimden SONRA ölçülür,
- * taştıkça sondan satır atılır ve yerine "+N daha" özeti konur.
- *
- * Ölçüm zamanlaması kritik: tek rAF'ta kutu henüz son yüksekliğine
- * oturmamış olur ve fonksiyon gereğinden fazla satır atar.
- */
-function sigdir(liste, toplam, ozetMetni, sonra) {
-  const uygula = () => {
-    if (!liste.isConnected) return;
-    if (liste.clientHeight < 20) return; // henüz yerleşmedi, ölçüm yanıltır
-
-    const satirlar = () => [...liste.children].filter((c) => !c.dataset.ozet);
-    let ozet = liste.querySelector('[data-ozet]');
-    const tasiyor = () => liste.scrollHeight > liste.clientHeight;
-
-    let guvenlik = 40;
-    while (tasiyor() && satirlar().length > 1 && guvenlik--) {
-      satirlar().pop().remove();
-      if (!ozet) {
-        ozet = el('li', liste.dataset.ozetSinifi || 'kayit-fazla');
-        ozet.dataset.ozet = 'evet';
-        liste.append(ozet);
-      }
-      ozet.textContent = ozetMetni(toplam - satirlar().length);
-    }
-
-    // Özet tek başına bile taşıyorsa liste tamamen özete iner: "en az bir
-    // satır kalır" kilidi yoksa taşma kontrolünü geçersiz kılar.
-    if (ozet && tasiyor() && satirlar().length === 1) {
-      satirlar()[0].remove();
-      ozet.textContent = ozetMetni(toplam);
-    }
-
-    if (sonra) sonra(satirlar().length, ozet);
-  };
-
-  requestAnimationFrame(() => requestAnimationFrame(uygula));
-}
-
-/**
- * Bir kutuyu sığdırır: taşarsa içindekileri VERİLEN SIRAYLA kaldırır, kesmez.
- * Yarım kalmış bir cümle veya alt kenardan tıraşlanmış bir iz şeridi,
- * olmayan öğeden kötüdür — biri okunmaz, diğeri bozuk görünür.
- *
- * Feda sırası bilinçli: önce yorum cümlesi, sonra iz şeridi. Cümle en
- * çok yer kaplayan ve en az kanal ekleyen öğe; iz ise seri rakamının
- * söylemediği DESENİ taşıyor, o yüzden sonuncu gider. Durum her hâlükârda
- * seri rakamı, durum kelimesi ve halka olmak üzere üç kanaldan okunur.
- *
- * 667px'lik telefonda ikincil alışkanlık kartı 58px'e düşüyor ve iz
- * şeridi kartın alt kenarından ortasından kesiliyordu.
- */
-function sigdirmaSirasi(kart, adaylar) {
-  requestAnimationFrame(() =>
-    requestAnimationFrame(() => {
-      if (!kart.isConnected || kart.clientHeight < 20) return;
-      for (const oge of adaylar) {
-        if (kart.scrollHeight - kart.clientHeight <= 2) return;
-        if (oge) oge.remove();
-      }
-    })
-  );
 }
 
 // --- Yığın şeridi (parça-bütün taşıyan HER veri bununla çizilir) ---------
@@ -427,7 +370,6 @@ function haftaCiz(veri, bugun, ortalama) {
   }
 
   kutu.append(alan, etiketler);
-  sigdirmaSirasi(kutu, [etiketler]);
   return kutu;
 }
 
@@ -532,13 +474,17 @@ function harcamaBlogu(veri, bugun, aksam) {
   // özeti yalnız KENDİ attığı satırlar için ekliyor, tavanın attığı satır
   // sessizce kayboluyordu.
   if (sirali.length > gosterilen.length) {
-    const ozet = el('li', 'kayit-fazla', `+${sirali.length - gosterilen.length} kayıt daha`);
+    const kalan = sirali.length - gosterilen.length;
+    const kalanTL = sirali.slice(gosterilen.length).reduce(
+      (t, h) => t + H.tryeCevir(h.tutar, h.birim || 'TRY', veri.kur),
+      0
+    );
+    const ozet = el('li', 'kayit-fazla', `diğer ${kalan} kayıt · ${lira(kalanTL)} ₺`);
     ozet.dataset.ozet = 'evet';
     liste.append(ozet);
   }
 
   blok.append(liste);
-  sigdir(liste, sirali.length, (kalan) => `+${kalan} kayıt daha`);
 
   return blok;
 }
@@ -726,7 +672,6 @@ function aliskanlikKarti(tanim, veri, bugun, secenek, isaretle) {
   // (akşam geri sayımı). Geri sayım sona konur çünkü günün yalnız o
   // saatinde anlamlı olan tek bilgi odur; ama halkanın kesilmesine de izin
   // verilemez, o yüzden feda edilebilirler listesinde yeri var.
-  sigdirmaSirasi(kart, [cumle, iz, veriOgesi]);
   return kart;
 }
 
@@ -743,35 +688,55 @@ function aliskanlikBlogu(veri, bugun, aksam, simdi, isaretle) {
     return blok;
   }
 
-  const ana = veri.tanimlar.find((t) => t.ana) || veri.tanimlar[0];
-  const ikincil = veri.tanimlar.find((t) => t !== ana) || null;
+  // İKİ SINIF, İKİ KUTU BOYU. `ana: true` olanlar ÖNEMLİ alışkanlıklardır
+  // ve büyük kart alırlar; kalanlar BASİT alışkanlıklardır ve sıkı kartta
+  // dururlar. Sıra sabit: önce bütün önemliler, sonra bütün basitler.
+  //
+  // Neden gruplu: alışkanlık sayısı zamanla artacak. Boyut farkı tek tek
+  // kartlara dağılmış olsaydı (büyük, küçük, büyük, küçük) liste bir
+  // ızgaraya değil kazaya benzerdi; sınıf sınıf dizilince boyut farkı
+  // sıralamanın kendisini anlatan bir işarete dönüşüyor.
+  const onemliler = veri.tanimlar.filter((t) => t.ana);
+  const basitler = veri.tanimlar.filter((t) => !t.ana);
+  // Hiç önemli işaretlenmemişse ilki öne çıkar: ekran sınıfsız kalmasın.
+  if (onemliler.length === 0 && basitler.length > 0) onemliler.push(basitler.shift());
 
-  blok.append(
-    aliskanlikKarti(ana, veri, bugun, {
-      boy: aksam ? 'seri-dev' : 'seri-kucuk',
-      cumle: true,
-      aksam,
-      ad: ana.ad.toLocaleUpperCase('tr'),
-    }, isaretle)
-  );
+  for (const t of onemliler) {
+    blok.append(
+      aliskanlikKarti(t, veri, bugun, {
+        boy: aksam ? 'seri-dev' : 'seri-kucuk',
+        cumle: true,
+        aksam,
+        ad: t.ad.toLocaleUpperCase('tr'),
+      }, isaretle)
+    );
+  }
 
-  if (!ikincil) return blok;
-
-  // İki kip de aynı iskeleti kurar; fark BOYUTTA. Eşit boyutta iki kart
-  // ızgara değil "eksik ızgara" gibi görünür, asimetri kasıtlı.
-  blok.append(
-    aliskanlikKarti(ikincil, veri, bugun, {
-      ikincil: true,
-      boy: aksam ? 'seri-orta' : 'seri-mini',
-      kucukDugme: !aksam,
-      veriSatiri: aksam ? uykuGeriSayim(simdi) : null,
-      // Tanımdaki ad bir cümle ("Gece 02:00'den önce uyu"); kart adı
-      // etiket sesiyle dizilir ve etiket cümle olamaz.
-      ad: 'ERKEN UYKU',
-    }, isaretle)
-  );
+  for (const t of basitler) {
+    blok.append(
+      aliskanlikKarti(t, veri, bugun, {
+        ikincil: true,
+        boy: aksam ? 'seri-orta' : 'seri-mini',
+        kucukDugme: !aksam,
+        veriSatiri: aksam && t.id === 'erken-uyku' ? uykuGeriSayim(simdi) : null,
+        // Tanımdaki ad bir cümle olabilir ("Gece 02:00'den önce uyu");
+        // kart adı etiket sesiyle dizilir ve etiket cümle olamaz.
+        ad: kartAdi(t),
+      }, isaretle)
+    );
+  }
 
   return blok;
+}
+
+/**
+ * Kart başlığı. Ad kelime sınırından KESİLMEZ — "Gece 02:00'den önce uyu"
+ * ilk iki kelimeye indirilince "GECE 02:00'DEN" kalıyordu ve bu bir ad
+ * değil, yarım cümle. Sayfa kaydırılabildiği için başlığın sarmasında bir
+ * sakınca yok; uzun ad sarar, kart onun kadar uzar.
+ */
+function kartAdi(tanim) {
+  return tanim.ad.trim().toLocaleUpperCase('tr');
 }
 
 // --- Abonelik bloğu ------------------------------------------------------
@@ -812,6 +777,52 @@ function abonelikDipnotu(aktif, veri, bugun) {
   if (bilinmeyen > 0) return `${bilinmeyen} aboneliğin yenileme günü bilinmiyor`;
   const y = H.yaklasanOdemeler(veri.abonelikler, bugun, 400)[0];
   return y ? `sıradaki ${y.abonelik.ad}, ${kalanMetni(y.kalanGun)}` : '';
+}
+
+/**
+ * SIRADAKİ ÖDEME — kendi kutusu, harcamanın hemen altında.
+ *
+ * Aylık abonelik yükü ekranın en altında duruyor ve "bir sonraki ödemem ne
+ * zaman" sorusu oraya kadar inmeyi gerektiriyordu. O soru günün her saati
+ * sorulabilir ve cevabı tek satırdır; listeyi taşımadan yalnız cevabı öne
+ * almak yeterli.
+ *
+ * Yenileme günü bilinmiyorsa tahmin ÜRETİLMEZ. Kutu yine durur ve neyi
+ * bilmediğini söyler: boş bir vaat, yanlış bir tarihten iyidir.
+ */
+function sonrakiOdemeBlogu(veri, bugun) {
+  const blok = el('section', 'blok blok-odeme');
+  const aktif = veri.abonelikler.filter((a) => a.aktif);
+  const y = H.yaklasanOdemeler(veri.abonelikler, bugun, 400)[0];
+
+  blok.append(el('p', 'etiket', 'SIRADAKİ ÖDEME'));
+
+  const satir = el('div', 'odeme-satir');
+
+  if (!y) {
+    satir.append(
+      el(
+        'p',
+        'veri',
+        aktif.length === 0
+          ? 'Aktif abonelik yok'
+          : 'Yenileme günleri henüz bilinmiyor'
+      )
+    );
+    blok.append(satir);
+    return blok;
+  }
+
+  const tl = H.tryeCevir(y.abonelik.tutar, y.abonelik.birim || 'TRY', veri.kur);
+  const sol = el('div', 'odeme-kim');
+  sol.append(
+    el('p', 'odeme-ad', y.abonelik.ad),
+    el('p', 'veri', kalanMetni(y.kalanGun))
+  );
+  satir.append(sol, buyukSayi(lira(tl), '₺', 'kucuk'));
+  blok.append(satir);
+
+  return blok;
 }
 
 function abonelikBlogu(veri, bugun) {
@@ -900,37 +911,6 @@ function abonelikBlogu(veri, bugun) {
   // Kısa telefonda satır düşerse ŞERİT DE kısılır: gizlenenler tek
   // "kalan" diliminde toplanır, böylece dilim sayısı satır sayısına eşit
   // kalır ve görünen yüzdeler yine 100 eder.
-  sigdir(
-    liste,
-    satirlar.length,
-    (kalan) => `+${kalan} abonelik daha`,
-    (gorunen, ozet) => {
-      if (gorunen >= satirlar.length) return;
-      const gizli = satirlar.length - gorunen;
-      const kalanToplam = satirlar.slice(gorunen).reduce((t, x) => t + x.aylik, 0);
-
-      const yeni = [
-        ...satirlar.slice(0, gorunen).map((x) => ({ ad: x.ad, tutar: x.aylik })),
-        { ad: `kalan ${gizli} abonelik`, tutar: kalanToplam },
-      ];
-      yeni.sort((a, b) => b.tutar - a.tutar);
-
-      const p = yuzdeDagit(yeni.map((d) => d.tutar));
-      const yeniSerit = seritCiz(
-        yeni.map((d, i) => ({ ...d, pay: p[i], kademe: kademeNo(i) })),
-        true
-      );
-      serit.replaceWith(yeniSerit);
-      serit = yeniSerit;
-
-      // Gizlenen dilimin payı da yazılmalı, yoksa şeridin bir bölümü
-      // etiketsiz renk olur ve görünen yüzdeler 100 etmez.
-      if (ozet) {
-        const kalanPay = p[yeni.findIndex((d) => d.ad.startsWith('kalan'))];
-        ozet.textContent = `+${gizli} abonelik daha · %${kalanPay}`;
-      }
-    }
-  );
 
   const dipnot = abonelikDipnotu(aktif, veri, bugun);
   if (dipnot) blok.append(el('p', 'dipnot', dipnot));
@@ -989,12 +969,18 @@ async function ciz() {
   }
 
   const harcama = harcamaBlogu(veri, bugun, aksam);
+  const odeme = sonrakiOdemeBlogu(veri, bugun);
   const aliskanlik = aliskanlikBlogu(veri, bugun, aksam, simdi, isaretle);
   const abonelik = abonelikBlogu(veri, bugun);
 
   // Kip yalnız sırayı değiştirmez; bloklar zaten farklı detay seviyesinde
-  // kuruldu. Abonelik her iki kipte de sonuncu: sabit çapa.
-  ekran.replaceChildren(...(aksam ? [aliskanlik, harcama] : [harcama, aliskanlik]), abonelik);
+  // kuruldu. Sıradaki ödeme her iki kipte de harcamanın hemen altında:
+  // cevabı bir satırlık bir soru, listeye inmeden görünmeli. Abonelik
+  // listesi her iki kipte de sonuncu — sabit çapa.
+  ekran.replaceChildren(
+    ...(aksam ? [aliskanlik, harcama, odeme] : [harcama, odeme, aliskanlik]),
+    abonelik
+  );
   ekran.removeAttribute('aria-busy');
   cizimSurdu = false;
 }

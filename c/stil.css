@@ -148,10 +148,13 @@ html {
 
 /* Dikey kaydırma yok. Bütçe aşılırsa blok BÜYÜMEZ, içerik kısılır —
    bu yüzden her yerde overflow:hidden + min-height:0. */
+/* Sayfa KAYDIRILABİLİR. Önceki sürüm her şeyi tek ekrana sığdırıp
+   içeriği kısıyordu: kayıt listesi "+3 kayıt daha"ya, alışkanlık kartları
+   40px'e iniyordu. Kaydırma serbest olunca sıkıştırmaya gerek kalmadı —
+   blok kendi içeriği kadar yer alır, hiçbir şey kırpılmaz. */
 body {
   margin: 0;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100dvh;
   background: var(--zemin);
   color: var(--murekkep);
   font-family: var(--yazi);
@@ -162,7 +165,7 @@ body {
 }
 
 .sayfa {
-  height: 100%;
+  min-height: 100dvh;
   max-width: 430px;
   margin: 0 auto;
   padding: 8px var(--kenar) 12px;
@@ -222,22 +225,15 @@ body {
    devreye girer, 844'te fazlalık en çok yeri hak eden bloğa gider. */
 
 #ekran {
-  flex: 1;
-  min-height: 0;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--ara);
-  grid-template-rows: minmax(0, 350fr) minmax(0, 174fr) minmax(0, 168fr);
 }
 
-body[data-kip='aksam'] #ekran {
-  grid-template-rows: minmax(0, 256fr) minmax(0, 268fr) minmax(0, 173fr);
-}
-
+/* Akşam: alışkanlık üstte, ödeme yine harcamanın altında. */
 /* --- Bloklar ------------------------------------------------------------ */
 
 .blok {
-  min-height: 0;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   background: var(--kart);
@@ -581,9 +577,6 @@ body[data-kip='aksam'] .blok-harcama .hafta-alan {
    satırda başka bir x'ten başlardı. display:contents satırın kutusunu
    kaldırır, hücreler doğrudan listenin sütunlarına oturur. */
 .kayitlar {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
   margin: 7px 0 0;
   padding: 5px 0 3px;
   list-style: none;
@@ -652,7 +645,6 @@ body[data-kip='aksam'] .blok-harcama .hafta-alan {
    kayması değildi. */
 
 .kart {
-  min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 72px;
   align-items: center;
@@ -664,7 +656,6 @@ body[data-kip='aksam'] .blok-harcama .hafta-alan {
      içinde olduğu için farklı bir değer, iki iz şeridini birbirinin
      altında kayık gösterirdi. */
   padding: 8px 12px;
-  overflow: hidden;
 }
 
 /* İki alışkanlık HİÇBİR KİPTE eşit boyutta çizilmez: eşit iki kart
@@ -702,14 +693,14 @@ body[data-kip='aksam'] .kart-ikincil {
   gap: 3px;
 }
 
+/* Uzun alışkanlık adı sarar, kesilmez. Kaydırma serbest olduğu için
+   kart onun kadar uzayabilir; "…" ile kırpmak adı okunmaz yapıyordu. */
 .kart-ad {
   font-size: 12px;
   font-weight: 700;
   font-stretch: 62%;
   letter-spacing: 0.1em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.25;
 }
 
 .kart-ritim {
@@ -890,10 +881,6 @@ body[data-kip='aksam'] .kart-ikincil {
     height: 28px;
   }
 
-  body[data-kip='gunduz'] #ekran {
-    grid-template-rows: minmax(0, 330fr) minmax(0, 185fr) minmax(0, 160fr);
-  }
-
   body[data-kip='gunduz'] .kart-ana {
     flex: 100;
   }
@@ -921,6 +908,38 @@ body[data-kip='aksam'] .kart-ikincil {
   }
 }
 
+/* --- Sıradaki ödeme kutusu ---------------------------------------------
+   Tek satırlık cevap: kim, ne zaman, ne kadar. Aylık yük listesi altta
+   duruyor; bu kutu o listeye inmeden "bir sonraki ödemem" sorusunu
+   kapatıyor. Yükseklik bütçesindeki en küçük pay bu kutuda. */
+
+.odeme-satir {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.odeme-kim {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.odeme-ad {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  font-stretch: 92%;
+  letter-spacing: -0.005em;
+  color: var(--murekkep);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* --- Abonelik bloğu -----------------------------------------------------
    En sıkı bütçeli blok: sayı + yorum + şerit + dört satır + dipnot.
    Sayı ve yorum AYNI SATIRDA — ayrı satırlardayken bloğun yaklaşık
@@ -946,9 +965,6 @@ body[data-kip='aksam'] .kart-ikincil {
 }
 
 .aboneler {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
   margin: 0 0 3px;
   padding: 0 0 3px;
   list-style: none;
