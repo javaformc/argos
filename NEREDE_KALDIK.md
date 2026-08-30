@@ -1,5 +1,5 @@
 # Nerede kaldık — Argos
-SON GÜNCELLEME: 30-08-2026 | HEAD: 372d09c | testler: 32/32 yeşil
+SON GÜNCELLEME: 30-08-2026 | HEAD: 0978e00 | testler: 38/38 yeşil
 
 ## Şu an ne durumdayız
 - **Arayüzde üç seçenek var, C seçildi.** A (`/`) ve B (`/b/`) birer fikir
@@ -7,21 +7,31 @@ SON GÜNCELLEME: 30-08-2026 | HEAD: 372d09c | testler: 32/32 yeşil
 - C'nin ana ekranı telefonda ve masaüstünde onaylandı. Masaüstü bir pano:
   üç sütun, kendi modülleri var (ayın günleri, kategori/ay, saate göre,
   alışkanlık/ay).
-- **Ayrıntılı sayfalar aşaması başladı.** İlki bitti: harcama (`#harcama`).
-- Kod bölündü: `c/ortak.js` iki ekranın ortak görsel dili, `c/ana.js` ana
-  ekran, `c/harcama.js` ayrıntı sayfası.
+- **Harcamanın ayrıntı ağacı bitti.** Dört sayfa:
+  `#harcama/<ay>` · `#kategori/<ay>/<ad>` · `#gun/<tarih>` · `#yer/<ay>/<ad>`
+- Kod bölündü: `c/ortak.js` ortak görsel dil, `c/ana.js` ana ekran,
+  `c/harcama.js` dört ayrıntı sayfası.
 
-## Gezinme kararı (bu oturumda verildi)
-**Blok başlığı kapıdır.** Kalıcı sekme çubuğu elendi: ekranın altından yer
-yiyor ve tıklanabilir öğe sayısını ikiye katlıyor. Ana ekranda "BUGÜN"
-başlığı `#harcama`ya açılıyor, sayfada "← BUGÜN" geri dönüyor. Hash
-tabanlı rota, tarayıcının geri tuşu çalışıyor.
+## Gezinme kararları
+- **Blok başlığı değil BLOĞUN TAMAMI kapıdır.** Önce başlığa küçük bir
+  düğme konmuştu; kullanıcı "kutunun tamamını kullanmak yerine üzerine
+  buton koymuşsun" dedi. Bağlantı artık `::after` ile bloğu kaplıyor.
+- **Kalıcı sekme çubuğu yok.** Ekranın altından yer yiyor ve tıklanabilir
+  öğe sayısını ikiye katlıyordu.
+- **Hash tabanlı rota**, tarayıcının kendi geri tuşu çalışıyor.
+- **Ay parametresi rotanın içinde** (`#kategori/2026-08/market`): bir
+  yerde saklansaydı "geri" her zaman bu aya götürürdü ve geçmiş ayda
+  gezinen biri her tıklamada bugüne fırlardı.
+- **İleri ok bugünün ayında kapanır**, yeri korunur (sönük). Kaybolunca
+  ay adı sağa kayıyor ve ay değiştirmek yerleşimi oynatan bir işlem gibi
+  görünüyordu.
 
 ## Sıradaki iş
-1. **Kullanıcı harcama ayrıntı sayfasını değerlendirsin.** Anlaşınca
-   sıradaki sayfaya geçilecek — parça parça ilerleniyor.
-2. Sonraki sayfa: **alışkanlık ayrıntısı** (uzun geçmiş, ısı haritası,
-   seri tarihçesi).
+1. **Kullanıcı harcama ağacını değerlendirsin.** Kullanıcının sözü:
+   "burada ne istediğimizi tam bitirelim, sonra devam ederiz alışkanlık
+   gibi kısımlardan."
+2. Sonraki: **alışkanlık ayrıntısı** (uzun geçmiş, ısı haritası, seri
+   tarihçesi).
 3. **Abonelik sayfası açılmayacak** — dört abonelik ana ekranda tam
    görünüyor, sayfa boş bir kabuk olurdu. Yenileme günleri girilirse
    takvim görünümü yeniden düşünülür.
@@ -56,8 +66,9 @@ Beşi de 27-08-2026'da soruldu, **ikinci kez taşınıyor**:
   düşer; gömülecek mi, sistem yazı tipine mi dönülecek?
 
 Yeni (30-08-2026):
-- **Geçmiş aylara gezinme** istenecek mi? Ayrıntı sayfası şimdilik yalnız
-  içinde bulunulan ayı çiziyor; veri katmanı tek ay yüklüyor.
+- **Geçmiş ay verisi ne kadar geriye gidiyor?** Ay gezinmesi geçmişte
+  sınırsız; kayıt tutulmamış bir ay boş görünüyor. Uygulamanın "ne zaman
+  başladığı" bilgisi yok ve şimdilik gerekmedi.
 
 ## İlgili notlar
 - Roadmap ve bağımlılık haritası: `PROJECT_PLAN.md`
