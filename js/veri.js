@@ -9,6 +9,68 @@
 // Karar: kararlar.md > Alışkanlık onayı senkronu
 
 import { ayAnahtari, onaylariBirlestir } from './hesap.js';
+import { githubKaynak } from './github.js';
+
+// --- Kaynak seçimi ------------------------------------------------------
+
+const DEPO = { sahip: 'javaformc', depo: 'argos-veri' };
+const TOKEN_ANAHTARI = 'argos-token';
+
+/**
+ * Yerel geliştirme sunucusunda mıyız?
+ *
+ * Ayrım `localhost` ile değil `*.github.io` ile yapılıyor: dev sunucu hem
+ * `localhost:4173` hem de yerel ağ adresinde (`192.168.x.x`) çalışıyor ve
+ * ikisinde de veri diskten geliyor. Soru "hangi makinedeyiz" değil,
+ * "bu sayfa bir dosya sunucusunun arkasında mı".
+ *
+ * `?kaynak=github` kalıcı bir doğrulama kancası: yerelde de GitHub yolunu
+ * ve token ekranını görmenin tek yolu bu — yoksa o akış ancak yayına
+ * çıktıktan sonra, üstelik gerçek veriyle denenebilirdi.
+ */
+export function yerelSunucuMu() {
+  if (new URLSearchParams(location.search).get('kaynak') === 'github') return false;
+  return !location.hostname.endsWith('.github.io');
+}
+
+/** Kayıtlı token. Gizli pencerede depolama kapalı olabilir; null döner. */
+export function tokenOku() {
+  try {
+    return localStorage.getItem(TOKEN_ANAHTARI) || null;
+  } catch {
+    return null;
+  }
+}
+
+export function tokenYaz(token) {
+  localStorage.setItem(TOKEN_ANAHTARI, token.trim());
+}
+
+export function tokenSil() {
+  try {
+    localStorage.removeItem(TOKEN_ANAHTARI);
+  } catch {
+    /* depolama kapalıysa yapacak bir şey yok */
+  }
+}
+
+/**
+ * Ortama uygun kaynak. Token gereken yerde token yoksa **null** döner —
+ * hata değil: ekran o durumda token isteyecek.
+ */
+export function kaynakSec() {
+  if (yerelSunucuMu()) return yerelKaynak('/veri');
+  const token = tokenOku();
+  if (!token) return null;
+  return githubKaynak({ ...DEPO, token });
+}
+
+/** Verilen token gerçekten çalışıyor mu — kaydetmeden önce denenir. */
+export async function tokenDene(token) {
+  const kaynak = githubKaynak({ ...DEPO, token: token.trim() });
+  await kaynak.oku('kur.json');
+  return kaynak;
+}
 
 /** Geliştirme sunucusundan (dev/sunucu.js) okuyan kaynak. */
 export function yerelKaynak(kok = '/veri') {

@@ -31,6 +31,7 @@ const KABUK = [
   './yazi/archivo-latin-ext.woff2',
   '../js/hesap.js',
   '../js/veri.js',
+  '../js/github.js',
 ];
 
 self.addEventListener('install', (olay) => {
@@ -69,9 +70,15 @@ self.addEventListener('fetch', (olay) => {
   // olurdu ve kullanıcı onu bir daha işaretlemez.
   if (istek.method !== 'GET') return;
 
-  // Vault verisi önbelleğe alınmaz. Bayat harcama toplamı, bugünün toplamı
-  // diye okunur — yanlış sayı, sayı yokluğundan kötüdür.
-  if (new URL(istek.url).pathname.startsWith('/veri/')) return;
+  const adres = new URL(istek.url);
+
+  // Veri önbelleğe alınmaz — ne dosya sunucusundan geleni ne GitHub'dan.
+  // Bayat harcama toplamı, bugünün toplamı diye okunur; yanlış sayı,
+  // sayı yokluğundan kötüdür. GitHub isteklerinde ikinci bir sebep daha
+  // var: yanıtlar Authorization başlığıyla alınıyor ve önbellekte
+  // tutulan bir kopya, token iptal edildikten sonra da okunabilir olurdu.
+  if (adres.pathname.startsWith('/veri/')) return;
+  if (adres.hostname === 'api.github.com') return;
 
   olay.respondWith(
     fetch(istek)

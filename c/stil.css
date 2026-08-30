@@ -1043,6 +1043,92 @@ body[data-kip='gunduz'] .kart-ikincil {
    Renk sistemi, tipografi ve kart dili aynı; değişen yoğunluk ve sorular. */
 
 
+/* --- Token ekranı -------------------------------------------------------
+   Yayındaki ilk açılışta görünen tek ekran. Argos'un başka hiçbir yerinde
+   metin girişi yok; buradaki alan veri değil, veriye açılan kapının
+   anahtarını alıyor ve bir kez alıyor. */
+
+.blok-token {
+  gap: 10px;
+  padding: 16px;
+}
+
+.token-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.token-alan {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--cizgi);
+  border-radius: 3px;
+  background: var(--zemin);
+  color: var(--murekkep);
+  font-family: var(--yazi);
+  font-size: 15px;
+  font-stretch: 84%;
+}
+
+.token-alan::placeholder {
+  color: var(--soluk);
+}
+
+.token-alan:focus-visible {
+  outline: 2px solid var(--vurgu);
+  outline-offset: 1px;
+  border-color: var(--vurgu);
+}
+
+.token-dugme {
+  /* 44px dokunma hedefi: bu düğmeye telefonda basılıyor ve tek denemede
+     isabet etmesi gerekiyor. */
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--vurgu);
+  color: var(--kart);
+  font-family: var(--yazi);
+  font-size: 14px;
+  font-weight: 700;
+  font-stretch: 84%;
+  cursor: pointer;
+}
+
+.token-dugme:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.token-dugme:focus-visible {
+  outline: 2px solid var(--vurgu);
+  outline-offset: 2px;
+}
+
+/* Durum satırı boşken de yer kaplar: sonuç yazınca form aşağı kaymasın,
+   yoksa "Bağlan"a basan parmak bir sonraki anda başka bir şeyin üstünde
+   kalıyor. */
+.token-durum {
+  margin: 0;
+  min-height: 18px;
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.04em;
+  color: var(--soluk);
+}
+
+.token-durum[data-durum='olmadi'] {
+  color: var(--eksi);
+}
+
+.token-durum[data-durum='oldu'] {
+  color: var(--durum);
+}
+
 /* --- Ayrıntı sayfası ----------------------------------------------------
    Ayrı bir tasarım değil, aynı dilin ikinci cümlesi: aynı kart yüzeyi,
    aynı üç ses, aynı kategori renkleri. Değişen tek şey ölçek — ana ekran

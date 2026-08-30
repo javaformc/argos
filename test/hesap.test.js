@@ -377,3 +377,28 @@ test('en büyükler döviz kaydını TL karşılığıyla sıralar', () => {
     [['teknoloji', 980], ['market', 500]]
   );
 });
+
+// --- GitHub kaynağı: base64 ---------------------------------------------
+
+test('base64 çevrimi Türkçe karakteri ve ₺ işaretini bozmaz', async () => {
+  const { base64Yaz, base64Oku } = await import('../js/github.js');
+
+  // btoa doğrudan çağrılsaydı bu dizgide InvalidCharacterError atardı:
+  // Latin-1 dışı her karakter onu düşürür.
+  const metin = JSON.stringify(
+    [{ kategori: 'yeme-icme', yer: 'İçim Şuğ', tutar: 1250, birim: '₺' }],
+    null,
+    2
+  );
+
+  const kodlu = base64Yaz(metin);
+  assert.match(kodlu, /^[A-Za-z0-9+/]+=*$/, 'çıktı geçerli base64');
+  assert.equal(base64Oku(kodlu), metin, 'gidiş-dönüş metni değiştirmiyor');
+});
+
+test('base64 çevrimi boş ve çok satırlı içerikte de tersine döner', async () => {
+  const { base64Yaz, base64Oku } = await import('../js/github.js');
+  assert.equal(base64Oku(base64Yaz('')), '');
+  const cokSatir = '[\n  {\n    "ğ": "İ"\n  }\n]\n';
+  assert.equal(base64Oku(base64Yaz(cokSatir)), cokSatir);
+});

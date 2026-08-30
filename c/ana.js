@@ -14,7 +14,15 @@
 // neresindeyim") sorusunu cevaplıyor.
 
 import * as H from '../js/hesap.js';
-import { yerelKaynak, veriYukle, ayVerisi, onayIsaretle } from '../js/veri.js';
+import {
+  veriYukle,
+  ayVerisi,
+  onayIsaretle,
+  kaynakSec,
+  tokenYaz,
+  tokenSil,
+  tokenDene,
+} from '../js/veri.js';
 import {
   aySayfasi,
   kategoriSayfasi,
@@ -82,7 +90,9 @@ function zorlananSaat(gercek) {
   return d;
 }
 
-const kaynak = yerelKaynak('/veri');
+// Kaynak çalışma anında seçilir ve token girilince DEĞİŞİR; bu yüzden
+// sabit değil. Yerelde dosya sunucusu, yayında GitHub deposu.
+let kaynak = kaynakSec();
 
 const ekran = document.getElementById('ekran');
 const tarihAlani = document.getElementById('tarih');
@@ -811,6 +821,88 @@ function abonelikBlogu(veri, bugun) {
   return blok;
 }
 
+// --- Token ekranı --------------------------------------------------------
+
+/**
+ * İlk açılışta bir kez: GitHub erişim anahtarı.
+ *
+ * "Argos'ta hiçbir metin girişi yoktur" kararının bilinçli istisnası.
+ * Girilen şey VERİ değil, veriye açılan kapının anahtarı — ve bir kez
+ * girilir, tarayıcıda kalır. Karara aykırı olan, her gün klavye açtıran
+ * bir giriş yüzeyiydi; bu o değil.
+ *
+ * Token KAYDEDİLMEDEN ÖNCE denenir. Yanlış bir anahtarı kaydedip sonra
+ * "veri okunamadı" demek, kullanıcıyı sorunu yanlış yerde aratır:
+ * ekranda hata görünür ama nedeni saklanmış olur.
+ */
+function tokenEkrani(sonra) {
+  const blok = el('section', 'blok blok-token');
+  blok.append(el('p', 'etiket', 'ARGOS'));
+  blok.append(
+    el('p', 'yorum', 'Verine erişmek için bir GitHub anahtarı gerekiyor.')
+  );
+
+  const form = el('form', 'token-form');
+  const alan = el('input', 'token-alan');
+  alan.type = 'password';
+  alan.placeholder = 'github_pat_…';
+  alan.autocomplete = 'off';
+  alan.spellcheck = false;
+  alan.setAttribute('aria-label', 'GitHub erişim anahtarı');
+
+  const dugme = el('button', 'token-dugme', 'Bağlan');
+  dugme.type = 'submit';
+
+  const durum = el('p', 'token-durum');
+
+  form.append(alan, dugme);
+  blok.append(form, durum);
+
+  blok.append(
+    el(
+      'p',
+      'dipnot',
+      'Anahtar yalnız bu tarayıcıda saklanır, hiçbir yere gönderilmez.'
+    )
+  );
+
+  form.addEventListener('submit', async (olay) => {
+    olay.preventDefault();
+    const girilen = alan.value.trim();
+    if (!girilen) return;
+
+    dugme.disabled = true;
+    alan.disabled = true;
+    durum.textContent = 'Deneniyor…';
+    durum.dataset.durum = 'bekliyor';
+
+    try {
+      await tokenDene(girilen);
+      tokenYaz(girilen);
+      durum.textContent = 'Bağlandı.';
+      durum.dataset.durum = 'oldu';
+      sonra();
+    } catch (hata) {
+      // Ağ hatası ile yetki hatası ayrı anlatılır: biri "bağlantını
+      // kontrol et", diğeri "anahtarı değiştir" demek.
+      durum.textContent =
+        hata instanceof TypeError
+          ? 'Bağlantı kurulamadı. Ağını kontrol et.'
+          : hata.message;
+      durum.dataset.durum = 'olmadi';
+      dugme.disabled = false;
+      alan.disabled = false;
+      alan.focus();
+      alan.select();
+    }
+  });
+
+  ekran.dataset.duzen = 'sutun';
+  ekran.replaceChildren(blok);
+  ekran.removeAttribute('aria-busy');
+  alan.focus();
+}
+
 // --- Çizim ---------------------------------------------------------------
 
 /**
@@ -922,11 +1014,34 @@ async function ciz() {
   kipAlani.textContent = aksam ? 'GÜNÜ KAPAT' : '';
   document.body.dataset.kip = aksam ? 'aksam' : 'gunduz';
 
+  // Yayındayken token gerekiyor ve yoksa çizilecek bir şey yok. Bu bir
+  // hata değil, ilk açılışın normal hâli.
+  if (!kaynak) {
+    cizimSurdu = false;
+    tokenEkrani(() => {
+      kaynak = kaynakSec();
+      ciz();
+    });
+    return;
+  }
+
   let veri;
   try {
     veri = await veriYukle(kaynak, bugun);
   } catch (hata) {
     cizimSurdu = false;
+    // Token reddedildiyse ekranda "veri okunamadı" demek yanlış yere
+    // baktırır: anahtar değişmiş ya da süresi dolmuş olabilir. Kayıtlı
+    // token silinip giriş ekranına dönülür.
+    if (hata.tokenSorunu) {
+      tokenSil();
+      kaynak = null;
+      tokenEkrani(() => {
+        kaynak = kaynakSec();
+        ciz();
+      });
+      return;
+    }
     hataGoster(hata, 'Veri okunamadı. Geliştirme sunucusu çalışıyor mu?');
     return;
   }

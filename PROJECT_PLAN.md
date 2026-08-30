@@ -40,9 +40,9 @@ gösteriyor; alışkanlık, bugünkü harcama ve yaklaşan abonelik ekranda.
 Hedef: Telefondan açılan sayfa `argos-veri` deposundan okuyor ve
 alışkanlık onayını oraya yazıyor.
 
-- [ ] **P4** — `argos-veri` private deposu + token akışı (ilk açılış, localStorage) — `BEKLIYOR`
-- [ ] **P5** — GitHub kaynağı: veri katmanının ikinci uygulaması (okuma) — `BEKLIYOR`
-- [ ] **P6** — Onay yazma: `onay-app-YYYY-AA.json` depoya PUT — `BEKLIYOR`
+- [x] **P4** — `argos-veri` private deposu + token akışı (ilk açılış, localStorage) — `BITTI`
+- [x] **P5** — GitHub kaynağı: veri katmanının ikinci uygulaması (okuma) — `BITTI`
+- [x] **P6** — Onay yazma: `onay-app-YYYY-AA.json` depoya PUT — `BITTI` (kod hazır, gerçek tokenla denenmedi)
 - [x] **P7** — PWA kabuğu: manifest, service worker, çevrimdışı önbellek, gömülü yazı tipi — `BITTI`
 - [ ] **P8** — GitHub Pages yayını + telefona ana ekrana ekleme — `BEKLIYOR`
 
