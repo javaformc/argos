@@ -63,6 +63,24 @@ export async function veriYukle(kaynak, bugun) {
 }
 
 /**
+ * Tek bir ayın harcamaları + kur.
+ *
+ * `veriYukle` her zaman İÇİNDE BULUNULAN ayı getirir çünkü ana ekranın
+ * sorusu bugün. Ayrıntı sayfası geçmiş bir aya bakabiliyor ve o ay için
+ * alışkanlık tanımına, onaylara, aboneliklere ihtiyacı yok — yalnız iki
+ * dosya okunur. Tam `veriYukle` çağırmak altı dosya isteği demekti.
+ *
+ * Eksik dosya hata değildir: kayıt tutulmamış bir ay boş görünür.
+ */
+export async function ayVerisi(kaynak, ay) {
+  const [harcamalar, kur] = await Promise.all([
+    kaynak.oku(`harcama/${ay}.json`),
+    kaynak.oku('kur.json'),
+  ]);
+  return { ay, harcamalar: harcamalar || [], kur: kur || {} };
+}
+
+/**
  * Bir alışkanlığı işaretler ve yalnız Argos'un dosyasını günceller.
  * Aynı gün + alışkanlık için eski kayıt değiştirilir, çoğaltılmaz.
  */

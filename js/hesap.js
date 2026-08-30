@@ -311,6 +311,121 @@ export function saatDagilimi(harcamalar, kur) {
   return { dilimler: kova, saatsiz };
 }
 
+// --- Ay penceresi -------------------------------------------------------
+
+/** "2026-08" -> o ayın çektiği gün sayısı. */
+export function aydaGun(ay) {
+  const yil = Number(ay.slice(0, 4));
+  const ayNo = Number(ay.slice(5, 7));
+  return new Date(yil, ayNo, 0).getDate();
+}
+
+/**
+ * Bir ayın KAÇ GÜNÜ geçti.
+ * İçinde bulunulan ayda bugüne kadar, geçmiş ayda ayın tamamı, gelecek
+ * ayda sıfır. Ortalamanın paydası budur; ay sonuna kadar olan günlere
+ * bölmek ortalamayı olduğundan küçük gösterir.
+ */
+export function ayinGecenGunu(ay, bugun) {
+  const buAy = bugun.slice(0, 7);
+  if (ay === buAy) return Number(bugun.slice(8, 10));
+  if (ay > buAy) return 0;
+  return aydaGun(ay);
+}
+
+/**
+ * Bir ayın günlük toplamları, 1'inden `gunSayisi`ye.
+ * `sonGunler` bugünden GERİYE sayar ve geçmiş bir aya bakarken yanlış
+ * pencere verir; bu ayın kendi takvimine bakar.
+ */
+export function ayinGunleri(harcamalar, kur, ay, gunSayisi) {
+  const cikti = [];
+  for (let i = 1; i <= gunSayisi; i++) {
+    const gun = ay + '-' + String(i).padStart(2, '0');
+    cikti.push({ gun, tutar: toplamTL(gununHarcamalari(harcamalar, gun), kur) });
+  }
+  return cikti;
+}
+
+/** Ay başından itibaren birikimli toplam, eskiden yeniye. */
+export function birikimli(harcamalar, kur, ay, gunSayisi) {
+  let t = 0;
+  return ayinGunleri(harcamalar, kur, ay, gunSayisi).map((g) => {
+    t += g.tutar;
+    return { gun: g.gun, toplam: t };
+  });
+}
+
+// --- Kırılımlar ---------------------------------------------------------
+
+/**
+ * Yere göre kırılım — kayıttaki `yer` alanı ("Migros", "Espressolab").
+ *
+ * Kategori "ne aldım" der, yer "nereye bıraktım" der; ikisi ayrı sorudur
+ * ve aynı kayıtta ikisi de bulunabilir.
+ *
+ * `yer` alanı OPSİYONEL ve seyrek. Yeri yazılmamış kayıtlar bir yere
+ * atanmaz, ayrı sayılır: eksik veriyi bir kutuya koymak, olmayan bir
+ * bilgiyi varmış gibi gösterir.
+ */
+export function yerKirilimi(harcamalar, kur) {
+  const toplamlar = new Map();
+  let yersiz = 0;
+  let yersizTutar = 0;
+
+  for (const h of harcamalar) {
+    const tl = tryeCevir(h.tutar, h.birim || 'TRY', kur);
+    const ad = typeof h.yer === 'string' && h.yer.trim() ? h.yer.trim() : null;
+    if (!ad) {
+      yersiz++;
+      yersizTutar += tl;
+      continue;
+    }
+    const mevcut = toplamlar.get(ad) || { yer: ad, tutar: 0, adet: 0 };
+    mevcut.tutar += tl;
+    mevcut.adet++;
+    toplamlar.set(ad, mevcut);
+  }
+
+  return {
+    yerler: [...toplamlar.values()].sort((a, b) => b.tutar - a.tutar),
+    yersiz,
+    yersizTutar,
+  };
+}
+
+/**
+ * Haftanın günlerine göre ORTALAMA, pazartesi başlangıçlı.
+ *
+ * Toplam değil ortalama: ayda beş pazartesi dört cumartesi olabiliyor ve
+ * toplam o eşitsizliği "pazartesi daha pahalı" diye okutur.
+ */
+export function haftaGunuDagilimi(harcamalar, kur, ay, gunSayisi) {
+  const kova = Array.from({ length: 7 }, () => ({ toplam: 0, gunSayisi: 0 }));
+
+  for (const g of ayinGunleri(harcamalar, kur, ay, gunSayisi)) {
+    const haftaninGunu = new Date(g.gun + 'T00:00:00').getDay(); // 0 = pazar
+    const i = (haftaninGunu + 6) % 7; // 0 = pazartesi
+    kova[i].gunSayisi++;
+    kova[i].toplam += g.tutar;
+  }
+
+  return kova.map((k, i) => ({
+    gun: i,
+    toplam: k.toplam,
+    gunSayisi: k.gunSayisi,
+    ortalama: k.gunSayisi > 0 ? k.toplam / k.gunSayisi : 0,
+  }));
+}
+
+/** En büyük `n` kayıt, TL karşılığına göre. Döviz kaydı da doğru sıralanır. */
+export function enBuyukler(harcamalar, kur, n = 5) {
+  return harcamalar
+    .map((h) => ({ kayit: h, tutar: tryeCevir(h.tutar, h.birim || 'TRY', kur) }))
+    .sort((a, b) => b.tutar - a.tutar)
+    .slice(0, n);
+}
+
 // --- Abonelik -----------------------------------------------------------
 
 /** Aylık gider karşılığı (yıllık olan 12'ye bölünür). Ham TL. */

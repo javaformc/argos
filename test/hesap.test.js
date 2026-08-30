@@ -300,3 +300,80 @@ test('boş liste tüm dilimleri sıfırla döndürür', () => {
   assert.equal(d.saatsiz, 0);
   assert.deepEqual(d.dilimler.map((x) => x.adet), [0, 0, 0, 0]);
 });
+
+// --- Ay penceresi ve kırılımlar -----------------------------------------
+
+test('ayın geçen günü: bu ayda bugüne kadar, geçmiş ayda ayın tamamı', () => {
+  assert.equal(h.ayinGecenGunu('2026-08', '2026-08-14'), 14);
+  assert.equal(h.ayinGecenGunu('2026-07', '2026-08-14'), 31, 'temmuz 31 çeker');
+  assert.equal(h.ayinGecenGunu('2026-02', '2026-08-14'), 28, '2026 artık yıl değil');
+  assert.equal(h.ayinGecenGunu('2026-09', '2026-08-14'), 0, 'gelecek ay sıfır');
+});
+
+test('ayın günleri bugünden değil ayın 1inden sayar', () => {
+  const kayitlar = [
+    { tarih: '2026-07-01', tutar: 10, birim: 'TRY', kategori: 'diger' },
+    { tarih: '2026-07-03', tutar: 20, birim: 'TRY', kategori: 'diger' },
+  ];
+  const gunler = h.ayinGunleri(kayitlar, KUR, '2026-07', 3);
+  assert.deepEqual(
+    gunler.map((g) => [g.gun, g.tutar]),
+    [['2026-07-01', 10], ['2026-07-02', 0], ['2026-07-03', 20]]
+  );
+});
+
+test('birikimli toplam hiç azalmaz, son değer ay toplamıdır', () => {
+  const kayitlar = [
+    { tarih: '2026-08-01', tutar: 100, birim: 'TRY', kategori: 'diger' },
+    { tarih: '2026-08-03', tutar: 50, birim: 'TRY', kategori: 'diger' },
+  ];
+  const b = h.birikimli(kayitlar, KUR, '2026-08', 4);
+  assert.deepEqual(b.map((x) => x.toplam), [100, 100, 150, 150]);
+  assert.equal(b[b.length - 1].toplam, h.toplamTL(kayitlar, KUR));
+});
+
+test('yer kırılımı: yeri yazılmamış kayıt bir yere atanmaz', () => {
+  const kayitlar = [
+    { tutar: 100, birim: 'TRY', kategori: 'market', yer: 'Migros' },
+    { tutar: 40, birim: 'TRY', kategori: 'market', yer: 'Migros' },
+    { tutar: 200, birim: 'TRY', kategori: 'yeme-icme', yer: 'Espressolab' },
+    { tutar: 30, birim: 'TRY', kategori: 'diger' },
+    { tutar: 70, birim: 'TRY', kategori: 'diger', yer: '   ' },
+  ];
+  const k = h.yerKirilimi(kayitlar, KUR);
+
+  assert.deepEqual(
+    k.yerler.map((y) => [y.yer, y.tutar, y.adet]),
+    [['Espressolab', 200, 1], ['Migros', 140, 2]],
+    'büyükten küçüğe, aynı yer toplanır'
+  );
+  assert.equal(k.yersiz, 2, 'boş dizgi de yersiz sayılır');
+  assert.equal(k.yersizTutar, 100);
+});
+
+test('hafta günü dağılımı toplam değil ortalama verir', () => {
+  // 2026-08-03 pazartesi. Ayın ilk 14 gününde iki pazartesi var (3 ve 10).
+  const kayitlar = [
+    { tarih: '2026-08-03', tutar: 200, birim: 'TRY', kategori: 'diger' },
+    { tarih: '2026-08-10', tutar: 0, birim: 'TRY', kategori: 'diger' },
+  ];
+  const d = h.haftaGunuDagilimi(kayitlar, KUR, '2026-08', 14);
+
+  assert.equal(d[0].gunSayisi, 2, 'iki pazartesi');
+  assert.equal(d[0].toplam, 200);
+  assert.equal(d[0].ortalama, 100, 'boş pazartesi ortalamayı düşürür');
+  assert.equal(d[6].ortalama, 0, 'kayıtsız pazar sıfır, bölme hatası yok');
+});
+
+test('en büyükler döviz kaydını TL karşılığıyla sıralar', () => {
+  const kayitlar = [
+    { tutar: 500, birim: 'TRY', kategori: 'market' },
+    { tutar: 20, birim: 'USD', kategori: 'teknoloji' }, // 20 * 49 = 980
+    { tutar: 300, birim: 'TRY', kategori: 'diger' },
+  ];
+  const e = h.enBuyukler(kayitlar, KUR, 2);
+  assert.deepEqual(
+    e.map((x) => [x.kayit.kategori, x.tutar]),
+    [['teknoloji', 980], ['market', 500]]
+  );
+});

@@ -14,8 +14,13 @@
 // neresindeyim") sorusunu cevaplıyor.
 
 import * as H from '../js/hesap.js';
-import { yerelKaynak, veriYukle, onayIsaretle } from '../js/veri.js';
-import { harcamaSayfasi } from './harcama.js';
+import { yerelKaynak, veriYukle, ayVerisi, onayIsaretle } from '../js/veri.js';
+import {
+  aySayfasi,
+  kategoriSayfasi,
+  gunSayfasi,
+  yerSayfasi,
+} from './harcama.js';
 import {
   kapiBasligi,
   genisEkran,
@@ -838,12 +843,44 @@ function yumusakGecis(cizimi) {
 /**
  * ROTA — hash tabanlı, tek sayfa.
  *
- * Boş hash ana ekran, '#harcama' harcama ayrıntısı. Ayrı bir .html dosyası
- * yerine hash seçildi: tema betiği, yazı tipi ve veri yeniden yüklenmiyor,
- * geçiş beyaz bir kareye düşmüyor. Geri tuşu yine tarayıcının kendi geri
- * tuşu.
+ *   (boş)                    ana ekran
+ *   harcama                  içinde bulunulan ay
+ *   harcama/2026-07          o ay
+ *   kategori/2026-08/market  o ayda o kategori
+ *   gun/2026-08-27           o gün
+ *   yer/2026-08/Migros       o ayda o mekân
+ *
+ * Ayrı .html dosyaları yerine hash: tema betiği, yazı tipi ve alışkanlık
+ * verisi yeniden yüklenmiyor, geçiş beyaz bir kareye düşmüyor. Geri tuşu
+ * yine tarayıcının kendi geri tuşu.
+ *
+ * Ay parametresi rotanın içinde duruyor, bir yerde saklanmıyor: kategori
+ * sayfasından geri dönünce hangi aya döneceği bağlantıda yazılı olmalı,
+ * yoksa "geri" her zaman bu aya götürür ve geçmiş ayda gezinen biri her
+ * tıklamada bugüne fırlar.
  */
-const rota = () => location.hash.replace(/^#/, '');
+function rotaCoz() {
+  const p = decodeURIComponent(location.hash.replace(/^#/, ''))
+    .split('/')
+    .filter(Boolean);
+
+  if (p[0] === 'harcama') return { sayfa: 'harcama', ay: p[1] || null };
+  if (p[0] === 'kategori' && p[1] && p[2]) {
+    return { sayfa: 'kategori', ay: p[1], ad: p[2] };
+  }
+  if (p[0] === 'yer' && p[1] && p[2]) {
+    return { sayfa: 'yer', ay: p[1], ad: p[2] };
+  }
+  if (p[0] === 'gun' && p[1]) return { sayfa: 'gun', tarih: p[1] };
+  return { sayfa: 'ana' };
+}
+
+/** Rotanın istediği ayın verisi. Bu ay zaten yüklü, geçmiş ay ek istek. */
+async function rotaVerisi(rota, veri) {
+  const ay = rota.sayfa === 'gun' ? rota.tarih.slice(0, 7) : rota.ay || veri.ay;
+  if (ay === veri.ay) return veri;
+  return ayVerisi(kaynak, ay);
+}
 
 let cizimSurdu = false;
 
@@ -886,12 +923,31 @@ async function ciz() {
     }
   }
 
-  // Ayrıntı sayfası: ana ekranın blokları hiç kurulmaz. Kurulup
+  // Ayrıntı sayfaları: ana ekranın blokları hiç kurulmaz. Kurulup
   // atılmaları görünmeyen bir maliyet olurdu ve tek tuş onay yalnız ana
   // ekranda var — orada olmayan bir düğmenin işleyicisi de gereksiz.
-  if (rota() === 'harcama') {
+  const rota = rotaCoz();
+  if (rota.sayfa !== 'ana') {
+    let ayVeri;
+    try {
+      ayVeri = await rotaVerisi(rota, veri);
+    } catch (hata) {
+      cizimSurdu = false;
+      hataGoster(hata, 'Ay verisi okunamadı.');
+      return;
+    }
+
+    const dugumler =
+      rota.sayfa === 'harcama'
+        ? aySayfasi(ayVeri, bugun)
+        : rota.sayfa === 'kategori'
+          ? kategoriSayfasi(ayVeri, bugun, rota.ad)
+          : rota.sayfa === 'yer'
+            ? yerSayfasi(ayVeri, bugun, rota.ad)
+            : gunSayfasi(ayVeri, bugun, rota.tarih);
+
     ekran.dataset.duzen = genisEkran() ? 'ayrinti' : 'sutun';
-    ekran.replaceChildren(...harcamaSayfasi(veri, bugun));
+    ekran.replaceChildren(...dugumler);
     ekran.removeAttribute('aria-busy');
     cizimSurdu = false;
     return;
@@ -938,7 +994,7 @@ async function ciz() {
     // Sağ: ayın dökümü — kategori, saat, abonelik.
     sag.append(
       ayOzetBlogu(veri, bugun),
-      ayKategoriBlogu(veri, bugun),
+      ayKategoriBlogu(veri, bugun, { tavan: 7, bagli: true }),
       saatBlogu(veri, bugun),
       abonelik
     );

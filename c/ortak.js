@@ -110,7 +110,7 @@ export function renkNo(kategori) {
  * yalnız kuyruktaki küçük dilim yer değiştirir. Aynı ekranda iki dilimin
  * aynı renkte olması, bir dilimin renginin dün başka olmasından kötüdür.
  */
-function renkleriAyir(dilimler) {
+export function renkleriAyir(dilimler) {
   const kullanilan = new Set();
   for (const d of dilimler) {
     if (d.renk === 'n') continue; // nötr yalnız kuyruğun, çakışması yok
@@ -286,6 +286,69 @@ export function lejantCiz(dilimler) {
   return liste;
 }
 
+// --- Daire (halka) grafiği -----------------------------------------------
+
+/**
+ * Kategori payları, halka.
+ *
+ * Yığın şeridi ve halka aynı soruyu sorar (parça-bütün) ve normalde ikisi
+ * bir arada bulunmaz. Burada bulunmalarının sebebi ÖLÇEK: şerit günü
+ * anlatıyor ve satır içinde 17px yer kaplıyor, halka ayı anlatıyor ve
+ * sayfanın en büyük görseli. Aynı biçimi iki farklı ölçekte kullanmak
+ * yerine ikinci ölçek kendi biçimini aldı.
+ *
+ * Yarıçap 15.9155 seçildi: çevresi tam 100 birim eder ve yüzde doğrudan
+ * `stroke-dasharray` uzunluğu olur — açı hesabı, trigonometri, `path`
+ * üretimi gerekmez. Dilimler arasındaki 0.7 birimlik kesinti zemin
+ * rengini gösterir; bitişik iki dilimin rengi yakınsa sınır yine görünür.
+ *
+ * Ortadaki sayı kasıtlı: boş bir halka merkezi, grafiğin en çok bakılan
+ * yerini boşa harcıyor.
+ */
+export function daireCiz(dilimler, ortaSayi, ortaEtiket) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const kutu = el('div', 'daire-kutu');
+
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 42 42');
+  svg.setAttribute('class', 'daire');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute(
+    'aria-label',
+    dilimler.length === 0
+      ? 'Dağılım için henüz kayıt yok'
+      : dilimler.map((d) => `${d.ad} yüzde ${d.pay}`).join(', ')
+  );
+
+  const zemin = document.createElementNS(NS, 'circle');
+  zemin.setAttribute('cx', '21');
+  zemin.setAttribute('cy', '21');
+  zemin.setAttribute('r', '15.9155');
+  zemin.setAttribute('class', 'daire-zemin');
+  svg.append(zemin);
+
+  // 25 birimlik kaydırma başlangıcı 12 yönüne alır; dilimler saat yönünde.
+  let kaydirma = 25;
+  for (const d of dilimler) {
+    const yay = document.createElementNS(NS, 'circle');
+    yay.setAttribute('cx', '21');
+    yay.setAttribute('cy', '21');
+    yay.setAttribute('r', '15.9155');
+    yay.setAttribute('class', 'daire-dilim');
+    yay.dataset.renk = String(d.renk);
+    const boy = Math.max(d.pay - 0.7, 0.4);
+    yay.setAttribute('stroke-dasharray', boy + ' ' + (100 - boy));
+    yay.setAttribute('stroke-dashoffset', String(kaydirma));
+    kaydirma -= d.pay;
+    svg.append(yay);
+  }
+
+  const orta = el('div', 'daire-orta');
+  orta.append(el('b', null, ortaSayi), el('span', null, ortaEtiket));
+  kutu.append(svg, orta);
+  return kutu;
+}
+
 // --- Kayıt satırı --------------------------------------------------------
 
 /**
@@ -311,23 +374,38 @@ export function saateGore(kayitlar) {
  * oynadığı anlaşılmıyordu. Çarpım işareti, sayının ne olduğunu söylemek
  * zorunda bırakır.
  */
-function kayitDetayi(h, kur) {
+function kayitDetayi(h, kur, yeriGizle) {
   const birim = h.birim || 'TRY';
   if (birim !== 'TRY') {
     const oran = H.bicimle(H.yuvarla(kur[birim]));
     return `${H.bicimle(h.tutar)} ${SEMBOL[birim] || birim} × ${oran}`;
   }
+  // Yer sayfasında yer adı zaten başlıkta: her satırda tekrar etmesi
+  // sütunu bilgi taşımayan bir kolona çevirir. Alt kategori varsa o girer.
+  if (yeriGizle) return h.alt ? oku(h.alt) : '';
   return h.yer || (h.alt ? oku(h.alt) : '');
 }
 
-export function kayitSatiri(h, kur) {
+/**
+ * Bir harcama satırı.
+ *
+ * `gizle` ile bir sütun susturulabilir: kategori sayfasında her satırda
+ * aynı kategori adı, yer sayfasında her satırda aynı mekân yazıyordu ve
+ * o sütun bilgi taşımayan bir kolona dönüşüyordu. Kategori metni boş
+ * bırakılınca ızgaranın `auto` sütunu kendiliğinden kapanır.
+ */
+export function kayitSatiri(h, kur, gizle) {
   const li = el('li', 'kayit');
+  // Saatsiz kayıtta sütun boş bırakılmaz: hizalı satırların altında sol
+  // kenarı tırtıklı bir yetim satır bırakıyordu. Sembol değil kelime.
+  li.append(el('span', 'saat', h.saat || 'saatsiz'));
+  // Boş bir span sütunu kapatmıyor, iki yanındaki boşluk duruyordu; sütun
+  // tamamen çıkarılır ve listenin ızgarası üçe iner (CSS'te `data-sutun`).
+  if (gizle !== 'kategori') {
+    li.append(el('span', 'kategori', oku(h.kategori)));
+  }
   li.append(
-    // Saatsiz kayıtta sütun boş bırakılmaz: hizalı satırların altında sol
-    // kenarı tırtıklı bir yetim satır bırakıyordu. Sembol değil kelime.
-    el('span', 'saat', h.saat || 'saatsiz'),
-    el('span', 'kategori', oku(h.kategori)),
-    el('span', 'detay', kayitDetayi(h, kur)),
+    el('span', 'detay', kayitDetayi(h, kur, gizle === 'yer')),
     el('span', 'tutar', `${lira(H.tryeCevir(h.tutar, h.birim || 'TRY', kur))} ₺`)
   );
   return li;
@@ -345,17 +423,24 @@ export function kayitSatiri(h, kur) {
  * maaş günü sıçraması, hafta sonu tepeleri, sakin geçen aralıklar. Yedi
  * sütunda görünmeyen desen otuz sütunda görünüyor.
  */
-export function ayGrafigiBlogu(veri, bugun) {
+export function ayGrafigiBlogu(veri, bugun, secenek) {
+  const sec = secenek || {};
+  const bagli = sec.bagli;
+  const vurgu = sec.vurgu || bugun;
   const blok = el('section', 'blok blok-ay');
   blok.dataset.alan = 'ay';
 
-  const gecenGun = Number(bugun.slice(8, 10));
-  const gunler = H.sonGunler(veri.harcamalar, veri.kur, bugun, gecenGun);
+  // Pencere AYIN KENDİ TAKVİMİ. "Bugünden geriye N gün" bu ay için doğru
+  // sonucu veriyordu ama geçmiş bir aya bakarken tamamen başka günleri
+  // çiziyordu — sessizce, çünkü sütun sayısı yine doğru çıkıyor.
+  const ay = veri.ay || bugun.slice(0, 7);
+  const gecenGun = H.ayinGecenGunu(ay, bugun);
+  const gunler = H.ayinGunleri(veri.harcamalar, veri.kur, ay, gecenGun);
   const toplam = gunler.reduce((t, g) => t + g.tutar, 0);
   const ortalama = gecenGun > 0 ? toplam / gecenGun : 0;
   const enBuyuk = Math.max(...gunler.map((g) => g.tutar), ortalama, 1);
 
-  const ayAdi = AYLAR[Number(bugun.slice(5, 7)) - 1];
+  const ayAdi = AYLAR[Number(ay.slice(5, 7)) - 1];
 
   // Kayıtsız ayda grafik ÇİZİLMEZ. Otuz sıfır sütunu, taban çizgileri
   // dışında hiçbir şey göstermeyen 200px'lik bir kutu bırakıyordu ve o
@@ -384,9 +469,13 @@ export function ayGrafigiBlogu(veri, bugun) {
   }
 
   for (const g of gunler) {
-    const sutun = el('i');
+    // Sütun, o günün sayfasına açılan kapı. 30 sütun dar hedefler ama
+    // aynı kapı dökümdeki gün başlığında da var — biri fare için, diğeri
+    // parmak için.
+    const sutun = bagli ? el('a') : el('i');
+    if (bagli) sutun.href = '#gun/' + g.gun;
     sutun.style.height = `${Math.max((g.tutar / enBuyuk) * 100, 3)}%`;
-    if (g.gun === bugun) sutun.dataset.bugun = '';
+    if (g.gun === vurgu) sutun.dataset.bugun = '';
     // Hafta sonu ayrı tonda: ayın ritmi çoğu zaman haftaya bağlı ve bu
     // ayrım olmadan otuz sütun tek bir gürültü kütlesi gibi okunuyor.
     const gun = new Date(`${g.gun}T00:00:00`).getDay();
@@ -410,18 +499,23 @@ export function ayGrafigiBlogu(veri, bugun) {
  * soru "parça-bütün" değil "hangisi daha büyük" ve sıralı barlar o soruyu
  * yığından daha doğrudan cevaplıyor.
  */
-export function ayKategoriBlogu(veri, bugun, tavan = 7) {
+export function ayKategoriBlogu(veri, bugun, secenek) {
+  const s = secenek || {};
+  const tavan = s.tavan || 7;
+  const ay = veri.ay || bugun.slice(0, 7);
+
   const blok = el('section', 'blok blok-kategori');
   blok.dataset.alan = 'kategori';
 
   // Tavan ana ekranda 7: pano sütunu dar ve orada soru "en büyükler ne".
   // Ayrıntı sayfası tavanı kaldırır — o sayfanın varlık sebebi tam döküm,
   // orada kuyruğu kesmek sayfayı ana ekranın kopyasına çevirirdi.
+  //
+  // Çakışma çözücü burada da geçerli: sekiz hue, on yediden fazla kategori
+  // var ve "fatura" ile "diğer" aynı hue'ya haritalı. Ana ekran ilk yediyi
+  // çizdiği için çakışma görünmüyordu; tavan kalkınca iki bar aynı renkte
+  // oldu. Renk kimlik kodluyorsa iki kimlik aynı olamaz.
   const tumu = H.kategoriKirilimi(veri.harcamalar, veri.kur);
-  // Çakışma çözücü burada da geçerli: sekiz hue, on yediden fazla
-  // kategori var ve "fatura" ile "diğer" aynı hue'ya haritalı. Ana ekran
-  // ilk yediyi çizdiği için çakışma görünmüyordu; tavan kalkınca iki bar
-  // aynı renkte oldu. Renk kimlik kodluyorsa iki kimlik aynı olamaz.
   const kirilim = renkleriAyir(
     tumu.slice(0, tavan).map((k) => ({ ...k, renk: renkNo(k.kategori) }))
   );
@@ -440,8 +534,12 @@ export function ayKategoriBlogu(veri, bugun, tavan = 7) {
   const liste = el('ul', 'kategori-barlar');
 
   for (const k of kirilim) {
-    const satir = el('li', 'kategori-bar');
-    const ad = el('span', 'kb-ad', oku(k.kategori));
+    // Satır tıklanabilirse <a>, değilse <div>: ızgara ikisinde de aynı,
+    // değişen yalnız etiketin kendisi.
+    const ic = s.bagli ? el('a', 'kategori-bar') : el('div', 'kategori-bar');
+    if (s.bagli) {
+      ic.href = '#kategori/' + ay + '/' + encodeURIComponent(k.kategori);
+    }
 
     const yol = el('span', 'kb-yol');
     const dolgu = el('i');
@@ -449,8 +547,34 @@ export function ayKategoriBlogu(veri, bugun, tavan = 7) {
     dolgu.dataset.renk = String(k.renk);
     yol.append(dolgu);
 
-    satir.append(ad, yol, el('span', 'kb-tutar', lira(k.tutar)));
+    ic.append(
+      el('span', 'kb-ad', oku(k.kategori)),
+      yol,
+      el('span', 'kb-tutar', lira(k.tutar))
+    );
+
+    const satir = el('li');
+    satir.append(ic);
     liste.append(satir);
+  }
+
+  // Halka ve barlar AYNI bloktadır ve bu kasıtlı: ikisi aynı veriyi
+  // gösteriyor ama farklı soruyu cevaplıyor — halka "yüzde kaçı", barlar
+  // "hangisi daha büyük". Ayrı bloklara koymak, aynı veriyi iki kez
+  // sunulmuş gibi gösterirdi; yan yana durunca barların adları halkanın
+  // lejantı oluyor ve ayrı bir lejant kutusu gerekmiyor.
+  if (s.daire) {
+    const paylar = yuzdeDagit(kirilim.map((k) => k.tutar));
+    const dilimler = kirilim.map((k, i) => ({
+      ad: oku(k.kategori),
+      renk: k.renk,
+      pay: paylar[i],
+    }));
+    const toplam = kirilim.reduce((t, k) => t + k.tutar, 0);
+    const ikili = el('div', 'kategori-ikili');
+    ikili.append(daireCiz(dilimler, lira(toplam), '₺'), liste);
+    blok.append(ikili);
+    return blok;
   }
 
   blok.append(liste);

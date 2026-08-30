@@ -1198,6 +1198,274 @@ body[data-kip='gunduz'] .kart-ikincil {
   color: var(--murekkep);
 }
 
+/* --- Küçük sayı üçlüsü --------------------------------------------------
+   Ana ekranda yalnız masaüstünde çiziliyordu ve kuralları medya sorgusunun
+   içindeydi; ayrıntı sayfaları onu telefonda da kullanıyor ve orada üç sayı
+   alt alta düşüp yarım ekran kaplıyordu. */
+
+.ay-ozet {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.ay-deger {
+  margin: 2px 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.ay-deger b {
+  font-size: 19px;
+  font-weight: 700;
+  font-stretch: 105%;
+  letter-spacing: -0.02em;
+}
+
+.ay-deger span {
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 62%;
+  color: var(--soluk);
+}
+
+/* --- Ay gezinmesi ------------------------------------------------------- */
+
+.ay-gezinme {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ay-ok {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 3px;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--vurgu);
+  text-decoration: none;
+}
+
+.ay-ok:hover,
+.ay-ok:focus-visible {
+  background: var(--vurgu-yumusak);
+}
+
+.ay-ok:focus-visible {
+  outline: 2px solid var(--vurgu);
+  outline-offset: 1px;
+}
+
+/* İleri ok bugünün ayında kapanır ama YERİ KORUNUR: kaybolunca ay adı
+   sağa kayıyordu ve ay değiştirmek yerleşimi oynatan bir işlem gibi
+   görünüyordu. Görünmez değil sönük — kapının orada olduğu ama şimdilik
+   kapalı olduğu okunmalı. */
+.ay-ok-bos {
+  color: var(--bos);
+  pointer-events: none;
+}
+
+/* --- Halka -------------------------------------------------------------- */
+
+.kategori-ikili {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+  align-items: center;
+}
+
+.daire-kutu {
+  position: relative;
+  width: clamp(150px, 34vw, 210px);
+  margin: 0 auto;
+  aspect-ratio: 1;
+}
+
+.daire {
+  width: 100%;
+  height: 100%;
+  /* -90° yerine dizilim JS'te dashoffset ile yapılıyor; burada yalnız
+     tarayıcının varsayılan yumuşatması kapatılmıyor. */
+  overflow: visible;
+}
+
+.daire-zemin {
+  fill: none;
+  stroke: var(--bos);
+  stroke-width: 5.5;
+}
+
+.daire-dilim {
+  fill: none;
+  stroke-width: 5.5;
+  /* Uçlar düz: yuvarlak uç, küçük dilimlerde payı olduğundan büyük
+     gösteriyor ve komşu dilimin üstüne biniyor. */
+  stroke-linecap: butt;
+}
+
+.daire-dilim[data-renk='1'] { stroke: var(--k1); }
+.daire-dilim[data-renk='2'] { stroke: var(--k2); }
+.daire-dilim[data-renk='3'] { stroke: var(--k3); }
+.daire-dilim[data-renk='4'] { stroke: var(--k4); }
+.daire-dilim[data-renk='5'] { stroke: var(--k5); }
+.daire-dilim[data-renk='6'] { stroke: var(--k6); }
+.daire-dilim[data-renk='7'] { stroke: var(--k7); }
+.daire-dilim[data-renk='8'] { stroke: var(--k8); }
+.daire-dilim[data-renk='n'] { stroke: var(--kn); }
+
+.daire-orta {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  pointer-events: none;
+}
+
+.daire-orta b {
+  font-size: clamp(20px, 5.2vw, 28px);
+  font-weight: 700;
+  font-stretch: 105%;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.daire-orta span {
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.08em;
+  color: var(--soluk);
+}
+
+/* --- Tıklanabilir kategori/yer satırı ----------------------------------- */
+
+.kategori-barlar li {
+  list-style: none;
+}
+
+a.kategori-bar {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 3px;
+  /* Hedef metinden büyük: 12px'lik bir satır parmak için hedef değil.
+     Negatif kenar boşluğu büyüyen hedefin ızgarayı kaydırmasını önler. */
+  margin: -3px -6px;
+  padding: 3px 6px;
+}
+
+a.kategori-bar:hover,
+a.kategori-bar:focus-visible {
+  background: var(--vurgu-yumusak);
+}
+
+a.kategori-bar:hover .kb-ad,
+a.kategori-bar:focus-visible .kb-ad {
+  color: var(--vurgu);
+}
+
+a.kategori-bar:focus-visible {
+  outline: 2px solid var(--vurgu);
+  outline-offset: 0;
+}
+
+/* --- Birikimli eğri ----------------------------------------------------- */
+
+.egri-alan {
+  height: clamp(80px, 18vh, 240px);
+  margin-top: 8px;
+}
+
+.egri {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* vector-effect: çizgi kalınlığı viewBox esnemesinden etkilenmez.
+   preserveAspectRatio="none" olmadan eğri yatayda ezilip dikeyde
+   uzuyordu; onunla birlikte bu olmadan çizgi de eziliyor. */
+.egri-yol {
+  fill: none;
+  stroke: var(--vurgu);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.egri-hedef {
+  stroke: var(--sutun);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+/* --- Haftanın günü ------------------------------------------------------ */
+
+.saat-alan.hafta-gunu-alan {
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+/* En pahalı gün vurguda: yedi sütunda gözle karşılaştırmak, iki sütun
+   yakınsa çalışmıyor. */
+.hafta-gunu-alan .saat-oge > i[data-bugun] {
+  background: var(--vurgu);
+}
+
+.hafta-gunu-alan .saat-tutar {
+  font-size: 11px;
+}
+
+/* --- En büyükler -------------------------------------------------------- */
+
+.enbuyuk-liste {
+  grid-template-columns: 52px auto minmax(0, 1fr) auto;
+}
+
+.enbuyuk-liste a.saat {
+  color: var(--vurgu);
+  text-decoration: none;
+}
+
+.enbuyuk-liste a.saat:hover,
+.enbuyuk-liste a.saat:focus-visible {
+  text-decoration: underline;
+}
+
+/* --- Gün başlığı bağlantısı --------------------------------------------- */
+
+/* Kategori sayfasında kategori sütunu hiç çizilmiyor: ızgara üçe iner,
+   yoksa boş sütunun iki yanındaki boşluk satırı ortasından yarıyordu. */
+.kayitlar[data-sutun='uc'] {
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+}
+
+a.gun-tarih {
+  text-decoration: none;
+  border-radius: 3px;
+  margin: -2px -5px;
+  padding: 2px 5px;
+}
+
+a.gun-tarih:hover,
+a.gun-tarih:focus-visible {
+  color: var(--vurgu);
+  background: var(--vurgu-yumusak);
+}
+
+a.gun-tarih:focus-visible {
+  outline: 2px solid var(--vurgu);
+  outline-offset: 0;
+}
+
 /* --- Ay modülleri -------------------------------------------------------
    Bu üç grafik ana ekranda YALNIZ masaüstünde çizilir ama kuralları medya
    sorgusunun içinde duramaz: harcama ayrıntı sayfası aynı grafikleri her
@@ -1211,11 +1479,12 @@ body[data-kip='gunduz'] .kart-ikincil {
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  height: clamp(80px, 21vh, 300px);
+  height: clamp(115px, 21vh, 300px);
   margin-top: 8px;
 }
 
-.ay-alan > i {
+.ay-alan > i,
+.ay-alan > a {
   flex: 1;
   min-width: 3px;
   border-radius: 2px 2px 0 0;
@@ -1224,11 +1493,13 @@ body[data-kip='gunduz'] .kart-ikincil {
 
 /* Hafta sonu ayrı tonda: ayın ritmi çoğu zaman haftaya bağlı ve bu ayrım
    olmadan otuz sütun tek bir gürültü kütlesi gibi okunuyor. */
-.ay-alan > i[data-haftasonu] {
+.ay-alan > i[data-haftasonu],
+.ay-alan > a[data-haftasonu] {
   background: var(--sutun-hs);
 }
 
-.ay-alan > i[data-bugun] {
+.ay-alan > i[data-bugun],
+.ay-alan > a[data-bugun] {
   background: var(--vurgu);
 }
 
@@ -1369,6 +1640,19 @@ body[data-kip='gunduz'] .kart-ikincil {
   /* Ayrıntı sayfası iki sütun: solda ayın özeti ve grafikleri, sağda
      döküm. Döküm tek başına bir sütunu hak ediyor çünkü ay ilerledikçe
      uzayan tek şey o — grafikler aynı boyda kalır, liste büyür. */
+  /* Halka solda, barlar sağda. Telefonda alt alta duruyorlar; geniş
+     ekranda yan yana durunca barların adları halkanın lejantı oluyor ve
+     ayrı bir lejant kutusu gerekmiyor. */
+  .kategori-ikili {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .daire-kutu {
+    width: clamp(130px, 13vw, 200px);
+    margin: 0;
+  }
+
   #ekran[data-duzen='ayrinti'] {
     display: grid;
     grid-template-columns: 1.15fr 1fr;
@@ -1378,6 +1662,10 @@ body[data-kip='gunduz'] .kart-ikincil {
 
   #ekran[data-duzen='ayrinti'] .gezinme {
     grid-column: 1 / -1;
+  }
+
+  [data-alan='dokum'] .dokum[data-sutun='uc'] {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
   }
 
   [data-alan='dokum'] .dokum {
@@ -1424,32 +1712,14 @@ body[data-kip='gunduz'] .kart-ikincil {
     padding: 10px 16px;
   }
 
-  /* Ay özeti kendi bloğunda, üç sütun. */
+  /* Geniş ekranda sayı bir kademe büyür; ızgara ve hizalama genel
+     bölümde tanımlı. */
   .ay-ozet {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
     gap: 14px;
-  }
-
-  .ay-deger {
-    margin: 2px 0 0;
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
   }
 
   .ay-deger b {
     font-size: 21px;
-    font-weight: 700;
-    font-stretch: 105%;
-    letter-spacing: -0.02em;
-  }
-
-  .ay-deger span {
-    font-size: 11px;
-    font-weight: 600;
-    font-stretch: 62%;
-    color: var(--soluk);
   }
 }
 
