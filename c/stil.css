@@ -168,12 +168,21 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* GÜVENLİ ALAN — dört kenar birden.
+   Ana ekrana eklenmiş bir PWA tarayıcı çubukları olmadan açılır ve
+   `viewport-fit=cover` ile ekranın tamamını kaplar: üst şerit çentiğin ve
+   kameranın altına giriyor, tarih ile saat kısmen görünmez oluyordu.
+   Yalnız alt kenar hesaba katılmıştı — o da ev çubuğu için.
+   `env()` desteklenmeyen yerde ikinci argüman (0px) kullanılır; masaüstü
+   ve normal tarayıcı sekmesi bu yüzden hiç etkilenmez. */
 .sayfa {
   min-height: 100dvh;
   max-width: 430px;
   margin: 0 auto;
-  padding: 8px var(--kenar) 12px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  padding-top: calc(8px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(var(--kenar) + env(safe-area-inset-left, 0px));
+  padding-right: calc(var(--kenar) + env(safe-area-inset-right, 0px));
   display: flex;
   flex-direction: column;
 }
@@ -1835,7 +1844,12 @@ a.gun-tarih:focus-visible {
     /* Sabit tavan yok: 1460px, 1920'lik ekranda sağda 400px boş bırakıyordu.
        Tavan yalnız satır uzunluğunun okunmaz hale gelmesini engelliyor. */
     max-width: min(2000px, 100%);
-    padding: clamp(12px, 1.6vh, 22px) clamp(20px, 2.2vw, 40px);
+    /* Güvenli alan geniş ekranda da eklenir: yatay tutulan bir tablette
+       çentik sola ya da sağa düşüyor ve içerik onun altına giriyor. */
+    padding-top: calc(clamp(12px, 1.6vh, 22px) + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(clamp(12px, 1.6vh, 22px) + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(clamp(20px, 2.2vw, 40px) + env(safe-area-inset-left, 0px));
+    padding-right: calc(clamp(20px, 2.2vw, 40px) + env(safe-area-inset-right, 0px));
   }
 
   .ust {
