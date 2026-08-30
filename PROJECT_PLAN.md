@@ -42,9 +42,11 @@ alışkanlık onayını oraya yazıyor.
 
 - [x] **P4** — `argos-veri` private deposu + token akışı (ilk açılış, localStorage) — `BITTI`
 - [x] **P5** — GitHub kaynağı: veri katmanının ikinci uygulaması (okuma) — `BITTI`
-- [x] **P6** — Onay yazma: `onay-app-YYYY-AA.json` depoya PUT — `BITTI` (kod hazır, gerçek tokenla denenmedi)
+- [x] **P6** — Onay yazma: `onay-app-YYYY-AA.json` depoya PUT — `BITTI`
+      Uçtan uca doğrulandı 30-08-2026: telefondan iki işaret, depoda iki commit.
 - [x] **P7** — PWA kabuğu: manifest, service worker, çevrimdışı önbellek, gömülü yazı tipi — `BITTI`
-- [ ] **P8** — GitHub Pages yayını + telefona ana ekrana ekleme — `BEKLIYOR`
+- [x] **P8** — GitHub Pages yayını + telefona ana ekrana ekleme — `BITTI`
+      Yayın: https://javaformc.github.io/argos/c/
 
 ### Milestone 3 — Derinlik ve masaüstü
 Hedef: Harcama kırılımına inilebiliyor, abonelik listesi tam görünüyor,

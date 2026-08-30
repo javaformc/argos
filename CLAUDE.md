@@ -60,6 +60,24 @@ Test koşucusu: Node yerleşik `node:test`. Barındırma: GitHub Pages.
   tek dürüst yolu bu; sahte veriyi gerçek klasöre yazmak yerine ayrı kök.
 <!-- Bu proje için kurulan skill/MCP: ne için kuruldu. -->
 
+## Veri senkronu — her oturumda
+Veriye **iki taraf** yazıyor: bu makinedeki Claude ve telefondaki Argos
+(yalnız `onay-app-*.json`). Aradaki tek kanal git.
+
+```
+veri okumadan ÖNCE : cd C:\MY_Code\argos-veri && git pull --ff-only
+veri yazdıktan SONRA: git add -A && git commit && git push
+```
+
+**Pull atlanırsa** telefonun işareti üzerine yazılır ve o işaret bir daha
+geri gelmez — kullanıcı onu yeniden işaretlemez, çünkü yaptığını sanıyor.
+**Push atlanırsa** telefon bayat veri gösterir ve hata vermez; sessizce
+dünkü sayıyı bugünmüş gibi okur.
+
+Çakışma çıkarsa (aynı dosyaya iki taraf yazmış): `onaylariBirlestir`
+kuralı geçerlidir — aynı gün + alışkanlık için **damgası yeni olan**
+kazanır. Elle birleştirirken bu kurala uy.
+
 ## Bu projeye özgü tuzaklar
 - **Veri deposu ayrı.** Kod `argos` (public), veri `argos-veri` (private).
   Bu depoya asla gerçek veri commit'lenmez — `veri/` `.gitignore`'da.

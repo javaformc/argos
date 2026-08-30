@@ -18,3 +18,12 @@
   kalkınca "Fatura" ile "Diğer" aynı renk oldu).
 - Bir listeyi kısaltan tavanı kaldırmadan önce o listenin gizlediği
   başka ne varsa ara: tavan, bir kusuru düzeltmez, görünmez tutar.
+- Ters bölü içeren metni Bash heredoc'una gömme: bu ortamda `\\` tek `\`
+  ye iniyor, yollar ve regex'ler sessizce bozuluyor (`C:\MY_Code` →
+  `C:MY_Code`). Öyle metni Edit ile yaz.
+- Metin değiştirirken yerine koymayı FONKSİYONLA ver (`() => yeni`):
+  dizgi biçiminde `$` ile başlayan diziler özel desen sayılıyor ve
+  içeriği kesiyor.
+- Veriye iki taraf yazıyorsa (bilgisayar + telefon), yazmadan önce
+  `git pull --ff-only`, yazdıktan sonra `git push`. Pull atlanırsa
+  telefonun işareti ezilir ve kullanıcı onu bir daha işaretlemez.
