@@ -1013,6 +1013,10 @@ body[data-kip='gunduz'] .kart-ikincil {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .daire-dilim {
+    transition: none;
+  }
+
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {
@@ -1279,6 +1283,12 @@ body[data-kip='gunduz'] .kart-ikincil {
   align-items: center;
 }
 
+/* Boş halkanın yanındaki tek satır ortalanır: telefonda halka ortada,
+   yazı sol kenarda kalıyor ve ikisi aynı kutuya ait görünmüyordu. */
+.kategori-bos > .veri {
+  text-align: center;
+}
+
 .daire-kutu {
   position: relative;
   width: clamp(150px, 34vw, 210px);
@@ -1306,6 +1316,30 @@ body[data-kip='gunduz'] .kart-ikincil {
   /* Uçlar düz: yuvarlak uç, küçük dilimlerde payı olduğundan büyük
      gösteriyor ve komşu dilimin üstüne biniyor. */
   stroke-linecap: butt;
+  transition: stroke-width 140ms ease;
+}
+
+/* Dilim de kapı. İmleç üstündeyken halka O DİLİMDE kalınlaşır — büyüme
+   `transform: scale` ile değil `stroke-width` ile yapılıyor: ölçek
+   dilimi merkezden kaydırıp komşularının üstüne bindiriyordu, kalınlık
+   ise yayı yerinde tutup içe ve dışa doğru büyütüyor.
+
+   5.5 -> 7.2 kasıtlı olarak küçük bir sıçrama: hangi dilimin üstünde
+   olunduğunu söylemeye yetiyor, grafiğin okunuşunu bozmuyor. Dış çap
+   40.4 birimde kalıyor, 42'lik viewBox'a sığıyor. */
+.daire a {
+  cursor: pointer;
+}
+
+.daire a:hover .daire-dilim,
+.daire a:focus-visible .daire-dilim {
+  stroke-width: 7.2;
+}
+
+/* Odak halkası bastırılır: kalınlaşma zaten görünür bir odak işareti ve
+   SVG'de dikdörtgen bir çerçeve yayın etrafında yamuk duruyor. */
+.daire a:focus-visible {
+  outline: none;
 }
 
 .daire-dilim[data-renk='1'] { stroke: var(--k1); }

@@ -216,14 +216,20 @@ function dokumBlogu(harcamalar, kur, bugun, secenek) {
 }
 
 /** Kategori dağılımı, halka + barlar. Ay bloğunun tek kayda inmiş hali. */
-function daireBlogu(harcamalar, kur, baslik) {
+function daireBlogu(harcamalar, kur, baslik, ay) {
   const blok = el('section', 'blok blok-kategori');
   blok.dataset.alan = 'kategori';
   blok.append(ustSatir(baslik, null));
 
   const tumu = H.kategoriKirilimi(harcamalar, kur);
+
+  // Kayıtsız günde halka YİNE çizilir, içi sıfır. Kaybolduğunda blok
+  // kısalıyor ve altındaki ay grafiği yukarı kayıyordu; gün gün gezinen
+  // biri her boş günde imleci yeniden konumlandırmak zorunda kalıyordu.
   if (tumu.length === 0) {
-    blok.append(el('p', 'veri', 'Kayıt yok'));
+    const bos = el('div', 'kategori-ikili kategori-bos');
+    bos.append(daireCiz([], '0', '₺'), el('p', 'veri', 'Kayıt yok'));
+    blok.append(bos);
     return blok;
   }
 
@@ -231,23 +237,14 @@ function daireBlogu(harcamalar, kur, baslik) {
     tumu.map((k) => ({ ...k, renk: renkNo(k.kategori) }))
   );
 
-  // Tek kategoride halka çizilmez: %100'ü tek renk olan bir daire hiçbir
-  // şey bölmüyor ve "dağılım" diye sunulduğunda olmayan bir çeşitliliği
-  // ima ediyor. Tek satır aynı bilgiyi dürüstçe veriyor.
-  if (kirilim.length === 1) {
-    const tek = kirilim[0];
-    blok.append(
-      el('p', 'yorum', `Tamamı tek kalemde: ${oku(tek.kategori)}.`)
-    );
-    return blok;
-  }
   const paylar = yuzdeDagit(kirilim.map((k) => k.tutar));
   const toplam = kirilim.reduce((t, k) => t + k.tutar, 0);
   const enBuyuk = kirilim[0].tutar;
 
   const liste = el('ul', 'kategori-barlar');
   for (const k of kirilim) {
-    const ic = el('div', 'kategori-bar');
+    const ic = ay ? el('a', 'kategori-bar') : el('div', 'kategori-bar');
+    if (ay) ic.href = '#kategori/' + ay + '/' + encodeURIComponent(k.kategori);
     const yol = el('span', 'kb-yol');
     const dolgu = el('i');
     dolgu.style.width = `${Math.max((k.tutar / enBuyuk) * 100, 2)}%`;
@@ -267,6 +264,7 @@ function daireBlogu(harcamalar, kur, baslik) {
     ad: oku(k.kategori),
     renk: k.renk,
     pay: paylar[i],
+    bag: ay ? '#kategori/' + ay + '/' + encodeURIComponent(k.kategori) : null,
   }));
 
   const ikili = el('div', 'kategori-ikili');
@@ -721,7 +719,7 @@ export function gunSayfasi(veri, bugun, tarih) {
   // Ayın tamamı, bakılan gün vurgulu: bu gün ayın neresine düşüyor
   // sorusunun cevabı ve aynı zamanda gezinme — sütuna basmak o güne gider.
   const grafik = ayGrafigiBlogu(veri, bugun, { bagli: true, vurgu: tarih });
-  const daire = daireBlogu(kayitlar, veri.kur, 'KATEGORİ · BU GÜN');
+  const daire = daireBlogu(kayitlar, veri.kur, 'KATEGORİ · BU GÜN', ay);
   const dokum = dokumBlogu(kayitlar, veri.kur, bugun, {
     baslik: 'KAYITLAR',
     tekGun: true,
@@ -770,7 +768,7 @@ export function yerSayfasi(veri, bugun, yer) {
     bugun,
     { bagli: true }
   );
-  const daire = daireBlogu(kayitlar, veri.kur, 'KATEGORİ · BURADA');
+  const daire = daireBlogu(kayitlar, veri.kur, 'KATEGORİ · BURADA', ay);
   const dokum = dokumBlogu(kayitlar, veri.kur, bugun, {
     baslik: 'KAYITLAR',
     gizle: 'yer',

@@ -316,10 +316,15 @@ export function daireCiz(dilimler, ortaSayi, ortaEtiket) {
   svg.setAttribute(
     'aria-label',
     dilimler.length === 0
-      ? 'Dağılım için henüz kayıt yok'
+      ? 'Bu gün için kayıt yok'
       : dilimler.map((d) => `${d.ad} yüzde ${d.pay}`).join(', ')
   );
 
+  // Zemin halkası dilim olmasa da çizilir: kayıtsız bir günde grafiğin
+  // tamamen kaybolması bloğu kısaltıyor ve ALTINDAKİ ay grafiğini yukarı
+  // çekiyordu. Gün gün gezinen biri her boş günde fareyi yeniden
+  // konumlandırmak zorunda kalıyor. Boş halka + ortada sıfır, hem yeri
+  // koruyor hem de "kayıt yok" bilgisini veriyor.
   const zemin = document.createElementNS(NS, 'circle');
   zemin.setAttribute('cx', '21');
   zemin.setAttribute('cy', '21');
@@ -340,7 +345,23 @@ export function daireCiz(dilimler, ortaSayi, ortaEtiket) {
     yay.setAttribute('stroke-dasharray', boy + ' ' + (100 - boy));
     yay.setAttribute('stroke-dashoffset', String(kaydirma));
     kaydirma -= d.pay;
-    svg.append(yay);
+
+    // Tarayıcının kendi ipucu. Dilimin hangi kategori olduğu yandaki
+    // barda yazılı ama fare dilimin üstündeyken göz oraya gitmiyor.
+    const ipucu = document.createElementNS(NS, 'title');
+    ipucu.textContent = `${d.ad} · %${d.pay}`;
+    yay.append(ipucu);
+
+    // Dilim de kapı: yandaki barı bulup tıklamak yerine doğrudan.
+    if (d.bag) {
+      const bag = document.createElementNS(NS, 'a');
+      bag.setAttribute('href', d.bag);
+      bag.setAttribute('aria-label', `${d.ad}, yüzde ${d.pay}`);
+      bag.append(yay);
+      svg.append(bag);
+    } else {
+      svg.append(yay);
+    }
   }
 
   const orta = el('div', 'daire-orta');
@@ -526,6 +547,15 @@ export function ayKategoriBlogu(veri, bugun, secenek) {
   );
 
   if (kirilim.length === 0) {
+    // Halkalı sürümde boş bile olsa halka çizilir: kaybolması bloğu
+    // kısaltıp altındaki grafikleri yukarı çekiyor ve gezinirken imleç
+    // her seferinde yeniden konumlandırılmak zorunda kalıyor.
+    if (s.daire) {
+      const ikili = el('div', 'kategori-ikili kategori-bos');
+      ikili.append(daireCiz([], '0', '₺'), el('p', 'veri', 'Bu ay kayıt yok'));
+      blok.append(ikili);
+      return blok;
+    }
     blok.append(el('p', 'veri', 'Bu ay kayıt yok'));
     return blok;
   }
@@ -569,6 +599,9 @@ export function ayKategoriBlogu(veri, bugun, secenek) {
       ad: oku(k.kategori),
       renk: k.renk,
       pay: paylar[i],
+      bag: s.bagli
+        ? '#kategori/' + ay + '/' + encodeURIComponent(k.kategori)
+        : null,
     }));
     const toplam = kirilim.reduce((t, k) => t + k.tutar, 0);
     const ikili = el('div', 'kategori-ikili');
