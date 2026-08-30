@@ -1553,46 +1553,85 @@ a.gun-tarih:focus-visible {
   margin-top: 8px;
 }
 
-.ay-alan > i,
-.ay-alan > a {
+/* Sütun sarmalayıcısı TAM YÜKSEKLİK, dolgu içeride. Hedef eskiden
+   dolgunun kendisiydi ve boyu tutarla orantılıydı: %3'lük bir gün 5px'lik
+   bir dokunma hedefi demekti. */
+.ay-sutun {
   flex: 1;
   min-width: 3px;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 2px;
+  text-decoration: none;
+}
+
+.ay-sutun > i {
+  width: 100%;
   border-radius: 2px 2px 0 0;
   background: var(--sutun);
 }
 
+/* Seçili sütun: dokunmatikte ilk dokunuşun karşılığı. Çerçeve rengin
+   üstüne binmiyor, yanına çiziliyor — sütunun kendi rengi kategori
+   kimliği taşıyor ve seçim onu bastırmamalı. */
+.ay-sutun[data-secili] {
+  outline: 2px solid var(--vurgu);
+  outline-offset: 1px;
+}
+
+.ay-sutun:focus-visible {
+  outline: 2px solid var(--vurgu);
+  outline-offset: 1px;
+}
+
 /* Hafta sonu ayrı tonda: ayın ritmi çoğu zaman haftaya bağlı ve bu ayrım
    olmadan otuz sütun tek bir gürültü kütlesi gibi okunuyor. */
-.ay-alan > i[data-haftasonu],
-.ay-alan > a[data-haftasonu] {
+.ay-sutun > i[data-haftasonu] {
   background: var(--sutun-hs);
 }
 
-.ay-alan > i[data-renk='1'], .ay-alan > a[data-renk='1'] { background: var(--k1); }
-.ay-alan > i[data-renk='2'], .ay-alan > a[data-renk='2'] { background: var(--k2); }
-.ay-alan > i[data-renk='3'], .ay-alan > a[data-renk='3'] { background: var(--k3); }
-.ay-alan > i[data-renk='4'], .ay-alan > a[data-renk='4'] { background: var(--k4); }
-.ay-alan > i[data-renk='5'], .ay-alan > a[data-renk='5'] { background: var(--k5); }
-.ay-alan > i[data-renk='6'], .ay-alan > a[data-renk='6'] { background: var(--k6); }
-.ay-alan > i[data-renk='7'], .ay-alan > a[data-renk='7'] { background: var(--k7); }
-.ay-alan > i[data-renk='8'], .ay-alan > a[data-renk='8'] { background: var(--k8); }
+.ay-sutun > i[data-renk='1'] { background: var(--k1); }
+.ay-sutun > i[data-renk='2'] { background: var(--k2); }
+.ay-sutun > i[data-renk='3'] { background: var(--k3); }
+.ay-sutun > i[data-renk='4'] { background: var(--k4); }
+.ay-sutun > i[data-renk='5'] { background: var(--k5); }
+.ay-sutun > i[data-renk='6'] { background: var(--k6); }
+.ay-sutun > i[data-renk='7'] { background: var(--k7); }
+.ay-sutun > i[data-renk='8'] { background: var(--k8); }
 
 /* Bugünün sütunu kategori renginin de ÜSTÜNDE: "şimdi" işareti kimlikten
    önce gelir, yoksa bugünün nerede olduğu kategori sayfasında kaybolur. */
-.ay-alan > i[data-bugun],
-.ay-alan > a[data-bugun] {
+.ay-sutun > i[data-bugun] {
   background: var(--vurgu);
 }
 
 .ay-etiket {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
+  gap: 10px;
   margin-top: 4px;
   font-size: 10px;
   font-weight: 600;
   font-stretch: 62%;
   letter-spacing: 0.06em;
   color: var(--soluk);
+}
+
+/* Seçilen günün tutarı. Boşken satır yine duruyor ve "1 … 30" kenar
+   etiketleri yerinden oynamıyor. */
+.ay-secim {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  font-stretch: 84%;
+  letter-spacing: 0.02em;
+  color: var(--murekkep);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* --- Kategori barları ------------------------------------------------ */

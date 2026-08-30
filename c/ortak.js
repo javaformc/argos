@@ -492,29 +492,65 @@ export function ayGrafigiBlogu(veri, bugun, secenek) {
     alan.append(cizgi);
   }
 
+  // Seçilen günün bilgisi alt etiket satırının ORTASINDA görünür.
+  // Balon yerine burası seçildi: otuz sütunun kenardakilerinde balon
+  // kutudan taşıyor, bu satır ise zaten var ve yerleşimi oynatmıyor.
+  const secim = el('span', 'ay-secim');
+
+  const kisaGun = (g) => KISA_GUN[new Date(`${g}T00:00:00`).getDay()];
+
   for (const g of gunler) {
-    // Sütun, o günün sayfasına açılan kapı. 30 sütun dar hedefler ama
-    // aynı kapı dökümdeki gün başlığında da var — biri fare için, diğeri
-    // parmak için.
-    const sutun = bagli ? el('a') : el('i');
+    // SÜTUN = TAM YÜKSEKLİK KAPI, içinde dolgu.
+    // Hedef eskiden sütunun kendisiydi ve boyu tutarla orantılıydı: 3%'lik
+    // bir gün 5px'lik bir dokunma hedefi demekti. Sarmalayıcı tam boy
+    // olunca hedef her günde aynı ve parmakla isabet ediliyor.
+    const sutun = bagli ? el('a', 'ay-sutun') : el('div', 'ay-sutun');
     if (bagli) sutun.href = '#gun/' + g.gun;
-    sutun.style.height = `${Math.max((g.tutar / enBuyuk) * 100, 3)}%`;
-    if (renk) sutun.dataset.renk = String(renk);
-    if (g.gun === vurgu) sutun.dataset.bugun = '';
+
+    const dolgu = el('i');
+    dolgu.style.height = `${Math.max((g.tutar / enBuyuk) * 100, 3)}%`;
+    if (renk) dolgu.dataset.renk = String(renk);
+    if (g.gun === vurgu) dolgu.dataset.bugun = '';
     // Hafta sonu ayrı tonda: ayın ritmi çoğu zaman haftaya bağlı ve bu
     // ayrım olmadan otuz sütun tek bir gürültü kütlesi gibi okunuyor.
-    const gun = new Date(`${g.gun}T00:00:00`).getDay();
-    if (gun === 0 || gun === 6) sutun.dataset.haftasonu = '';
+    const haftaninGunu = new Date(`${g.gun}T00:00:00`).getDay();
+    if (haftaninGunu === 0 || haftaninGunu === 6) dolgu.dataset.haftasonu = '';
+    sutun.append(dolgu);
+
     sutun.title = `${g.gun.slice(8)} · ${lira(g.tutar)} ₺`;
+
+    // DOKUNMATİKTE İKİ AŞAMA: önce oku, sonra git.
+    //
+    // Farenin `title` ipucu telefonda karşılığı olmayan bir şey; sütuna
+    // dokunmak doğrudan gün sayfasına atlıyordu ve kategoride kalarak tek
+    // bir günün tutarına bakmanın yolu yoktu. İlk dokunuş tutarı yazar,
+    // aynı sütuna ikinci dokunuş o güne gider.
+    //
+    // Ayrım cihaz türüyle değil `hover: none` ile yapılıyor: soru "telefon
+    // mu" değil, "bu girdi yöntemi üzerine gelmeyi biliyor mu".
+    if (bagli) {
+      sutun.addEventListener('click', (olay) => {
+        if (!matchMedia('(hover: none)').matches) return;
+        if (sutun.dataset.secili === 'evet') return;
+        olay.preventDefault();
+        const oncekiler = alan.querySelectorAll('[data-secili]');
+        for (const o of oncekiler) delete o.dataset.secili;
+        sutun.dataset.secili = 'evet';
+        secim.textContent =
+          `${Number(g.gun.slice(8))} ${kisaGun(g.gun)} · ${lira(g.tutar)} ₺`;
+      });
+    }
+
     alan.append(sutun);
   }
 
   const etiket = el('div', 'ay-etiket');
-  etiket.append(el('span', null, '1'), el('span', null, String(gecenGun)));
+  etiket.append(el('span', null, '1'), secim, el('span', null, String(gecenGun)));
   blok.append(alan, etiket);
 
   return blok;
 }
+
 
 /**
  * KATEGORİ (BU AY) — yatay barlar, büyükten küçüğe.
