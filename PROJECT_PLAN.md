@@ -43,14 +43,14 @@ alışkanlık onayını oraya yazıyor.
 - [ ] **P4** — `argos-veri` private deposu + token akışı (ilk açılış, localStorage) — `BEKLIYOR`
 - [ ] **P5** — GitHub kaynağı: veri katmanının ikinci uygulaması (okuma) — `BEKLIYOR`
 - [ ] **P6** — Onay yazma: `onay-app-YYYY-AA.json` depoya PUT — `BEKLIYOR`
-- [ ] **P7** — PWA kabuğu: manifest, service worker, çevrimdışı önbellek — `BEKLIYOR`
+- [x] **P7** — PWA kabuğu: manifest, service worker, çevrimdışı önbellek, gömülü yazı tipi — `BITTI`
 - [ ] **P8** — GitHub Pages yayını + telefona ana ekrana ekleme — `BEKLIYOR`
 
 ### Milestone 3 — Derinlik ve masaüstü
 Hedef: Harcama kırılımına inilebiliyor, abonelik listesi tam görünüyor,
 Argos Obsidian içinde sekme olarak açılıyor.
 
-- [ ] **P9** — Harcama kırılım ekranı: kategori → alt → yer — `BEKLIYOR`
+- [x] **P9** — Harcama ayrıntı ağacı: ay → kategori / gün / yer — `BITTI`
 - [ ] **P10** — Abonelik listesi ekranı — `BEKLIYOR`
 - [ ] **P11** — Obsidian Custom Frames sekmesi — `BEKLIYOR`
 
@@ -73,6 +73,11 @@ P11 → P8
 ```
 
 **Bağımsız parçalar (tıkanma halinde kaçış yolu):** P1, P2, P4
+
+**Yerel ağ ara adımı (plan dışı, 30-08-2026):** P8 beklerken dev sunucu
+`ARGOS_AG=1` ile yerel ağa açılabiliyor ve telefondan `http://<ip>:4173/c/`
+ile giriliyor. Service worker orada çalışmaz (güvenli bağlam değil), ama
+düzen gerçek cihazda doğrulanabiliyor. P8 bunun yerini alacak.
 
 Not: P1 veri katmanını **kaynak-bağımsız** tanımlar (aynı arayüz, iki
 uygulama). P5 tıkanırsa P3 ve sonrası yerel kaynakla ilerlemeye devam

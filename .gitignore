@@ -32,3 +32,7 @@ veri/
 # Playwright MCP ciktilari
 .playwright-mcp/
 *.png
+
+# ...ama uygulama ikonlari kodun parcasi: manifest onlara isaret ediyor ve
+# eksiklerse PWA kurulmuyor. Ekran goruntusu kuralinin istisnasi.
+!c/ikon-*.png

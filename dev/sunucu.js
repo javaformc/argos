@@ -11,12 +11,37 @@ import { createServer } from 'node:http';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, extname, dirname, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { networkInterfaces } from 'node:os';
 
 const PROJE_KOK = dirname(dirname(fileURLToPath(import.meta.url)));
 // resolve(): ARGOS_VERI POSIX kipinde de verilebiliyor (Git Bash). Ayrık
 // biçimdeki bir yol join() çıktısıyla asla eşleşmez ve her istek 403 döner.
 const VERI_KOK = resolve(process.env.ARGOS_VERI || 'C:\\ws\\veri');
 const PORT = Number(process.env.PORT) || 4173;
+
+/**
+ * Ağa açılma BİLİNÇLİ bir karardır, varsayılan değil.
+ *
+ * `ARGOS_AG=1` verilmedikçe sunucu yalnız bu makineden erişilebilir.
+ * Sebep: bu sunucu vault'taki gerçek veriyi servis ediyor ve
+ * `onay-app-*.json` dosyasına YAZMA izni var. Aynı ağdaki herkes —
+ * misafir Wi-Fi'ı dahil — harcama geçmişini okuyabilir ve alışkanlık
+ * kaydını değiştirebilir. Telefonda denemek için açılır, iş bitince
+ * kapatılır.
+ */
+const AGA_ACIK = process.env.ARGOS_AG === '1';
+const ADRES = AGA_ACIK ? '0.0.0.0' : '127.0.0.1';
+
+/** Bu makinenin yerel ağ adresleri (telefondan yazılacak olan). */
+function yerelAdresler() {
+  const bulunan = [];
+  for (const arayuzler of Object.values(networkInterfaces())) {
+    for (const a of arayuzler || []) {
+      if (a.family === 'IPv4' && !a.internal) bulunan.push(a.address);
+    }
+  }
+  return bulunan;
+}
 
 const TURLER = {
   '.html': 'text/html; charset=utf-8',
@@ -25,6 +50,9 @@ const TURLER = {
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.webmanifest': 'application/manifest+json',
+  '.woff2': 'font/woff2',
+  '.png': 'image/png',
+  '.ico': 'image/x-icon',
 };
 
 /**
@@ -117,8 +145,23 @@ const sunucu = createServer(async (istek, yanit) => {
   dosyaGonder(yanit, hedef);
 });
 
-sunucu.listen(PORT, () => {
+sunucu.listen(PORT, ADRES, () => {
   console.log(`Argos geliştirme sunucusu: http://localhost:${PORT}`);
   console.log(`  kod  : ${PROJE_KOK}`);
   console.log(`  veri : ${VERI_KOK}`);
+
+  if (!AGA_ACIK) {
+    console.log('  ağ   : kapalı (telefondan açmak için ARGOS_AG=1)');
+    return;
+  }
+
+  const adresler = yerelAdresler();
+  console.log('  ağ   : AÇIK — aynı Wi-Fi ağındaki her cihaz erişebilir');
+  if (adresler.length === 0) {
+    console.log('         (ağ arayüzü bulunamadı)');
+  } else {
+    for (const a of adresler) {
+      console.log(`         telefondan: http://${a}:${PORT}/c/`);
+    }
+  }
 });

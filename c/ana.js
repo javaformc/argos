@@ -813,10 +813,34 @@ function abonelikBlogu(veri, bugun) {
 
 // --- Çizim ---------------------------------------------------------------
 
+/**
+ * Hata kutusu.
+ *
+ * Çevrimdışıyken mesaj DEĞİŞİR: "geliştirme sunucusu çalışıyor mu" telefonda
+ * karşılığı olmayan bir soru ve altındaki "Failed to fetch" hiçbir şey
+ * anlatmıyor. Kabuk çevrimdışı açılabildiği için bu ekran gerçekten
+ * görülecek bir ekran; ne olduğunu söylemesi gerekiyor.
+ */
 function hataGoster(hata, baslik) {
   const kutu = el('div', 'blok hata');
-  kutu.append(el('p', 'yorum', baslik));
-  kutu.append(el('code', null, String(hata.message || hata)));
+  // Ağ hatası mı, sunucu hatası mı? `fetch` ağa hiç ulaşamazsa TypeError
+  // atar; HTTP durum kodları veri katmanında normal Error'a çevriliyor.
+  // Ayrımı buradan yapmak `navigator.onLine`dan sağlam: o bayrak sayfa
+  // yüklenirken bir süre eski değerinde kalabiliyor ve tam çizim anında
+  // yanlış cevap veriyor (ölçüldü — çevrimdışı açılışta `true` dönüyordu).
+  const cevrimdisi = hata instanceof TypeError || !navigator.onLine;
+  kutu.append(
+    el('p', 'yorum', cevrimdisi ? 'Bağlantı yok. Veri okunamadı.' : baslik)
+  );
+  kutu.append(
+    el(
+      'code',
+      null,
+      cevrimdisi
+        ? 'Argos veriyi her açılışta yeniden okur; bayat bir kopya göstermez.'
+        : String(hata.message || hata)
+    )
+  );
   ekran.replaceChildren(kutu);
   ekran.removeAttribute('aria-busy');
   console.error(hata);
