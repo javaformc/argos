@@ -1234,6 +1234,42 @@ body[data-kip='gunduz'] .kart-ikincil {
   color: var(--soluk);
 }
 
+/* --- Sayfa kimliği ------------------------------------------------------
+   Kategori ve yer sayfasının başlığı bir ETİKET değil bir AD: 11px'lik
+   soluk gri bir eyebrow, sayfanın neye ait olduğunu söyleyen tek işaretti
+   ve dev sayının yanında siliniyordu. Punto büyütüldü, renk mürekkebe
+   çekildi, kategorinin noktası yanına kondu.
+
+   Nokta lejantla AYNI öğe (.nokta): aynı renk aynı biçimde iki yerde
+   görünüyor ve eşleşme oradan kuruluyor. Ad yine yazılı — renk tek başına
+   hiçbir bilgiyi taşımaz. */
+
+.kimlik {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.kimlik .nokta {
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.kimlik-ad {
+  font-size: 15px;
+  font-weight: 700;
+  font-stretch: 84%;
+  letter-spacing: 0.02em;
+  color: var(--murekkep);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* --- Ay gezinmesi ------------------------------------------------------- */
 
 .ay-gezinme {
@@ -1532,6 +1568,17 @@ a.gun-tarih:focus-visible {
   background: var(--sutun-hs);
 }
 
+.ay-alan > i[data-renk='1'], .ay-alan > a[data-renk='1'] { background: var(--k1); }
+.ay-alan > i[data-renk='2'], .ay-alan > a[data-renk='2'] { background: var(--k2); }
+.ay-alan > i[data-renk='3'], .ay-alan > a[data-renk='3'] { background: var(--k3); }
+.ay-alan > i[data-renk='4'], .ay-alan > a[data-renk='4'] { background: var(--k4); }
+.ay-alan > i[data-renk='5'], .ay-alan > a[data-renk='5'] { background: var(--k5); }
+.ay-alan > i[data-renk='6'], .ay-alan > a[data-renk='6'] { background: var(--k6); }
+.ay-alan > i[data-renk='7'], .ay-alan > a[data-renk='7'] { background: var(--k7); }
+.ay-alan > i[data-renk='8'], .ay-alan > a[data-renk='8'] { background: var(--k8); }
+
+/* Bugünün sütunu kategori renginin de ÜSTÜNDE: "şimdi" işareti kimlikten
+   önce gelir, yoksa bugünün nerede olduğu kategori sayfasında kaybolur. */
 .ay-alan > i[data-bugun],
 .ay-alan > a[data-bugun] {
   background: var(--vurgu);

@@ -115,11 +115,34 @@ function ayGezinmesi(ay, bugun) {
 
 // --- Ortak parçalar ------------------------------------------------------
 
-/** Etiket + dev sayı + tek cümlelik bağlam. Dört sayfanın da tepesi. */
-function tepeBlogu(etiket, sag, toplam, cumle, bos) {
+/**
+ * Etiket + dev sayı + tek cümlelik bağlam. Dört sayfanın da tepesi.
+ *
+ * `kimlik` verilirse başlık bir ETİKET değil bir AD olur: puntosu büyür,
+ * yanına o kategorinin renkli noktası gelir. Kategorinin kendi sayfasında
+ * rengini hiç görmemek, renk-kategori eşleşmesinin kafada kurulmasını
+ * engelliyordu — renk ancak tekrar tekrar aynı adla görülünce hatırlanır.
+ * Ad yine yazılı: renk tek başına hiçbir bilgiyi taşımaz.
+ */
+function tepeBlogu(etiket, sag, toplam, cumle, bos, kimlik) {
   const blok = el('section', 'blok blok-aytoplam');
   blok.dataset.alan = 'aytoplam';
-  blok.append(ustSatir(etiket, sag));
+
+  if (kimlik) {
+    const satir = el('div', 'ust-satir');
+    const ad = el('p', 'kimlik');
+    if (kimlik.renk) {
+      const nokta = el('span', 'nokta');
+      nokta.dataset.renk = String(kimlik.renk);
+      ad.append(nokta);
+    }
+    ad.append(el('span', 'kimlik-ad', etiket));
+    satir.append(ad);
+    if (sag) satir.append(el('p', 'veri', sag));
+    blok.append(satir);
+  } else {
+    blok.append(ustSatir(etiket, sag));
+  }
   blok.append(buyukSayi(lira(toplam), '₺', 'dev', { bos }));
   blok.append(el('p', 'yorum', cumle));
   return blok;
@@ -605,6 +628,20 @@ export function aySayfasi(veri, bugun) {
 export function kategoriSayfasi(veri, bugun, kategori) {
   const ay = veri.ay;
   const kayitlar = veri.harcamalar.filter((h) => h.kategori === kategori);
+
+  // Renk, ayın TAM kırılımı üzerinden çözülür. Doğrudan `renkNo` çağırmak
+  // yanlış rengi verebilirdi: sekiz hue on yediden fazla kategoriye
+  // yetmiyor ve çakışma çözücü ay sayfasında bazı kategorileri başka bir
+  // hue'ya kaydırıyor. Aynı kategorinin iki sayfada iki renkte görünmesi,
+  // rengin kimlik kodladığı iddiasını çürütürdü.
+  const kirilim = renkleriAyir(
+    H.kategoriKirilimi(veri.harcamalar, veri.kur).map((k) => ({
+      ...k,
+      renk: renkNo(k.kategori),
+    }))
+  );
+  const bulunan = kirilim.find((k) => k.kategori === kategori);
+  const renk = bulunan ? bulunan.renk : renkNo(kategori);
   const gecenGun = H.ayinGecenGunu(ay, bugun);
   const toplam = H.toplamTL(kayitlar, veri.kur);
   const ayToplam = H.ayToplami(veri.harcamalar, veri.kur);
@@ -616,11 +653,12 @@ export function kategoriSayfasi(veri, bugun, kategori) {
     : `Ayın harcamasının %${pay}'i bu kalemde.`;
 
   const tepe = tepeBlogu(
-    oku(kategori).toLocaleUpperCase('tr'),
+    oku(kategori),
     bos ? null : `${kayitlar.length} kayıt`,
     toplam,
     cumle,
-    bos
+    bos,
+    { renk }
   );
 
   const gunSayisi = new Set(kayitlar.map((h) => h.tarih)).size;
@@ -635,7 +673,7 @@ export function kategoriSayfasi(veri, bugun, kategori) {
   const grafik = ayGrafigiBlogu(
     { ay, harcamalar: kayitlar, kur: veri.kur },
     bugun,
-    { bagli: true }
+    { bagli: true, renk }
   );
 
   const yer = yerBlogu(
@@ -750,11 +788,12 @@ export function yerSayfasi(veri, bugun, yer) {
     : `${ziyaret} ayrı günde ${kayitlar.length} kayıt.`;
 
   const tepe = tepeBlogu(
-    yer.toLocaleUpperCase('tr'),
+    yer,
     bos ? null : `${kayitlar.length} kayıt`,
     toplam,
     cumle,
-    bos
+    bos,
+    { renk: null }
   );
 
   const sayilar = sayilarBlogu(null, [

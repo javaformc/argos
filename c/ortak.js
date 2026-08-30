@@ -448,6 +448,9 @@ export function ayGrafigiBlogu(veri, bugun, secenek) {
   const sec = secenek || {};
   const bagli = sec.bagli;
   const vurgu = sec.vurgu || bugun;
+  // Kategori sayfasında sütunlar o kategorinin rengini alır: renk
+  // kimlik kodluyorsa kimliğin kendi sayfasında da görünmeli.
+  const renk = sec.renk;
   const blok = el('section', 'blok blok-ay');
   blok.dataset.alan = 'ay';
 
@@ -496,6 +499,7 @@ export function ayGrafigiBlogu(veri, bugun, secenek) {
     const sutun = bagli ? el('a') : el('i');
     if (bagli) sutun.href = '#gun/' + g.gun;
     sutun.style.height = `${Math.max((g.tutar / enBuyuk) * 100, 3)}%`;
+    if (renk) sutun.dataset.renk = String(renk);
     if (g.gun === vurgu) sutun.dataset.bugun = '';
     // Hafta sonu ayrı tonda: ayın ritmi çoğu zaman haftaya bağlı ve bu
     // ayrım olmadan otuz sütun tek bir gürültü kütlesi gibi okunuyor.
