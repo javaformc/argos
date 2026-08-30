@@ -2,10 +2,11 @@
 //
 // İki iş yapar:
 //   /            -> proje kökündeki statik dosyalar
-//   /veri/...    -> vault'taki gerçek veri klasörü (VERI_KOK)
+//   /veri/...    -> argos-veri deposunun çalışma kopyası (VERI_KOK)
 //
-// Neden ayrı klasör: veri vault'ta yaşar, kod deposuna kopyalanmaz.
-// Kopyalansaydı iki kaynak ayrışır ve hangisinin doğru olduğu belirsizleşirdi.
+// Neden ayrı klasör: veri KENDİ deposunda yaşar (argos-veri, private),
+// kod deposuna kopyalanmaz. Kopyalansaydı iki kaynak ayrışır ve hangisinin
+// doğru olduğu belirsizleşirdi — ayrıca kod deposu public.
 
 import { createServer } from 'node:http';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
@@ -16,7 +17,12 @@ import { networkInterfaces } from 'node:os';
 const PROJE_KOK = dirname(dirname(fileURLToPath(import.meta.url)));
 // resolve(): ARGOS_VERI POSIX kipinde de verilebiliyor (Git Bash). Ayrık
 // biçimdeki bir yol join() çıktısıyla asla eşleşmez ve her istek 403 döner.
-const VERI_KOK = resolve(process.env.ARGOS_VERI || 'C:\\ws\\veri');
+//
+// Varsayılan yol 30-08-2026'da `C:\ws\veri`'den buraya taşındı: veri artık
+// kendi git deposunda ve Drive senkronunun dışında. Drive `.git` klasörünü
+// de senkronluyor, dosya kilidi yok ve git yazarken senkron başlarsa depo
+// bozulabiliyor.
+const VERI_KOK = resolve(process.env.ARGOS_VERI || 'C:\\MY_Code\\argos-veri');
 const PORT = Number(process.env.PORT) || 4173;
 
 /**

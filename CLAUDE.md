@@ -24,7 +24,9 @@ Claude yazar, Argos okur; tek yazma yüzeyi tek tuşluk alışkanlık onayı.
 - Kararlar, mimari, fikirler: `C:\ws\projeler\Argos\`
 - Çalışma notları (atomik): `C:\ws\projeler\Argos\calisma\`
   — `oturum-loglari/`, `sorunlar/`, `secimler/`
-- **Veri (kaynak):** `C:\ws\veri\` — vault kökünde, proje içinde değil
+- **Veri (kaynak):** `C:\MY_Code\argos-veri\` — kendi private git deposu
+  (`github.com/javaformc/argos-veri`). 30-08-2026'da `C:\ws\veri`'den
+  taşındı; gerekçe vault `kararlar.md > Verinin yeri > Sonradan not`.
 
 ## Durum
 Son durum: `NEREDE_KALDIK.md`
@@ -53,7 +55,7 @@ Test koşucusu: Node yerleşik `node:test`. Barındırma: GitHub Pages.
 - **Playwright MCP** — `gorsel-kontrol` bu projede bununla koşuyor.
   Headless çalışır, tarayıcı eklentisinin bağlı olmasını beklemez.
   Kurulmasaydı her UI değişikliğinde ekranı kullanıcının açması gerekirdi.
-- **İki dev sunucu kalıbı** — 4173 gerçek veri (`C:wseri`), 4174
+- **İki dev sunucu kalıbı** — 4173 gerçek veri (`C:\MY_Code\argos-veri`), 4174
   `ARGOS_VERI` ile örnek veri. Gerçek veri boşken dolu ekranı görmenin
   tek dürüst yolu bu; sahte veriyi gerçek klasöre yazmak yerine ayrı kök.
 <!-- Bu proje için kurulan skill/MCP: ne için kuruldu. -->
@@ -66,7 +68,7 @@ Test koşucusu: Node yerleşik `node:test`. Barındırma: GitHub Pages.
 - **Onay dosyaları ikizdir.** `onay-*.json` Claude'un, `onay-app-*.json`
   Argos'un. Argos ikincisinden başkasına yazmaz.
 - Kur `veri/kur.json`'dan okunur, koda gömülmez.
-- **İşaretleme testi 4173'te yapılmaz.** O sunucu `C:wseri`'ye yazar
+- **İşaretleme testi 4173'te yapılmaz.** O sunucu `C:\MY_Code\argos-veri`'ye yazar
   ve tıklama kullanıcının gerçek alışkanlık kaydına düşer. Tek tuş onayı
   denemek için her zaman 4174 (örnek veri) kullanılır. Bu iki kez oldu;
   ikisinde de kayıt elle geri alınmak zorunda kaldı.
