@@ -174,7 +174,11 @@ body {
    kameranın altına giriyor, tarih ile saat kısmen görünmez oluyordu.
    Yalnız alt kenar hesaba katılmıştı — o da ev çubuğu için.
    `env()` desteklenmeyen yerde ikinci argüman (0px) kullanılır; masaüstü
-   ve normal tarayıcı sekmesi bu yüzden hiç etkilenmez. */
+   ve normal tarayıcı sekmesi bu yüzden hiç etkilenmez.
+
+   Üst kenar için ayrıca bir TABAN var (aşağıda, standalone kuralı):
+   yalnız `env()` yeterli olmadı — iPhone 13'te ana ekrandan açılan
+   uygulamada değer sıfır dönüyor ve boşluk hiç oluşmuyordu. */
 .sayfa {
   min-height: 100dvh;
   max-width: 430px;
@@ -185,6 +189,22 @@ body {
   padding-right: calc(var(--kenar) + env(safe-area-inset-right, 0px));
   display: flex;
   flex-direction: column;
+}
+
+/* ÇENTİK TABANI — yalnız ana ekrandan açılan uygulamada, yalnız dokunmatik.
+   `env(safe-area-inset-top)` tek başına yetmedi: iPhone 13'te standalone
+   kipte sıfır dönüyor ve üst şerit kameranın altında kalıyordu. `max()`
+   ikisinin büyüğünü alır — env doğru değeri veriyorsa (47px) o kullanılır,
+   sıfır dönüyorsa 44px taban devreye girer.
+
+   `display-mode: standalone` şart: normal tarayıcı sekmesinde zaten adres
+   çubuğu var ve bu boşluk orada iki kez uygulanmış olurdu.
+   `hover: none` şart: masaüstünde kurulan bir PWA'da çentik yok, orada
+   44px boşluk sebepsiz bir bant bırakırdı. */
+@media (display-mode: standalone) and (hover: none) {
+  .sayfa {
+    padding-top: calc(8px + max(env(safe-area-inset-top, 0px), 44px));
+  }
 }
 
 /* --- Üst şerit ---------------------------------------------------------- */
