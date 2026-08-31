@@ -1,5 +1,5 @@
 # Nerede kaldık — Argos
-SON GÜNCELLEME: 31-08-2026 | HEAD: 033fa3b | testler: 49/49 yeşil
+SON GÜNCELLEME: 31-08-2026 | HEAD: c077c81 | testler: 49/49 yeşil
 
 ## Argos bitti ve kullanımda
 **https://javaformc.github.io/argos/c/** — telefonda ana ekranda,
@@ -35,6 +35,25 @@ Veri `C:\MY_Code\argos-veri` klasöründe (Drive'ın dışında).
 **Yazmadan önce `git pull --ff-only`, yazdıktan sonra `git push`** —
 gerekçesi proje `CLAUDE.md > Veri senkronu`. Atlanırsa telefonun işareti
 sessizce ezilir.
+
+## Kayıt girme
+Kullanıcı harcama/alışkanlık/abonelik anlattığında **`argos-kayit`**
+skill'i. Kişisel global klasörde (`~\.claude-personal\skills\`), yani
+hangi sohbette olursan ol tetikleniyor — vault sohbeti, başka bir proje,
+Remote Control. **Süren işin ortasında da girilir.**
+
+Dışarıdayken telefondaki Claude `gelen/`e not bırakıyor
+(`## Hedef: argos`, ham cümle); Claude Code işliyor.
+Kural: `C:\ws\kurallar\gelen.md > Ölçüm notu`
+
+## Vault kopyası
+`dev/vault-ozet.js` kaynaktan okuyup `C:\ws\veri\` altına **türetilmiş**
+kopya yazar (`ozet.md` + `kopya/`). Telefondaki Claude harcamayı oradan
+okuyup yorumluyor — veri Drive dışına çıkınca kaybolan yetenek buydu.
+
+**Yön tek, kopyaya kimse yazmaz.** Tazeleme kayıt yazmanın 4. adımı ve
+oturum başında pull'dan sonra. Atlanırsa kopya bayatlar ve kullanıcı
+dışarıda eski sayıyı doğru sanır.
 
 ## Sıradaki iş: kullanım
 Kullanıcının sözü (31-08-2026): *"dışarı çıktığımda harcama yaptığımda
