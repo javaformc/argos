@@ -27,15 +27,14 @@ sessizce ezilir.
 ## Sıradaki iş
 1. **Milestone 2 onayı bekliyor.** Kullanıcı biraz kullanacak; onay
    gelince `milestone-2-onaylandi` tag'i atılacak.
-2. **Abonelik yenileme günleri** — kullanıcı "söyleyeceğim" dedi
-   (31-08-2026). Girilince "Sıradaki ödeme" kutusu çalışmaya başlar.
-3. **Harcama girişi** — "zamanla ekleyeceğiz" (31-08-2026). Gerçek veri
+2. **Harcama girişi** — "zamanla ekleyeceğiz" (31-08-2026). Gerçek veri
    akmadan ay sayfaları boş görünmeye devam eder.
-4. **Alışkanlık ayrıntı sayfaları** — harcamadaki desenin aynısı. Veri
+3. **Alışkanlık ayrıntı sayfaları** — harcamadaki desenin aynısı. Veri
    zaten dolu, gerçek veriyle test edilebilir.
-5. **P10 — abonelik listesi ekranı** planda açık. Daha önce "sayfa
-   açılmasın" denmişti (dört abonelik ana ekranda tam görünüyor);
-   yenileme günleri girilirse takvim görünümü yeniden değerlendirilecek.
+4. **P10 — abonelik listesi ekranı** planda açık. Daha önce "sayfa
+   açılmasın" denmişti (dört abonelik ana ekranda tam görünüyor).
+   Yenileme günleri 31-08'de girildi; takvim görünümü yeniden
+   değerlendirilebilir ama hâlâ dört satırlık bir veri.
 
 ## Bu oturumda öğrenilen üç tuzak
 Üçü de `LESSONS.md`'de:
@@ -56,14 +55,12 @@ dönüyor.** Çentik boşluğu `max(env(...), 44px)` ile garantiye alındı.
   isterse kaldırır.
 
 ## CEVAPLANMAMIŞ SORULAR
-27-08-2026'da soruldu, **üçüncü kez taşınıyor** (kullanıcı sürekli
-atlıyor; bir sonraki oturumda önce bunlar sorulmalı):
-- **F1 TV periyodu aylık mı?**
-- **EUR kuru tahmini** — yalnız USD ölçüldü.
+27-08-2026'da soruldu, **üçüncü kez taşınıyor**:
+- **EUR kuru tahmini** — yalnız USD ölçüldü, EUR doğrulanmadı.
 - **"Ana" alışkanlık spor seçildi**, sorulmadan.
 
-Kapandı: Google Fonts sorusu (yazı tipi 30-08'de gömüldü), aboneliklerin
-yenileme günleri (kullanıcı söyleyeceğini bildirdi, 3. maddede takipte).
+Kapandı: Google Fonts (yazı tipi 30-08'de gömüldü) · F1 TV periyodu
+(aylık, 31-08) · abonelik yenileme günleri (31-08 girildi).
 
 ## İlgili notlar
 - Roadmap ve bağımlılık haritası: `PROJECT_PLAN.md`
