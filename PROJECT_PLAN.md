@@ -104,8 +104,15 @@ eder — bu ayrım tıkanma kaçışının temeli, kaldırılmamalı.
 altında atomik not olmalı. Not yoksa işaret eksiktir.
 
 ### Milestone Onay Kaydı
-| Milestone | Onay tarihi | Git tag |
-|---|---|---|
-| 1 | | `milestone-1-onaylandi` |
-| 2 | | `milestone-2-onaylandi` |
-| 3 | | `milestone-3-onaylandi` |
+| Milestone | Onay tarihi | Git tag | Nereye atıldı |
+|---|---|---|---|
+| 1 | 31-08-2026 | `milestone-1-onaylandi` | `40bd333` — ana ekranın son hali |
+| 2 | 31-08-2026 | `milestone-2-onaylandi` | `a79c11b` — yayına çıkış |
+| 3 | 31-08-2026 | `milestone-3-onaylandi` | `033fa3b` |
+
+Milestone 1'in tag'i geriye dönük atıldı: onayı fiilen o dönemde verilmiş
+ama tag unutulmuştu. Tag geçmişteki doğru commit'e kondu — bugüne atmak
+onu bir geri dönüş noktası olmaktan çıkarırdı.
+
+**Üç milestone'un da bütün parçaları bitti.** Bundan sonrası roadmap'in
+dışında: kullanım sırasında çıkan istekler ve düzeltmeler.
