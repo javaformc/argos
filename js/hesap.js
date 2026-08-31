@@ -311,6 +311,75 @@ export function saatDagilimi(harcamalar, kur) {
   return { dilimler: kova, saatsiz };
 }
 
+// --- Alışkanlık geçmişi -------------------------------------------------
+
+/**
+ * Tüm geçmişteki EN UZUN kesintisiz seri.
+ *
+ * `seriHesapla` bugünden geriye sayar ve "şu an ne durumdayım" sorusunu
+ * cevaplar; bu ise "en iyi ne yapmıştım" sorusunu. İkisi ayrı sayı:
+ * bugünkü seri kopmuş olabilir ama rekor durur.
+ *
+ * İzin verilen boşluk sıklığa bağlı — günlükte 1 gün, "2 günde bir"de
+ * 2 gün. Aynı hesabı iki kez yazmamak için tek eşiğe indirildi.
+ * Haftalık alışkanlıkta seri kavramı yok; 0 döner.
+ */
+export function enUzunSeri(tanim, onaylar) {
+  const tip = tanim.siklik && tanim.siklik.tip;
+  if (tip === 'haftalik') return 0;
+  const izin = tip === 'gun-arasi' ? tanim.siklik.deger || 1 : 1;
+
+  const gunler = onaylar
+    .filter((o) => o.aliskanlik === tanim.id && o.durum === 'yapildi')
+    .map((o) => o.tarih)
+    .sort();
+
+  let enUzun = 0;
+  let mevcut = 0;
+  let onceki = null;
+  for (const g of gunler) {
+    mevcut = onceki && gunFarki(g, onceki) <= izin ? mevcut + 1 : 1;
+    if (mevcut > enUzun) enUzun = mevcut;
+    onceki = g;
+  }
+  return enUzun;
+}
+
+/**
+ * Haftanın günlerine göre tutturma oranı, pazartesi başlangıçlı.
+ *
+ * Payda BEKLENEN gün sayısı: kayıt tutulmamış günler ve alışkanlığın
+ * beklenmediği günler hesaba girmez. "Cumartesi hep kaçırıyorum" ancak
+ * cumartesi gerçekten beklendiği günlerle karşılaştırılınca söylenebilir.
+ */
+export function aliskanlikGunDagilimi(tanim, onaylar, bugun, gunSayisi) {
+  const kova = Array.from({ length: 7 }, () => ({ yapildi: 0, beklenen: 0 }));
+
+  for (const g of aliskanlikIzi(tanim, onaylar, bugun, gunSayisi)) {
+    if (g.durum === 'kayitsiz' || g.durum === 'beklenmiyor') continue;
+    const i = (new Date(g.gun + 'T00:00:00').getDay() + 6) % 7; // 0 = pazartesi
+    kova[i].beklenen++;
+    if (g.durum === 'yapildi') kova[i].yapildi++;
+  }
+
+  return kova.map((k, i) => ({
+    gun: i,
+    yapildi: k.yapildi,
+    beklenen: k.beklenen,
+    oran: k.beklenen > 0 ? k.yapildi / k.beklenen : null,
+  }));
+}
+
+/**
+ * İzin durum sayıları. `beklenmiyor` ve `kayitsiz` ayrı tutulur —
+ * ikisini "yapılmadı"ya katmak, olmayan bir başarısızlığı sayıya yazar.
+ */
+export function izSayaci(iz) {
+  const sayac = { yapildi: 0, yapilmadi: 0, bekliyor: 0, beklenmiyor: 0, kayitsiz: 0 };
+  for (const g of iz) sayac[g.durum]++;
+  return sayac;
+}
+
 // --- Ay penceresi -------------------------------------------------------
 
 /** "2026-08" -> o ayın çektiği gün sayısı. */

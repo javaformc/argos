@@ -29,6 +29,7 @@ import {
   gunSayfasi,
   yerSayfasi,
 } from './harcama.js';
+import { aliskanlikSayfasi } from './aliskanlik.js';
 import {
   kapiBasligi,
   genisEkran,
@@ -489,16 +490,40 @@ function aliskanlikKarti(tanim, veri, bugun, secenek, isaretle) {
   kart.style.viewTransitionName = `alk-${tanim.id}`;
   const govde = el('div', 'kart-govde');
 
+  // KART DA KAPI — harcama kutusuyla aynı desen: görünürde başlıkta bir
+  // ok var, basılacak alan kartın tamamı.
+  //
+  // Buradaki fark, kartın İÇİNDE zaten basılan bir şey olması: onay
+  // halkası. Kaplama onun üstüne binmemeli, yoksa tek tuş onay çalışmaz
+  // ve bunun ekranda hiçbir belirtisi olmaz — düğme duruyor, basılıyor,
+  // hiçbir şey olmuyor. Halka CSS'te bir kademe yukarı alındı.
+  kart.classList.add('blok-kapi');
+
   const onay = H.onayBul(veri.onaylar, tanim.id, bugun);
   const bekleniyor = H.bugunBekleniyorMu(tanim, veri.onaylar, bugun);
   const kod = durumKodu(onay, bekleniyor);
   const seri = seriSayisi(tanim, veri.onaylar, bugun);
 
+  // KART DA KAPI — harcama kutusuyla aynı desen: bağlantı `::after` ile
+  // kartın tamamını kaplıyor, görünürde yalnız sağ üstteki ok var.
+  //
+  // Ok GEREKLİ: onsuz bağlantının hiçbir görsel karşılığı kalmıyor ve
+  // kartın açılabildiği anlaşılmıyordu. Ayrıca boş bir <a> sıfır boyutlu
+  // oluyor; klavye odağı ona geldiğinde odak halkası görünmüyordu.
+  //
+  // Kartın İÇİNDE zaten basılan bir şey var: onay halkası. Kaplama onun
+  // üstüne binmemeli, yoksa tek tuş onay çalışmaz ve bunun ekranda hiçbir
+  // belirtisi olmaz — düğme durur, basılır, hiçbir şey olmaz. Halka CSS'te
+  // bir kademe yukarı alındı.
+  const kapi = el('a', 'kapi-bag kart-kapi');
+  kapi.href = '#aliskanlik/' + encodeURIComponent(tanim.id);
+  kapi.setAttribute('aria-label', `${secenek.ad || tanim.ad} geçmişi`);
+  kapi.append(el('span', 'kapi-ok', '›'));
+
   const ust = el('div', 'ust-satir');
-  ust.append(
-    el('span', 'kart-ad', secenek.ad || tanim.ad),
-    el('span', 'kart-ritim', ritimMetni(tanim))
-  );
+  const ustSag = el('div', 'kart-ustsag');
+  ustSag.append(el('span', 'kart-ritim', ritimMetni(tanim)), kapi);
+  ust.append(el('span', 'kart-ad', secenek.ad || tanim.ad), ustSag);
   govde.append(ust);
 
   const satir = el('div', 'kart-seri');
@@ -970,6 +995,7 @@ function yumusakGecis(cizimi) {
  *   kategori/2026-08/market  o ayda o kategori
  *   gun/2026-08-27           o gün
  *   yer/2026-08/Migros       o ayda o mekân
+ *   aliskanlik/spor          o alışkanlığın geçmişi
  *
  * Ayrı .html dosyaları yerine hash: tema betiği, yazı tipi ve alışkanlık
  * verisi yeniden yüklenmiyor, geçiş beyaz bir kareye düşmüyor. Geri tuşu
@@ -993,6 +1019,7 @@ function rotaCoz() {
     return { sayfa: 'yer', ay: p[1], ad: p[2] };
   }
   if (p[0] === 'gun' && p[1]) return { sayfa: 'gun', tarih: p[1] };
+  if (p[0] === 'aliskanlik' && p[1]) return { sayfa: 'aliskanlik', ad: p[1] };
   return { sayfa: 'ana' };
 }
 
@@ -1078,6 +1105,14 @@ async function ciz() {
     } catch (hata) {
       cizimSurdu = false;
       hataGoster(hata, 'Ay verisi okunamadı.');
+      return;
+    }
+
+    if (rota.sayfa === 'aliskanlik') {
+      ekran.dataset.duzen = genisEkran() ? 'ayrinti' : 'sutun';
+      ekran.replaceChildren(...aliskanlikSayfasi(veri, bugun, rota.ad));
+      ekran.removeAttribute('aria-busy');
+      cizimSurdu = false;
       return;
     }
 

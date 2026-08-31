@@ -1072,6 +1072,127 @@ body[data-kip='gunduz'] .kart-ikincil {
    Renk sistemi, tipografi ve kart dili aynı; değişen yoğunluk ve sorular. */
 
 
+/* --- Alışkanlık sayfası -------------------------------------------------- */
+
+/* Onay halkası kaplamanın ÜSTÜNDE kalır. Kart artık bir kapı ve kaplaması
+   kartın tamamını örtüyor; halka bir kademe yukarı alınmazsa tek tuş onay
+   sessizce çalışmaz — düğme durur, basılır, hiçbir şey olmaz. */
+.kart .onay {
+  position: relative;
+  z-index: 2;
+}
+
+/* Ritim etiketi ve kapı oku sağ üstte yan yana. `ust-satir` iki öğeyi
+   iki uca yaslıyor; ok üçüncü öğe olarak eklenseydi ritim ortada kalırdı. */
+.kart-ustsag {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.kart-kapi {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Kimlik noktası alışkanlıkta RENK değil DURUM taşır: kategori hue'ları
+   burada anlam ifade etmiyor, "yapıldı / kaçırıldı / bekliyor" ediyor. */
+.kimlik .nokta[data-durum='yapildi'] { background: var(--durum); }
+.kimlik .nokta[data-durum='yapilmadi'] { background: var(--eksi); }
+.kimlik .nokta[data-durum='bekliyor'] { background: var(--vurgu); }
+.kimlik .nokta[data-durum='beklenmiyor'] { background: var(--sutun); }
+
+/* --- Isı haritası --------------------------------------------------------
+   Hafta sütun, gün satır. İz şeridi (ana ekran) 14 günü tek sıra gösterir;
+   burada pencere altı katına çıkıyor ve tek sıra okunmaz oluyordu.
+   Satırlar haftanın günü olduğu için "hep cumartesi kaçıyor" deseni dikey
+   okunuyor; sütunlar zamanı soldan sağa taşıyor. */
+
+/* Hücre boyu SABİT, esnek değil. `1fr` ile kurulduğunda pencere dört
+   haftaya inince (takip yeni başladıysa) hücreler 75px'e şişiyor ve dört
+   dolu kareden ibaret grafik 500px yer kaplıyordu. Izgara sola yaslanır,
+   artan yer boş kalır — hücrenin boyu veriye göre değişmemeli, çünkü
+   hücrenin büyüklüğü hiçbir şey anlatmıyor. */
+.isi {
+  display: grid;
+  grid-template-columns: 22px repeat(var(--hafta, 12), minmax(0, 20px));
+  justify-content: start;
+  gap: 3px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.isi-gun {
+  font-size: 9px;
+  font-weight: 600;
+  font-stretch: 62%;
+  letter-spacing: 0.04em;
+  color: var(--soluk);
+}
+
+.isi-hucre {
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: var(--bos);
+}
+
+.isi-hucre[data-d='yapildi'] { background: var(--durum); }
+.isi-hucre[data-d='yapilmadi'] { background: var(--eksi); }
+.isi-hucre[data-d='bekliyor'] { box-shadow: inset 0 0 0 1.5px var(--vurgu); }
+
+/* Beklenmeyen gün ile kayıtsız gün AYRI: ilki kuralın gereği boş, ikincisi
+   veri yokluğu. İkisini aynı göstermek, olmayan bir başarısızlığı ya da
+   olmayan bir başarıyı ima ediyor. */
+.isi-hucre[data-d='beklenmiyor'] {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--cizgi);
+}
+
+.isi-hucre[data-d='kayitsiz'] {
+  background: var(--bos);
+  opacity: 0.45;
+}
+
+/* Gelecek gün yer tutar ama boyanmaz: son hafta sütunu eksik kalırsa
+   diğerlerinden dar görünüyor ve göz onu "grafik bozuk" diye okuyor. */
+.isi-hucre[data-d='gelecek'] {
+  background: none;
+}
+
+/* --- İşaret listesi ------------------------------------------------------ */
+
+.isaret-liste {
+  grid-template-columns: 52px auto minmax(0, 1fr) auto;
+}
+
+.isaret-liste a.saat {
+  color: var(--vurgu);
+  text-decoration: none;
+}
+
+.isaret-liste a.saat:hover,
+.isaret-liste a.saat:focus-visible {
+  text-decoration: underline;
+}
+
+.isaret-durum[data-durum='yapildi'] { color: var(--durum); }
+.isaret-durum[data-durum='yapilmadi'] { color: var(--eksi); }
+
+.isaret-liste .kayit[data-bugun] .detay {
+  color: var(--vurgu);
+}
+
+/* Kaynak sütunu en sönük bilgi: hangi cihazdan işaretlendiği denetim
+   sorusudur, günlük okumanın parçası değil. */
+.isaret-liste .tutar {
+  font-weight: 600;
+  font-stretch: 62%;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--soluk);
+}
+
 /* --- Token ekranı -------------------------------------------------------
    Yayındaki ilk açılışta görünen tek ekran. Argos'un başka hiçbir yerinde
    metin girişi yok; buradaki alan veri değil, veriye açılan kapının

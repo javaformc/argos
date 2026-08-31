@@ -402,3 +402,84 @@ test('base64 çevrimi boş ve çok satırlı içerikte de tersine döner', async
   const cokSatir = '[\n  {\n    "ğ": "İ"\n  }\n]\n';
   assert.equal(base64Oku(base64Yaz(cokSatir)), cokSatir);
 });
+
+// --- Alışkanlık geçmişi -------------------------------------------------
+
+test('en uzun seri bugünden bağımsızdır, rekoru bulur', () => {
+  const tanim = { id: 'x', siklik: { tip: 'gunluk' } };
+  const onaylar = [
+    // dört günlük seri, sonra kopuş, sonra iki günlük
+    { aliskanlik: 'x', tarih: '2026-08-01', durum: 'yapildi' },
+    { aliskanlik: 'x', tarih: '2026-08-02', durum: 'yapildi' },
+    { aliskanlik: 'x', tarih: '2026-08-03', durum: 'yapildi' },
+    { aliskanlik: 'x', tarih: '2026-08-04', durum: 'yapildi' },
+    { aliskanlik: 'x', tarih: '2026-08-06', durum: 'yapilmadi' },
+    { aliskanlik: 'x', tarih: '2026-08-10', durum: 'yapildi' },
+    { aliskanlik: 'x', tarih: '2026-08-11', durum: 'yapildi' },
+  ];
+  assert.equal(h.enUzunSeri(tanim, onaylar), 4);
+
+  // Bugünkü seri kopmuş olsa da rekor durur.
+  assert.equal(h.seriHesapla(tanim, onaylar, '2026-08-20'), 0);
+});
+
+test('gün-arası alışkanlıkta seri boşluğu tolere eder', () => {
+  const tanim = { id: 'y', siklik: { tip: 'gun-arasi', deger: 2 } };
+  const onaylar = [
+    { aliskanlik: 'y', tarih: '2026-08-01', durum: 'yapildi' },
+    { aliskanlik: 'y', tarih: '2026-08-03', durum: 'yapildi' },
+    { aliskanlik: 'y', tarih: '2026-08-05', durum: 'yapildi' },
+    // 4 gün boşluk: seri kopar
+    { aliskanlik: 'y', tarih: '2026-08-09', durum: 'yapildi' },
+  ];
+  assert.equal(h.enUzunSeri(tanim, onaylar), 3, 'iki günlük aralık seriyi bozmaz');
+
+  const gunlukTanim = { id: 'y', siklik: { tip: 'gunluk' } };
+  assert.equal(
+    h.enUzunSeri(gunlukTanim, onaylar),
+    1,
+    'aynı kayıtlar günlük ölçütte tek tek kalır'
+  );
+});
+
+test('başka alışkanlığın kayıtları seriye karışmaz', () => {
+  const tanim = { id: 'x', siklik: { tip: 'gunluk' } };
+  const onaylar = [
+    { aliskanlik: 'x', tarih: '2026-08-01', durum: 'yapildi' },
+    { aliskanlik: 'z', tarih: '2026-08-02', durum: 'yapildi' },
+    { aliskanlik: 'x', tarih: '2026-08-03', durum: 'yapildi' },
+  ];
+  assert.equal(h.enUzunSeri(tanim, onaylar), 1);
+});
+
+test('hafta günü dağılımının paydası BEKLENEN gündür', () => {
+  // 2026-08-03 pazartesi. Takip 03'te başlıyor, 09'a kadar bakılıyor.
+  const tanim = { id: 'x', siklik: { tip: 'gunluk' } };
+  const onaylar = [
+    { aliskanlik: 'x', tarih: '2026-08-03', durum: 'yapildi' },   // pazartesi
+    { aliskanlik: 'x', tarih: '2026-08-04', durum: 'yapilmadi' }, // salı
+    { aliskanlik: 'x', tarih: '2026-08-05', durum: 'yapildi' },   // çarşamba
+  ];
+  const d = h.aliskanlikGunDagilimi(tanim, onaylar, '2026-08-05', 7);
+
+  const pazartesi = d[0];
+  const sali = d[1];
+  assert.equal(pazartesi.oran, 1, 'pazartesi 1/1');
+  assert.equal(sali.oran, 0, 'salı 0/1');
+
+  // Takip başlamadan önceki günler (01, 02) hiç sayılmaz.
+  const cumartesi = d[5];
+  assert.equal(cumartesi.beklenen, 0);
+  assert.equal(cumartesi.oran, null, 'kayıtsız gün oranı sıfır değil, YOK');
+});
+
+test('iz sayacı beklenmiyor ve kayıtsızı ayrı tutar', () => {
+  const tanim = { id: 'x', siklik: { tip: 'gun-arasi', deger: 2 } };
+  const onaylar = [{ aliskanlik: 'x', tarih: '2026-08-10', durum: 'yapildi' }];
+  const iz = h.aliskanlikIzi(tanim, onaylar, '2026-08-12', 5);
+  const s = h.izSayaci(iz);
+
+  assert.equal(s.yapildi, 1);
+  assert.equal(s.kayitsiz + s.beklenmiyor + s.yapilmadi + s.bekliyor, 4);
+  assert.equal(s.yapilmadi, 0, 'takip öncesi gün kaçırılmış sayılmaz');
+});
