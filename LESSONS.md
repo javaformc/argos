@@ -20,7 +20,12 @@
   başka ne varsa ara: tavan, bir kusuru düzeltmez, görünmez tutar.
 - Ters bölü içeren metni Bash heredoc'una gömme: bu ortamda `\\` tek `\`
   ye iniyor, yollar ve regex'ler sessizce bozuluyor (`C:\MY_Code` →
-  `C:MY_Code`). Öyle metni Edit ile yaz.
+  `C:MY_Code`). Öyle metni Edit ile yaz. **Bu kural yazıldıktan sonra iki
+  kez daha ihlal edildi** — betik yazmak refleks, kural okunmuyor. Metinde
+  `\` görürsen Edit'e geç, betiği düşünme bile.
+- Betik hata verse de `&&` zincirindeki sonraki komut çalışabilir: hatalı
+  bir düzenleme betiğinin ardından atılan commit, yapılmamış değişikliği
+  commit'lemiş gibi görünür. Zinciri kısa tut, çıktıyı oku.
 - Metin değiştirirken yerine koymayı FONKSİYONLA ver (`() => yeni`):
   dizgi biçiminde `$` ile başlayan diziler özel desen sayılıyor ve
   içeriği kesiyor.

@@ -78,6 +78,16 @@ dünkü sayıyı bugünmüş gibi okur.
 kuralı geçerlidir — aynı gün + alışkanlık için **damgası yeni olan**
 kazanır. Elle birleştirirken bu kurala uy.
 
+**Kullanıcı harcama, alışkanlık ya da abonelik anlattığında:**
+`argos-kayit` skill'i. Şema, kategori disiplini, hangi dosyaya ne
+yazılacağı ve yazma sırası orada — buraya kopyalanmaz, çünkü yalnız kayıt
+girerken lazım ve her mesajda taşınması gereksiz.
+
+Skill **kişisel global** klasörde (`~\.claude-personal\skills\`), bu
+projenin içinde değil: kullanıcı harcamasını vault sohbetinde de, başka
+bir projede de, dışarıdayken Remote Control'den de söylüyor. Proje içine
+konsaydı yalnız Argos klasöründe açılan oturumlarda yüklenirdi.
+
 ## Bu projeye özgü tuzaklar
 - **Veri deposu ayrı.** Kod `argos` (public), veri `argos-veri` (private).
   Bu depoya asla gerçek veri commit'lenmez — `veri/` `.gitignore`'da.
