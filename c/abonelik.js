@@ -119,7 +119,9 @@ function payBlogu(veri, bugun) {
   blok.dataset.alan = 'abonepay';
 
   const aktif = veri.abonelikler.filter((a) => a.aktif);
-  blok.append(ustSatir('PAY', `${aktif.length} abonelik`));
+  // Sağ etiket sütunları adlandırıyor: iki sayı yan yana durunca
+  // hangisinin ay hangisinin yıl olduğu okunmadan anlaşılmıyor.
+  blok.append(ustSatir('PAY', 'aylık · yıllık'));
 
   if (aktif.length === 0) {
     blok.append(el('p', 'veri', 'Aktif abonelik yok'));
@@ -142,10 +144,14 @@ function payBlogu(veri, bugun) {
     dolgu.style.width = `${Math.max((s.aylik / enBuyuk) * 100, 2)}%`;
     dolgu.dataset.renk = String((i % 8) + 1);
     yol.append(dolgu);
+    // Yıllık karşılık abonelik BAŞINA: toplam yıllık sayı yukarıda
+    // duruyor ama "bu kalem bana yılda ne ediyor" sorusunu cevaplamıyor.
+    // 90 ₺'lik bir abonelik ayda önemsiz görünüp yılda 1.080 ₺ ediyor.
     satir.append(
       el('span', 'kb-ad', s.a.ad),
       yol,
-      el('span', 'kb-tutar', lira(s.aylik))
+      el('span', 'kb-tutar', lira(s.aylik)),
+      el('span', 'kb-yillik', lira(s.aylik * 12))
     );
     const li = el('li');
     li.append(satir);

@@ -1094,7 +1094,20 @@ body[data-kip='gunduz'] .kart-ikincil {
    (personal)" ile "Claude Code (work)" ikisi de "Claude Code (pers…" olarak
    kesiliyor ve ayırt edilemiyordu. Ad sütunu bu blokta genişletildi. */
 .blok-abonepay .kategori-bar {
-  grid-template-columns: 132px minmax(0, 1fr) auto;
+  grid-template-columns: 132px minmax(0, 1fr) auto auto;
+}
+
+/* Yıllık karşılık aylığın yanında ama bir kademe sönük: bar uzunluğu
+   AYLIK tutarı gösteriyor ve iki sayı eşit ağırlıkta olsaydı hangisinin
+   çubukla eşleştiği belirsizleşirdi. */
+.kb-yillik {
+  font-size: 12px;
+  font-stretch: 62%;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--soluk);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 /* --- Abonelik dökümü ----------------------------------------------------- */
