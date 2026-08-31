@@ -67,7 +67,13 @@ Veriye **iki taraf** yazıyor: bu makinedeki Claude ve telefondaki Argos
 ```
 veri okumadan ÖNCE : cd C:\MY_Code\argos-veri && git pull --ff-only
 veri yazdıktan SONRA: git add -A && git commit && git push
+pull/push SONRASI   : cd C:\MY_Code\argos && node dev/vault-ozet.js
 ```
+
+Üçüncü satır vault kopyasını tazeler (`C:\ws\veri\ozet.md` + `kopya/`).
+Telefondaki Claude harcamayı oradan okuyor; atlanırsa kullanıcı dışarıda
+soru sorduğunda eski sayıyı doğru sanır. Kaynağa değil kopyaya yazar,
+yön tek yönlüdür.
 
 **Pull atlanırsa** telefonun işareti üzerine yazılır ve o işaret bir daha
 geri gelmez — kullanıcı onu yeniden işaretlemez, çünkü yaptığını sanıyor.
