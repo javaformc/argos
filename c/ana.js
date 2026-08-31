@@ -67,7 +67,11 @@ const KAYIT_SATIR = 3;
 // Masaüstünde liste kısılmaz: telefonda üç satır "kalabalık etmesin" diye
 // seçilmişti, geniş ekranda o gerekçe yok.
 const KAYIT_SATIR_GENIS = 9;
+// Telefonda dört satır: abonelik şeridi ana ekranın en altındaki blok ve
+// orada sabit bir çapa olması gerekiyor. Masaüstünde o kısıt yok — sağ
+// sütun zaten uzun ve sekiz satır kuyruk oluşturmadan sığıyor.
 const ABONE_SATIR = 4;
+const ABONE_SATIR_GENIS = 8;
 const UYKU_SINIRI = 2; // erken uyku hedefi: 02:00
 
 /**
@@ -769,11 +773,12 @@ function abonelikBlogu(veri, bugun) {
     }))
     .sort((x, y) => y.aylik - x.aylik);
 
-  if (satirlar.length > ABONE_SATIR) {
-    const kuyruk = satirlar.slice(ABONE_SATIR - 1);
+  const tavan = genisEkran() ? ABONE_SATIR_GENIS : ABONE_SATIR;
+  if (satirlar.length > tavan) {
+    const kuyruk = satirlar.slice(tavan - 1);
     const kuyrukToplam = kuyruk.reduce((t, s) => t + s.aylik, 0);
     satirlar = [
-      ...satirlar.slice(0, ABONE_SATIR - 1),
+      ...satirlar.slice(0, tavan - 1),
       {
         ad: `+${kuyruk.length} abonelik`,
         tutar: `${lira(kuyrukToplam)} ₺`,
