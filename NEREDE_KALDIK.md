@@ -1,19 +1,31 @@
 # Nerede kaldık — Argos
-SON GÜNCELLEME: 31-08-2026 | HEAD: 1e4bcb2 | testler: 40/40 yeşil
+SON GÜNCELLEME: 31-08-2026 | HEAD: 033fa3b | testler: 49/49 yeşil
 
-## Şu an ne durumdayız
-**Argos yayında ve uçtan uca çalışıyor.** https://javaformc.github.io/argos/c/
+## Argos bitti ve kullanımda
+**https://javaformc.github.io/argos/c/** — telefonda ana ekranda,
+bilgisayarda Obsidian sekmesinde (Custom Frames).
 
-30-08-2026'da Milestone 2'nin beş parçası da bitti; kullanıcı telefonundan
-iki alışkanlık işaretledi ve ikisi de depoya commit olarak düştü.
+**Üç milestone da onaylandı ve tag'lendi (31-08-2026).** Roadmap'te
+işaretlenmemiş parça kalmadı. Bundan sonrası kullanım sırasında çıkan
+istekler ve düzeltmeler — plan dosyası artık yeni parça beklemiyor.
 
-- Arayüzde üç seçenek var, **C seçildi**. A (`/`) ve B (`/b/`) fikir olarak
-  duruyor, silinmiyor; bütün geliştirme `/c/` üzerinde.
-- Harcamanın ayrıntı ağacı bitti: `#harcama/<ay>` · `#kategori/<ay>/<ad>` ·
-  `#gun/<tarih>` · `#yer/<ay>/<ad>`
-- Obsidian'da **Custom Frames** eklentisiyle sekme olarak açılıyor.
+## Ekranlar
+| Rota | Ne gösterir |
+|---|---|
+| (boş) | ana ekran — bugün |
+| `#harcama/<ay>` | ayın tamamı: halka, ay grafiği, birikimli, hafta günü, saat, nereye, en büyük 5, gün gün döküm |
+| `#kategori/<ay>/<ad>` | o kalem: günlük maliyet, işlem başına, o kategorinin günleri ve mekânları |
+| `#gun/<tarih>` | o gün: toplam, kategori halkası, ayın içindeki yeri |
+| `#yer/<ay>/<ad>` | o mekân: ziyaret başına, o mekânın günleri |
+| `#aliskanlik/<id>` | ısı haritası, haftanın günü deseni, rekor, işaret dökümü |
+| `#abonelik` | ödeme takvimi, pay (aylık + yıllık), sırayla tam liste |
 
-## İki depo, iki rol
+**Kapılar:** ana ekrandaki bloğun/kartın TAMAMI tıklanabilir (küçük bir ok
+işaret eder). Kategori barları, halka dilimleri, ay grafiği sütunları ve
+gün başlıkları da kapı. Dokunmatikte grafik sütunu iki aşamalı: ilk
+dokunuş tutarı yazar, ikincisi o güne gider.
+
+## İki depo
 | Depo | Görünürlük | İçerik |
 |---|---|---|
 | `javaformc/argos` | public | kod; GitHub Pages buradan yayınlıyor |
@@ -24,46 +36,40 @@ Veri `C:\MY_Code\argos-veri` klasöründe (Drive'ın dışında).
 gerekçesi proje `CLAUDE.md > Veri senkronu`. Atlanırsa telefonun işareti
 sessizce ezilir.
 
-## Sıradaki iş
-1. **Milestone 2 onayı bekliyor.** Kullanıcı biraz kullanacak; onay
-   gelince `milestone-2-onaylandi` tag'i atılacak.
-2. **Harcama girişi** — "zamanla ekleyeceğiz" (31-08-2026). Gerçek veri
-   akmadan ay sayfaları boş görünmeye devam eder.
-3. **Alışkanlık ayrıntı sayfaları** — harcamadaki desenin aynısı. Veri
-   zaten dolu, gerçek veriyle test edilebilir.
-4. **P10 — abonelik listesi ekranı** planda açık. Daha önce "sayfa
-   açılmasın" denmişti (dört abonelik ana ekranda tam görünüyor).
-   Yenileme günleri 31-08'de girildi; takvim görünümü yeniden
-   değerlendirilebilir ama hâlâ dört satırlık bir veri.
+## Sıradaki iş: kullanım
+Kullanıcının sözü (31-08-2026): *"dışarı çıktığımda harcama yaptığımda
+parça parça söyleyeceğim, birikecek."*
 
-## Bu oturumda öğrenilen üç tuzak
-Üçü de `LESSONS.md`'de:
-- Bash heredoc bu ortamda `\\` dizisini tek `\` yapıyor; ters bölü içeren
-  metni Edit ile yaz.
-- `String.replace`'te yerine koymayı fonksiyonla ver, `$` desenleri
-  içeriği kesiyor.
-- İki taraflı veride pull/push disiplini.
+Yani artık akış şu: kullanıcı harcama anlatır → `argos-veri`ye yazılır →
+push → telefonda görünür. Veri biriktikçe ekranlar dolacak; şu an
+harcama tarafı boş, alışkanlıkta iki işaret var.
 
-Ayrıca: **`env(safe-area-inset-top)` iPhone 13'te standalone kipte sıfır
-dönüyor.** Çentik boşluğu `max(env(...), 44px)` ile garantiye alındı.
+**Veri birikince gözden geçirilecekler** (bugünkü tasarım kararları örnek
+veriye göre verildi):
+- Döküm listesi ayda 100+ kayıtta nasıl görünüyor
+- Kategori sayısı sekiz hue'yu aşarsa çakışma çözücü ne yapıyor
+- Isı haritası penceresi büyüdükçe telefonda okunur kalıyor mu
 
 ## Dokunulmayacaklar
 - **İşaretleme testi 4173'te yapılmaz** — o sunucu gerçek veriye yazar.
   Tek tuş onayı denemek için her zaman 4174 (örnek veri).
-- A ve B silinmez.
+- A (`/`) ve B (`/b/`) silinmez; birer fikir olarak duruyor.
 - `C:\ws\veri-eski-2026-08-30` — taşınan verinin eski hâli, kullanıcı
   isterse kaldırır.
 
 ## CEVAPLANMAMIŞ SORULAR
-27-08-2026'da soruldu, **üçüncü kez taşınıyor**:
-- **EUR kuru tahmini** — yalnız USD ölçüldü, EUR doğrulanmadı.
-- **"Ana" alışkanlık spor seçildi**, sorulmadan.
+Yok. 27-08'den beri açık duran beş sorunun hepsi 30–31 Ağustos'ta
+kapandı (Google Fonts, F1 TV periyodu, abonelik yenileme günleri, EUR
+kuru, ana alışkanlık).
 
-Kapandı: Google Fonts (yazı tipi 30-08'de gömüldü) · F1 TV periyodu
-(aylık, 31-08) · abonelik yenileme günleri (31-08 girildi).
+## Bilinen sınır
+Yıllık abonelikler ödeme takviminde görünmüyor: veri modeli yalnız ayın
+gününü tutuyor, hangi ayda çıktığını tutmuyor. Şu an yıllık abonelik yok;
+girilirse sayfa dipnotta "N yıllık abonelik takvimde yok" der ve veri
+modeline ay alanı eklemek gerekir.
 
 ## İlgili notlar
-- Roadmap ve bağımlılık haritası: `PROJECT_PLAN.md`
+- Roadmap ve onay kaydı: `PROJECT_PLAN.md`
 - Ders kalıpları: `LESSONS.md`
 - Kararlar ve mimari: `C:\ws\projeler\Argos\`
 - Devlog: `C:\ws\projeler\Argos\calisma\oturum-loglari\`
