@@ -54,7 +54,9 @@ Argos Obsidian içinde sekme olarak açılıyor.
 
 - [x] **P9** — Harcama ayrıntı ağacı: ay → kategori / gün / yer — `BITTI`
 - [ ] **P10** — Abonelik listesi ekranı — `BEKLIYOR`
-- [ ] **P11** — Obsidian Custom Frames sekmesi — `BEKLIYOR`
+- [x] **P11** — Obsidian Custom Frames sekmesi — `BITTI`
+      Eklenti: Custom Frames (Ell). Frame URL yayın adresi; token
+      Obsidian webview'inde ayrı saklandığı için bir kez daha girilir.
 
 ---
 

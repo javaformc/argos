@@ -1,74 +1,69 @@
 # Nerede kaldık — Argos
-SON GÜNCELLEME: 30-08-2026 | HEAD: 0978e00 | testler: 38/38 yeşil
+SON GÜNCELLEME: 31-08-2026 | HEAD: 1e4bcb2 | testler: 40/40 yeşil
 
 ## Şu an ne durumdayız
-- **Arayüzde üç seçenek var, C seçildi.** A (`/`) ve B (`/b/`) birer fikir
-  olarak duruyor, silinmiyor; **bütün geliştirme C üzerinde** (`/c/`).
-- C'nin ana ekranı telefonda ve masaüstünde onaylandı. Masaüstü bir pano:
-  üç sütun, kendi modülleri var (ayın günleri, kategori/ay, saate göre,
-  alışkanlık/ay).
-- **Harcamanın ayrıntı ağacı bitti.** Dört sayfa:
-  `#harcama/<ay>` · `#kategori/<ay>/<ad>` · `#gun/<tarih>` · `#yer/<ay>/<ad>`
-- Kod bölündü: `c/ortak.js` ortak görsel dil, `c/ana.js` ana ekran,
-  `c/harcama.js` dört ayrıntı sayfası.
+**Argos yayında ve uçtan uca çalışıyor.** https://javaformc.github.io/argos/c/
 
-## Gezinme kararları
-- **Blok başlığı değil BLOĞUN TAMAMI kapıdır.** Önce başlığa küçük bir
-  düğme konmuştu; kullanıcı "kutunun tamamını kullanmak yerine üzerine
-  buton koymuşsun" dedi. Bağlantı artık `::after` ile bloğu kaplıyor.
-- **Kalıcı sekme çubuğu yok.** Ekranın altından yer yiyor ve tıklanabilir
-  öğe sayısını ikiye katlıyordu.
-- **Hash tabanlı rota**, tarayıcının kendi geri tuşu çalışıyor.
-- **Ay parametresi rotanın içinde** (`#kategori/2026-08/market`): bir
-  yerde saklansaydı "geri" her zaman bu aya götürürdü ve geçmiş ayda
-  gezinen biri her tıklamada bugüne fırlardı.
-- **İleri ok bugünün ayında kapanır**, yeri korunur (sönük). Kaybolunca
-  ay adı sağa kayıyor ve ay değiştirmek yerleşimi oynatan bir işlem gibi
-  görünüyordu.
+30-08-2026'da Milestone 2'nin beş parçası da bitti; kullanıcı telefonundan
+iki alışkanlık işaretledi ve ikisi de depoya commit olarak düştü.
+
+- Arayüzde üç seçenek var, **C seçildi**. A (`/`) ve B (`/b/`) fikir olarak
+  duruyor, silinmiyor; bütün geliştirme `/c/` üzerinde.
+- Harcamanın ayrıntı ağacı bitti: `#harcama/<ay>` · `#kategori/<ay>/<ad>` ·
+  `#gun/<tarih>` · `#yer/<ay>/<ad>`
+- Obsidian'da **Custom Frames** eklentisiyle sekme olarak açılıyor.
+
+## İki depo, iki rol
+| Depo | Görünürlük | İçerik |
+|---|---|---|
+| `javaformc/argos` | public | kod; GitHub Pages buradan yayınlıyor |
+| `javaformc/argos-veri` | **private** | harcama, alışkanlık, abonelik |
+
+Veri `C:\MY_Code\argos-veri` klasöründe (Drive'ın dışında).
+**Yazmadan önce `git pull --ff-only`, yazdıktan sonra `git push`** —
+gerekçesi proje `CLAUDE.md > Veri senkronu`. Atlanırsa telefonun işareti
+sessizce ezilir.
 
 ## Sıradaki iş
-1. **Kullanıcı harcama ağacını değerlendirsin.** Kullanıcının sözü:
-   "burada ne istediğimizi tam bitirelim, sonra devam ederiz alışkanlık
-   gibi kısımlardan."
-2. Sonraki: **alışkanlık ayrıntısı** (uzun geçmiş, ısı haritası, seri
-   tarihçesi).
-3. **Abonelik sayfası açılmayacak** — dört abonelik ana ekranda tam
-   görünüyor, sayfa boş bir kabuk olurdu. Yenileme günleri girilirse
-   takvim görünümü yeniden düşünülür.
-4. Telefon düzeninde kullanıcının biriktirdiği "detaylar" var; masaüstü
-   oturunca konuşulacak (27-08'den beri bekliyor).
+1. **Milestone 2 onayı bekliyor.** Kullanıcı biraz kullanacak; onay
+   gelince `milestone-2-onaylandi` tag'i atılacak.
+2. **Abonelik yenileme günleri** — kullanıcı "söyleyeceğim" dedi
+   (31-08-2026). Girilince "Sıradaki ödeme" kutusu çalışmaya başlar.
+3. **Harcama girişi** — "zamanla ekleyeceğiz" (31-08-2026). Gerçek veri
+   akmadan ay sayfaları boş görünmeye devam eder.
+4. **Alışkanlık ayrıntı sayfaları** — harcamadaki desenin aynısı. Veri
+   zaten dolu, gerçek veriyle test edilebilir.
+5. **P10 — abonelik listesi ekranı** planda açık. Daha önce "sayfa
+   açılmasın" denmişti (dört abonelik ana ekranda tam görünüyor);
+   yenileme günleri girilirse takvim görünümü yeniden değerlendirilecek.
 
-## Veri durumu
-- **Gerçek veri (4173) harcamada boş.** Ayrıntı sayfası orada dört küçük
-  "kayıt yok" bloğu gösteriyor — doğru davranış, doğrulandı.
-- Dolu ekran örnek veriyle (4174) doğrulanıyor. Örnek veri **bugüne göre**
-  üretiliyor; gün dönünce `scratchpad/b-turlar/ornek-veri-uret.js` yeniden
-  çalıştırılmalı.
-- Kullanıcı: *"tüm geliştirmelere gerçek veriyi zamanla gireceğiz, test
-  verisi yeterli."*
+## Bu oturumda öğrenilen üç tuzak
+Üçü de `LESSONS.md`'de:
+- Bash heredoc bu ortamda `\\` dizisini tek `\` yapıyor; ters bölü içeren
+  metni Edit ile yaz.
+- `String.replace`'te yerine koymayı fonksiyonla ver, `$` desenleri
+  içeriği kesiyor.
+- İki taraflı veride pull/push disiplini.
+
+Ayrıca: **`env(safe-area-inset-top)` iPhone 13'te standalone kipte sıfır
+dönüyor.** Çentik boşluğu `max(env(...), 44px)` ile garantiye alındı.
 
 ## Dokunulmayacaklar
-- **İşaretleme testi 4173'te yapılmaz** — o sunucu `C:\ws\veri`'ye yazar.
-  İki kez oldu, ikisinde de elle geri alındı. Her zaman 4174.
-- `C:\ws\veri\` altındaki `onay-*.json`, `harcama/*.json`, `abonelik.json`
-  Claude'un dosyaları; Argos yalnız `onay-app-*.json`'a yazar.
+- **İşaretleme testi 4173'te yapılmaz** — o sunucu gerçek veriye yazar.
+  Tek tuş onayı denemek için her zaman 4174 (örnek veri).
 - A ve B silinmez.
-- GitHub deposu açma ve token üretme — kullanıcının kararı.
+- `C:\ws\veri-eski-2026-08-30` — taşınan verinin eski hâli, kullanıcı
+  isterse kaldırır.
 
 ## CEVAPLANMAMIŞ SORULAR
-Beşi de 27-08-2026'da soruldu, **ikinci kez taşınıyor**:
+27-08-2026'da soruldu, **üçüncü kez taşınıyor** (kullanıcı sürekli
+atlıyor; bir sonraki oturumda önce bunlar sorulmalı):
 - **F1 TV periyodu aylık mı?**
-- **Aboneliklerin yenileme günleri** — dördü de bilinmiyor, ekranda
-  "Sıradaki ödeme" kutusu bu yüzden boş görünüyor.
 - **EUR kuru tahmini** — yalnız USD ölçüldü.
 - **"Ana" alışkanlık spor seçildi**, sorulmadan.
-- **Google Fonts CDN'den yükleniyor.** Çevrimdışı PWA'da yazı tipleri
-  düşer; gömülecek mi, sistem yazı tipine mi dönülecek?
 
-Yeni (30-08-2026):
-- **Geçmiş ay verisi ne kadar geriye gidiyor?** Ay gezinmesi geçmişte
-  sınırsız; kayıt tutulmamış bir ay boş görünüyor. Uygulamanın "ne zaman
-  başladığı" bilgisi yok ve şimdilik gerekmedi.
+Kapandı: Google Fonts sorusu (yazı tipi 30-08'de gömüldü), aboneliklerin
+yenileme günleri (kullanıcı söyleyeceğini bildirdi, 3. maddede takipte).
 
 ## İlgili notlar
 - Roadmap ve bağımlılık haritası: `PROJECT_PLAN.md`
