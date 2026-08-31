@@ -1072,6 +1072,47 @@ body[data-kip='gunduz'] .kart-ikincil {
    Renk sistemi, tipografi ve kart dili aynı; değişen yoğunluk ve sorular. */
 
 
+/* --- Ödeme takvimi ------------------------------------------------------
+   Ay grafiğiyle aynı biçim: sütun dizisi, aynı soru (zamanda büyüklük).
+   Farklı olan veri — harcanan değil, çıkacak olan. */
+
+.takvim-alan {
+  height: clamp(90px, 14vh, 180px);
+}
+
+/* Geçmiş ödeme bilgidir, gelecek ödeme karardır. Aynı tonda çizilirse
+   ay içinde nerede olunduğu kayboluyor. */
+.ay-sutun > i[data-odeme='gecmis'] {
+  background: var(--sutun);
+}
+
+.ay-sutun > i[data-odeme='gelecek'] {
+  background: var(--p2);
+}
+
+/* Abonelik adları kategori adlarından uzun: 82px'lik sütunda "Claude Code
+   (personal)" ile "Claude Code (work)" ikisi de "Claude Code (pers…" olarak
+   kesiliyor ve ayırt edilemiyordu. Ad sütunu bu blokta genişletildi. */
+.blok-abonepay .kategori-bar {
+  grid-template-columns: 132px minmax(0, 1fr) auto;
+}
+
+/* --- Abonelik dökümü ----------------------------------------------------- */
+
+.abone-dokum {
+  grid-template-columns: 34px auto minmax(0, 1fr) auto;
+}
+
+/* Bir hafta içinde çıkacak ödeme vurgulu: listenin asıl işi "yakında ne
+   var" sorusunu cevaplamak. */
+.abone-dokum .kayit[data-bugun] .kategori {
+  color: var(--vurgu);
+}
+
+.abone-dokum .kayit[data-bugun] .detay {
+  color: var(--vurgu);
+}
+
 /* --- Alışkanlık sayfası -------------------------------------------------- */
 
 /* Onay halkası kaplamanın ÜSTÜNDE kalır. Kart artık bir kapı ve kaplaması

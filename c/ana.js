@@ -30,6 +30,7 @@ import {
   yerSayfasi,
 } from './harcama.js';
 import { aliskanlikSayfasi } from './aliskanlik.js';
+import { abonelikSayfasi } from './abonelik.js';
 import {
   kapiBasligi,
   genisEkran,
@@ -762,12 +763,15 @@ function abonelikBlogu(veri, bugun) {
   const aktif = veri.abonelikler.filter((a) => a.aktif);
   const toplam = H.aylikAbonelikToplami(veri.abonelikler, veri.kur);
 
-  blok.append(el('p', 'etiket', 'AYLIK ABONELİK YÜKÜ'));
+  blok.append(kapiBasligi('AYLIK ABONELİK YÜKÜ', 'abonelik'));
 
   // Sayı ve bağlam cümlesi AYNI SATIRDA: ayrı satırlardayken bloğun
   // yüksekliğinin büyük kısmı çerçeveye gidiyor ve dört abonelikten
   // yalnız biri görünüyordu.
   const gunluk = aktif.length === 0 ? 0 : H.yuvarla(toplam / 30);
+  // Blok kapı: dört satırlık tavan yüzünden burada gizlenen abonelikler
+  // ve ödeme takvimi ayrıntı sayfasında duruyor.
+  blok.classList.add('blok-kapi');
   const tepe = el('div', 'abone-tepe');
   tepe.append(
     buyukSayi(lira(toplam), '₺', 'kucuk', { bos: aktif.length === 0 }),
@@ -996,6 +1000,7 @@ function yumusakGecis(cizimi) {
  *   gun/2026-08-27           o gün
  *   yer/2026-08/Migros       o ayda o mekân
  *   aliskanlik/spor          o alışkanlığın geçmişi
+ *   abonelik                 abonelik yükü ve ödeme takvimi
  *
  * Ayrı .html dosyaları yerine hash: tema betiği, yazı tipi ve alışkanlık
  * verisi yeniden yüklenmiyor, geçiş beyaz bir kareye düşmüyor. Geri tuşu
@@ -1020,6 +1025,7 @@ function rotaCoz() {
   }
   if (p[0] === 'gun' && p[1]) return { sayfa: 'gun', tarih: p[1] };
   if (p[0] === 'aliskanlik' && p[1]) return { sayfa: 'aliskanlik', ad: p[1] };
+  if (p[0] === 'abonelik') return { sayfa: 'abonelik' };
   return { sayfa: 'ana' };
 }
 
@@ -1105,6 +1111,14 @@ async function ciz() {
     } catch (hata) {
       cizimSurdu = false;
       hataGoster(hata, 'Ay verisi okunamadı.');
+      return;
+    }
+
+    if (rota.sayfa === 'abonelik') {
+      ekran.dataset.duzen = genisEkran() ? 'ayrinti' : 'sutun';
+      ekran.replaceChildren(...abonelikSayfasi(veri, bugun));
+      ekran.removeAttribute('aria-busy');
+      cizimSurdu = false;
       return;
     }
 

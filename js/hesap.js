@@ -511,6 +511,55 @@ export function aylikAbonelikToplami(abonelikler, kur) {
 }
 
 /**
+ * Ay içindeki ödeme dağılımı: her gün için o gün çıkan toplam.
+ *
+ * "Aylık 3.031 ₺" tek sayı olarak yükü gösteriyor ama ne zaman çıktığını
+ * göstermiyor; ayın ilk haftasında 1.440 ₺ çıkması ile aya eşit yayılması
+ * aynı toplamı verir, aynı şeyi yaşatmaz.
+ *
+ * Ayın çekmediği güne düşen yenileme son güne çekilir (31'i olmayan ayda
+ * 31 -> 30), `sonrakiYenileme` ile aynı kural.
+ *
+ * YILLIK abonelikler takvimde YOK: veri modeli yalnız ayın gününü tutuyor,
+ * hangi ayda çıktığını tutmuyor. Onları her aya koymak yılda bir çıkan bir
+ * tutarı on iki kez göstermek olurdu; sayıları ayrıca döndürülüyor ki
+ * ekran "takvimde görünmeyen N abonelik var" diyebilsin.
+ */
+export function odemeTakvimi(abonelikler, kur, ay) {
+  const gunSayisi = aydaGun(ay);
+  const gunler = Array.from({ length: gunSayisi }, (_, i) => ({
+    gun: i + 1,
+    tutar: 0,
+    adlar: [],
+  }));
+
+  let takvimDisi = 0;
+  let gunuBilinmeyen = 0;
+
+  for (const a of abonelikler) {
+    if (!a.aktif) continue;
+    if (a.yenileme_gunu == null) {
+      gunuBilinmeyen++;
+      continue;
+    }
+    if (a.periyot === 'yillik') {
+      takvimDisi++;
+      continue;
+    }
+    const g = Math.min(a.yenileme_gunu, gunSayisi);
+    gunler[g - 1].tutar += tryeCevir(a.tutar, a.birim || 'TRY', kur);
+    gunler[g - 1].adlar.push(a.ad);
+  }
+
+  return { gunler, takvimDisi, gunuBilinmeyen };
+}
+
+/** Aktif aboneliklerin yıllık karşılığı. Ham TL. */
+export function yillikAbonelikToplami(abonelikler, kur) {
+  return aylikAbonelikToplami(abonelikler, kur) * 12;
+}
+
+/**
  * Bir sonraki yenileme tarihi.
  * yenileme_gunu null ise BİLİNMİYOR demektir — tahmin üretilmez, null döner.
  * Veri belirsizliği ekranda da belirsiz kalmalı.

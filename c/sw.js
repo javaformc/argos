@@ -24,6 +24,7 @@ const KABUK = [
   './ortak.js',
   './harcama.js',
   './aliskanlik.js',
+  './abonelik.js',
   './stil.css',
   './ikon.svg',
   './uygulama.webmanifest',

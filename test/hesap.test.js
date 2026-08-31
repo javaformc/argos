@@ -483,3 +483,52 @@ test('iz sayacı beklenmiyor ve kayıtsızı ayrı tutar', () => {
   assert.equal(s.kayitsiz + s.beklenmiyor + s.yapilmadi + s.bekliyor, 4);
   assert.equal(s.yapilmadi, 0, 'takip öncesi gün kaçırılmış sayılmaz');
 });
+
+// --- Ödeme takvimi ------------------------------------------------------
+
+test('ödeme takvimi günlere dağıtır, ayın çekmediği günü sona çeker', () => {
+  const abonelikler = [
+    { ad: 'A', tutar: 100, birim: 'TRY', periyot: 'aylik', yenileme_gunu: 5, aktif: true },
+    { ad: 'B', tutar: 50, birim: 'TRY', periyot: 'aylik', yenileme_gunu: 5, aktif: true },
+    { ad: 'C', tutar: 200, birim: 'TRY', periyot: 'aylik', yenileme_gunu: 31, aktif: true },
+  ];
+  const { gunler } = h.odemeTakvimi(abonelikler, KUR, '2026-02'); // 28 gün
+
+  assert.equal(gunler.length, 28);
+  assert.equal(gunler[4].tutar, 150, 'aynı güne düşen ikisi toplanır');
+  assert.deepEqual(gunler[4].adlar, ['A', 'B']);
+  assert.equal(gunler[27].tutar, 200, '31 -> ayın son günü');
+  assert.equal(gunler[0].tutar, 0, 'ödemesiz gün sıfır kalır');
+});
+
+test('takvim yıllık ve günü bilinmeyen abonelikleri ayrı sayar', () => {
+  const abonelikler = [
+    { ad: 'Aylık', tutar: 100, birim: 'TRY', periyot: 'aylik', yenileme_gunu: 3, aktif: true },
+    { ad: 'Yıllık', tutar: 1200, birim: 'TRY', periyot: 'yillik', yenileme_gunu: 3, aktif: true },
+    { ad: 'Belirsiz', tutar: 60, birim: 'TRY', periyot: 'aylik', yenileme_gunu: null, aktif: true },
+    { ad: 'Kapalı', tutar: 90, birim: 'TRY', periyot: 'aylik', yenileme_gunu: 3, aktif: false },
+  ];
+  const t = h.odemeTakvimi(abonelikler, KUR, '2026-08');
+
+  assert.equal(t.gunler[2].tutar, 100, 'takvimde yalnız aylık ve günü bilinen');
+  assert.equal(t.takvimDisi, 1, 'yıllık olan ayrı sayılır');
+  assert.equal(t.gunuBilinmeyen, 1);
+});
+
+test('ödeme takvimi dövizi TL karşılığıyla toplar', () => {
+  const abonelikler = [
+    { ad: 'USD', tutar: 10, birim: 'USD', periyot: 'aylik', yenileme_gunu: 9, aktif: true },
+  ];
+  const { gunler } = h.odemeTakvimi(abonelikler, KUR, '2026-08');
+  assert.equal(gunler[8].tutar, 490, '10 * 49');
+});
+
+test('yıllık toplam aylığın on iki katıdır', () => {
+  const abonelikler = [
+    { tutar: 100, birim: 'TRY', periyot: 'aylik', aktif: true },
+    { tutar: 1200, birim: 'TRY', periyot: 'yillik', aktif: true },
+  ];
+  // aylık: 100 + 100 = 200
+  assert.equal(h.aylikAbonelikToplami(abonelikler, KUR), 200);
+  assert.equal(h.yillikAbonelikToplami(abonelikler, KUR), 2400);
+});

@@ -53,7 +53,9 @@ Hedef: Harcama kırılımına inilebiliyor, abonelik listesi tam görünüyor,
 Argos Obsidian içinde sekme olarak açılıyor.
 
 - [x] **P9** — Harcama ayrıntı ağacı: ay → kategori / gün / yer — `BITTI`
-- [ ] **P10** — Abonelik listesi ekranı — `BEKLIYOR`
+- [x] **P10** — Abonelik ekranı: ödeme takvimi, pay, tam liste — `BITTI`
+      Karar 31-08 değişti: "sayfa açılmasın" gerekçesi dört abonelik
+      ana ekranda tam görünmesiydi; yediye çıkınca dördü gizlendi.
 - [x] **P11** — Obsidian Custom Frames sekmesi — `BITTI`
       Eklenti: Custom Frames (Ell). Frame URL yayın adresi; token
       Obsidian webview'inde ayrı saklandığı için bir kez daha girilir.
